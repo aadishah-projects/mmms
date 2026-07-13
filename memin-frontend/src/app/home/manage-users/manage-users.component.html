@@ -1,0 +1,47 @@
+<div class="manage-users-container">
+  @if (feedbackMessage) {
+    <div class="feedback" [class.success]="feedbackType === 'success'" [class.error]="feedbackType === 'error'">
+      {{ feedbackMessage }}
+    </div>
+  }
+
+  @if (isLoaded) {
+    <div class="heading">Manage Users</div>
+    <p class="sub-heading">Assign roles to registered users</p>
+
+    <div class="users-table-wrapper">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users; track user.uid) {
+            <tr>
+              <td class="user-name">{{ user.firstName }} {{ user.lastName }}</td>
+              <td class="user-username">{{ user.username }}</td>
+              <td class="user-email">{{ user.email }}</td>
+              <td>
+                <select
+                  class="role-select"
+                  [ngModel]="user.role"
+                  (ngModelChange)="onRoleChange(user, $event)"
+                >
+                  @for (role of availableRoles; track role) {
+                    <option [value]="role">{{ formatRole(role) }}</option>
+                  }
+                </select>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <span class="loader"></span>
+  }
+</div>

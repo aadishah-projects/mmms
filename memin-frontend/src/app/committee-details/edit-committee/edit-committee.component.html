@@ -1,0 +1,3 @@
+@if(hasDataLoaded) {
+    <app-committee-form (formSaveEvent)="onFormSave($event)" [isEditPage]="true" [committeeFormData]="committeeFormData"></app-committee-form>
+}

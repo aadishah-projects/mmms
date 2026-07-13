@@ -1,0 +1,11 @@
+@import "minute_styles";
+
+#a4-box[contenteditable="true"] {
+  outline: 2px dashed #4a90e2;
+  outline-offset: 4px;
+  cursor: text;
+
+  &:focus {
+    outline-color: #2d6db5;
+  }
+}

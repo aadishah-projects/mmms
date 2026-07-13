@@ -1,0 +1,194 @@
+@use "colors" as colors;
+@use "constants" as constants;
+@import "form_styles";
+@import "dialog_styles";
+@import "button_styles";
+@import "reset";
+@import "@angular/cdk/overlay-prebuilt.css";
+
+//SOME GLOBAL SYTLES
+
+@font-face {
+  font-family: "Baloo";
+  src: url("assets/fonts/Baloo2-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900; /* adjust if you know the weight range */
+  font-style: normal;
+  size-adjust: 115%; /* Makes Baloo 10% larger when used as fallback */
+}
+
+@font-face {
+  font-family: "Annapurna";
+  src: url("assets/fonts/AnnapurnaSIL-Regular.ttf") format("truetype");
+  font-style: normal;
+  size-adjust: 115%;
+}
+
+ht html,
+body {
+  font-family: Roboto, "Baloo", sans-serif !important;
+  font-weight: 400;
+  background-color: colors.$color-background-main;
+  color: #dcddde;
+  scrollbar-gutter: stable; //reserves space for scrollbar even when not visible to prevent layout shift
+}
+
+//empty container
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: colors.$color-button-disabled-text;
+  font-size: 1rem;
+  font-style: italic;
+  padding: 40px 0px;
+  width: 100%;
+}
+
+/* Global scrollbar styling */
+* {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: colors.$color-background-card;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: colors.$color-border-primary;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: colors.$color-background-input;
+  }
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+
+// <span class="loader"></span>
+// .loader {
+//   width: 48px;
+//   height: 48px;
+//   border-radius: 50%;
+//   display: inline-block;
+//   border-top: 3px solid #FFF;
+//   border-right: 3px solid transparent;
+//   box-sizing: border-box;
+//   animation: rotation 1s linear infinite;
+// }
+
+// @keyframes rotation {
+//   0% {
+//     transform: rotate(0deg);
+//   }
+//   100% {
+//     transform: rotate(360deg);
+//   }
+// } 
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-block;
+  border-top: 3px solid #FFF;
+  border-right: 3px solid transparent;
+  box-sizing: border-box;
+
+  /* Start completely invisible */
+  opacity: 0;
+
+  /* Chain two animations:
+      - 'rotation': runs immediately and forever (your original animation)
+      - 'fadeIn': waits 0.4s, then runs once to make opacity 1 */
+  animation: 
+    rotation 1s linear infinite, 
+    fadeIn 0.5s ease-in 0.4s forwards; 
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Define the fade-in animation */
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+
+
+//FOR PRINTING MINUTE
+
+@media print {
+  @page {
+    size: A4;
+    margin: 25mm 0;
+    // margin-top: 25mm; // Browser will apply this margin on all pages
+  }
+
+  /* 1. Hide everything in the body */
+  body * {
+    visibility: hidden;
+    margin: 0 !important;
+  }
+
+  //withinout this there is some margin/padding
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 2. Make the target div and its children visible */
+  #a4-box,
+  #a4-box * {
+    visibility: visible;
+  }
+
+  .minute-options * {
+    display: none;
+  }
+
+  .menu-btn {
+    display: none;
+  }
+
+  .menu-btn-container * {
+    display: none;
+  }
+
+  /* 3. Position the target div at the top-left of the paper */
+  #a4-box {
+    position: absolute;
+    box-shadow: none !important;
+    font-size: constants.$font-large !important;
+    padding: 0 0 0 25mm !important; //NOTE: the right margin is also set to 0 because right margin is automatically inserted in the print preview(dont know how), verify by turning on the border here.
+    // border: 1px solid red;
+    margin: 0 !important;
+  }
+}

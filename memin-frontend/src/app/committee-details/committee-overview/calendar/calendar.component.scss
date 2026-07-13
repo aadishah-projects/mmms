@@ -1,0 +1,196 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+:host {
+  width: 100%;
+}
+
+select {
+  padding: 4px 8px;
+  background: colors.$color-background-main;
+  border-radius: 4px;
+  border: 1px solid colors.$color-border-primary;
+  color: colors.$color-text-primary;
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: colors.$color-text-muted;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: colors.$color-border-focus;
+    background: colors.$color-background-input-hover;
+  }
+
+  &:hover:not(:focus) {
+    border-color: colors.$color-background-input;
+    background: colors.$color-background-input-hover;
+  }
+}
+
+.calendar-container {
+  background: colors.$color-background-secondary;
+  // background: colors.$color-background-main;
+  // border-radius: 6px;
+  border: 1px solid colors.$color-border-primary;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 10px;
+  margin-bottom: 1rem;
+}
+
+.heading {
+  font-size: constants.$font-xxl;
+  font-weight: constants.$font-weight-semibold;
+  color: colors.$color-text-primary;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 10px 0;
+}
+
+.month {
+  border: 1px solid colors.$color-border-primary;
+  // border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+  background: #fafafa;
+  background: colors.$color-background-main;
+  text-transform: uppercase;
+  font-size: constants.$font-small;
+  font-weight: constants.$font-weight-semibold;
+}
+
+.month-name {
+  font-size: constants.$font-small;
+  font-weight: constants.$font-weight-semibold;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 0.5rem;
+}
+
+.day {
+  padding: 4px 0;
+  border-radius: 4px;
+  font-size: constants.$font-small;
+  font-weight: constants.$font-weight-normal;
+}
+
+.day.meeting {
+  background-color: #4caf50;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #388e3c;
+  }
+}
+
+.day.today {
+  border: 1px solid #4caf50;
+  font-weight: bold;
+}
+
+// Popup styles
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background: colors.$color-background-main;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 8px;
+  min-width: 320px;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid colors.$color-border-primary;
+
+  h3 {
+    margin: 0;
+    font-size: constants.$font-large;
+    font-weight: constants.$font-weight-semibold;
+    color: colors.$color-text-primary;
+  }
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: colors.$color-text-muted;
+  padding: 0;
+  line-height: 1;
+
+  &:hover {
+    color: colors.$color-text-primary;
+  }
+}
+
+.popup-body {
+  padding: 16px;
+}
+
+.meeting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid colors.$color-border-primary;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: colors.$color-background-input-hover;
+  }
+}
+
+.meeting-title {
+  font-weight: constants.$font-weight-semibold;
+  color: colors.$color-text-primary;
+}
+
+.meeting-time,
+.meeting-place {
+  font-size: constants.$font-small;
+  color: colors.$color-text-muted;
+}

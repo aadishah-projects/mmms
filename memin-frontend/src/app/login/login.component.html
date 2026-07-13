@@ -1,0 +1,59 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2 class="login-title">Welcome back!</h2>
+    <h3 class="login-sub-title">Let's organize your meetings!</h3>
+
+    <form class="login-form" [formGroup]="formData" (ngSubmit)="onSubmit()">
+      <div class="input-group">
+        <label> Username<span class="required-astrick">*</span> </label>
+        <input
+          id="control-username"
+          type="text"
+          formControlName="username"
+          class="form-input"
+          [class.error]="username.touched && username.dirty && username.invalid"
+          spellcheck="false"
+        />
+        @if ((username.touched && username.dirty) || showAllErrors) {
+          @if (username.errors?.["required"]) {
+            <p class="field-error">Username is required</p>
+          } @else if (username.errors?.["usernameImproperFormat"]) {
+            <p class="field-error">
+              Username must not have any spaces or special symbols
+            </p>
+          }
+        }
+      </div>
+
+      <div class="input-group">
+        <label>Password<span class="required-astrick">*</span></label>
+        <input
+          id="control-password"
+          type="password"
+          formControlName="password"
+          class="form-input"
+          [class.error]="password.touched && password.dirty && password.invalid"
+          spellcheck="false"
+          autocomplete="off"
+        />
+        @if ((password.touched && password.dirty) || showAllErrors) {
+          @if (password.errors?.["required"]) {
+            <p class="field-error">Password is required</p>
+          }
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="formData.invalid || isLoading"
+      >
+        @if (isLoading) {
+          <span class="spinner"></span> Signing In...
+        } @else {
+          Sign In
+        }
+      </button>
+    </form>
+  </div>
+</div>

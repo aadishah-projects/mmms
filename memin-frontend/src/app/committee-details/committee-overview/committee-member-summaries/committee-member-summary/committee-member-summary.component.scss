@@ -1,0 +1,41 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+:host {
+  display: flex;
+  width: 100%;
+}
+
+.member-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: colors.$color-background-card;
+  // border-radius: 6px;
+  border: 1px solid colors.$color-border-primary;
+  padding: 8px 10px;
+  width: 100%;
+  transition: all 0.15s ease;
+  cursor: pointer;
+
+  &:hover {
+      background: colors.$color-card-hover;
+    transform: translateY(-1px);
+  }
+}
+
+.member-name {
+  font-size: constants.$font-normal;
+  font-weight: constants.$font-weight-semibold;
+  color: colors.$color-text-primary;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.member-role {
+  font-size: constants.$font-small;
+  font-weight: constants.$font-weight-normal;
+  color: colors.$color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

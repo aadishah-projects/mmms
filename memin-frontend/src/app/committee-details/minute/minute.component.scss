@@ -1,0 +1,17 @@
+:host {
+  display: flex;
+  width: 100%;
+  gap: 20px;
+}
+
+:host:has(.loader) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; 
+}
+@media (max-width: 768px) {
+    app-minute-edit {
+	display:none;
+    }
+}

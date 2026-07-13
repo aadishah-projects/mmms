@@ -1,0 +1,85 @@
+@if (hasCommitteeMembersLoaded) {
+<app-member-summaries
+    [membersOfCommittee]="membersOfCommittee"
+></app-member-summaries>
+}
+
+@if (hasOverviewDataLoaded && hasMeetingDataLoaded) {
+  <div class="details-and-calendar">
+    <div class="committee-details">
+      <div class="committee-info">
+        <div class="committee-name">
+          {{ committeeOverview.name }}
+        </div>
+        <div class="committee-description">
+          {{ committeeOverview.description }}
+        </div>
+
+        <div class="detail-item">
+          <span class="label">Created Date</span>
+          <span class="value">{{
+            committeeOverview.createdDate | date: "d MMM, y"
+          }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="label">Coordinator</span>
+          <span class="value">{{ committeeOverview.coordinatorName }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="label">Minute Langugage</span>
+          <span class="value">{{ committeeOverview.language.charAt(0) + committeeOverview.language.slice(1).toLowerCase() }}</span>
+        </div>
+      </div>
+
+      <div class="committee-statistics">
+        <div class="statistic-item">
+          <span class="label">Members</span>
+          <span class="value">{{ committeeOverview.memberCount }}</span>
+        </div>
+
+        <div class="statistic-item">
+          <span class="label">Meetings</span>
+          <span class="value">{{ committeeOverview.meetingCount }}</span>
+        </div>
+
+        <div class="statistic-item">
+          <span class="label">Decisions</span>
+          <span class="value">{{ committeeOverview.decisionCount }}</span>
+        </div>
+
+        <div class="statistic-item">
+          <span class="label">First Meeting</span>
+          <span class="value">
+            @if (committeeOverview.firstMeetingDate) {
+              {{ committeeOverview.firstMeetingDate | date: "d MMM, y" }}
+            } @else {
+              No Meeting
+            }
+          </span>
+        </div>
+
+        <div class="statistic-item">
+          <span class="label">Last Meeting</span>
+          <span class="value">
+            @if (committeeOverview.lastMeetingDate) {
+              {{ committeeOverview.lastMeetingDate | date: "d MMM, y" }}
+            } @else {
+              No Meeting
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <app-meeting-summaries [meetingSummaries]="meetingSummaries">
+    </app-meeting-summaries>
+
+    <app-calendar
+      [meetings]="committeeOverview.meetings"
+    ></app-calendar>
+  </div>
+  } @else {
+    <span class="loader"></span>
+  }

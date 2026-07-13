@@ -1,0 +1,8 @@
+<div 
+  #myPopup
+  id="myPopup"
+  class="popup" 
+  popover="manual"
+     [ngClass]="[popup.type, startPopupDisappearingAnimation ? 'hide-popup' : '']" popover="manual">
+    <p class="message">{{ popup.message }}</p>
+</div>

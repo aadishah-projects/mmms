@@ -1,0 +1,158 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+:host {
+  background: colors.$color-background-card;
+  padding: 0px 0px;
+
+  position: fixed;
+  top: constants.$header-height; // distance from top of viewport
+  left: 0; // distance from left of viewport
+  width: constants.$sidebar-width;
+
+  background: colors.$color-background-main;
+  z-index: 9998; // make sure it's above everything but below the header
+
+  min-height: 100vh;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid colors.$color-border-primary;
+  height: 100vh;
+}
+
+.sidebar-nav {
+  margin-top: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.nav-item {
+  display: flex;
+  position: relative;
+  flex-direction: row;
+  flex: flex-start;
+  padding: 12px 16px 12px 10px;
+  color: colors.$color-text-secondary;
+  text-decoration: none;
+  border-radius: 0;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  height: 20px;
+  align-items: center; //centers the svg
+
+  gap: 10px;
+
+  .icon {
+    width: 30px;
+  }
+
+  .icon.create-committee {
+  }
+
+  .icon-selected * {
+    stroke: colors.$text-select-highlight;
+  }
+
+  &:hover {
+    background: colors.$color-background-input;
+    color: colors.$color-text-primary;
+  }
+
+  &:active {
+    background: colors.$color-background-main;
+  }
+
+  &.active {
+    background: colors.$color-border-focus;
+    color: #ffffff;
+  }
+}
+
+.nav-text {
+  position: absolute;
+  left: 70%;
+  top: 90%;
+  transform: translateY(-50%);
+  background: #222;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  font-size: constants.$font-small;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.nav-item:hover .nav-text {
+  opacity: 1;
+  transition-delay: 1s;
+}
+
+.nav-text.sub {
+  font-size: 0.9rem;
+}
+
+.selected {
+  background: colors.$color-background-input;
+  color: colors.$text-select-highlight;
+}
+
+///////////////////////////////////////////////
+//mobile styling
+//////////////////////////////////////////////
+
+@media (max-width: 768px) {
+  :host {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: constants.$sidebar-height-mobile;
+    min-height: constants.$sidebar-height-mobile;
+    z-index: 9998;
+    border-top: 1px solid colors.$color-border-primary;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    height: constants.$sidebar-height-mobile;
+    border-right: none;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .nav-item {
+    flex: 1;
+    padding: 8px 4px;
+    .icon {
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    // .create-committee {
+    // transform: scale(1.5); //use if resize is needed
+    // }
+  }
+  .nav-text {
+    display: none;
+  }
+
+  //hide submenu
+  .sub-menu {
+    display: none;
+  }
+}

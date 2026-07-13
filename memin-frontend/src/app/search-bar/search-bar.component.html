@@ -1,0 +1,20 @@
+<div class="search-container">
+  <form class="search-form" [formGroup]="formData">
+    <input
+      type="text"
+      class="search-input"
+      formControlName="searchInput"
+      placeholder="Search members..."
+    />
+  </form>
+
+  <div class="search-results">
+    @for (searchResult of searchResults; track searchResult.memberId) {
+      <div class="result-item">
+        {{ searchResult.firstName + " " + searchResult.lastName }}
+      </div>
+    } @empty {
+      <div class="result-item">No Results Found</div>
+    }
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<!-- when this template is rendered for the first time, minuteData()() may not have been populated by the server, and it may be undefined  
+-->
+
+<div class="menu-btn-container">
+  <button class="menu-btn" (click)="showMinuteOptions = !showMinuteOptions">
+    ⋯
+  </button>
+</div>
+
+<div class="minute-options" [class.hidden]="!showMinuteOptions">
+  <div class="option" (click)="onWordFileDownload($event)">
+    Convert to Word File
+  </div>
+  <div class="option" (click)="toggleEditMode()">Edit Directly</div>
+  <div class="option" (click)="printPage()">Print directly</div>
+  <div class="option" (click)="showChangeParticipantOrderDialog()">
+    Change Participant Order
+  </div>
+</div>
+
+<!-- Dialog for changing the order of invitees -->
+<dialog
+  class="main-dialog"
+  cdkDropList
+  (cdkDropListDropped)="drop($event)"
+  #participant_order_dialog
+    (click)="onDialogClick($event)"
+>
+  <div class="panel-header">
+    <p class="heading">Drag and Drop with ☰ as handle</p>
+    <p class="panel-subtitle">
+      NOTE: These changes are not persisted in the database
+    </p>
+  </div>
+
+  <div class="participants">
+    @for (participant of minuteData().participants; track $index) {
+    <div cdkDrag>
+      <div *cdkDragPlaceholder class="custom-placeholder"></div>
+      <div class="participant-info">
+        <span class="drag-handle" cdkDragHandle>☰</span>
+        <div class="participant-name">{{ participant.fullName }}</div>
+        <div class="participant-role">{{ participant.role }}</div>
+      </div>
+    </div>
+    }
+  </div>
+</dialog>
+
+@if (minuteData() != undefined && minuteData().minuteLanguage === "NEPALI") {
+<app-minute-nepali-1
+  [minuteData]="minuteData()"
+  [isEditable]="isEditMode"
+  class="minute"
+  (click)="showMinuteOptions = false"
+></app-minute-nepali-1>
+} @else if ( minuteData() != undefined && minuteData().minuteLanguage ===
+"ENGLISH" ) {
+<app-minute-english-1
+  [minuteData]="minuteData()"
+  [isEditable]="isEditMode"
+  class="minute"
+  (click)="showMinuteOptions = false"
+></app-minute-english-1>
+}
+<div></div>

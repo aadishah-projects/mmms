@@ -1,0 +1,199 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+
+:host {
+  background: colors.$color-background-main;
+}
+
+
+:host:has(.loader) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; 
+}
+
+
+//------------------RIGHT PANEL that shows committee members---------------------------
+
+app-member-summaries {
+  position: fixed;
+  top: constants.$header-height; // distance from top of viewport
+  right: 0; // distance from right of viewport
+  background: colors.$color-background-main;
+  z-index: 9998; // make sure it's above everything but below the header
+  border-left: 1px solid colors.$color-border-primary;
+  width: constants.$app-committee-member-summaries-width;
+  height: calc(100vh - constants.$header-height);
+  overflow-y: auto;
+  padding: 16px 15px;
+  box-sizing: border-box;
+}
+
+.committee.members-not-shown {
+  margin-right: 0; // no space on the right when the members are not shown
+}
+
+
+//-----------------------------Main overview section-------------------------------------------------
+
+.details-and-calendar {
+  display:flex;
+  flex-grow: 1;
+  flex-direction: column;
+  gap: 24px;
+  align-items: start;
+  margin-right: constants.$app-committee-member-summaries-width;
+  //enable the following styling if want to capture the scroll bar within the .detail-and-calender and NOT in the .main-content
+  // min-height: 0;
+  // max-height: 100%;
+  // overflow-y: auto;
+  padding-right: 25px;  //space from the right committee member panel
+}
+
+.committee-details {
+  display: flex;
+  align-items: stretch;  //so that both .info and .statistics is same height
+  width: 100%;
+  gap: 24px;
+  flex-grow: 1;
+}
+
+.committee-info {
+  background: colors.$color-background-secondary;
+  // background: colors.$color-background-main;
+  border: 1px solid colors.$color-border-primary;
+  // border-radius: 8px;
+  padding: 32px;
+  transition: all 0.2s ease;
+  flex-grow: 1;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .committee-name {
+    font-size: 2rem;
+    font-weight: constants.$font-weight-semibold;
+    color: colors.$color-text-primary;
+    margin-bottom: 16px;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+  }
+
+  .committee-description {
+    font-size: constants.$font-large;
+    font-weight: constants.$font-weight-normal;
+    color: colors.$color-text-secondary;
+    margin-bottom: 32px;
+    line-height: 1.6;
+    max-width: 600px;
+  }
+
+  .detail-item {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .label {
+      font-size: constants.$font-small;
+      font-weight: constants.$font-weight-semibold;
+      color: colors.$color-text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      min-width: 140px;
+      margin-right: 16px;
+      flex-shrink: 0;
+    }
+
+    .value {
+      font-size: constants.$font-medium;
+      font-weight: constants.$font-weight-medium;
+      color: colors.$color-text-primary;
+      line-height: 1.4;
+    }
+  }
+}
+
+.committee-statistics {
+  background: colors.$color-background-secondary;
+  // background: colors.$color-background-main;
+  border: 1px solid colors.$color-border-primary;
+  // border-radius: 8px;
+  padding: 32px;
+  transition: all 0.2s ease;
+  min-width: 300px;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .statistic-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid colors.$color-border-primary;
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    &:first-child {
+      padding-top: 0;
+    }
+
+    .label {
+      font-size: constants.$font-small;
+      font-weight: constants.$font-weight-semibold;
+      color: colors.$color-text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .value {
+      font-size: constants.$font-medium;
+      font-weight: constants.$font-weight-semibold;
+      color: colors.$color-text-primary;
+      text-align: right;
+    }
+  }
+}
+
+app-meeting-summaries {
+    width: 100%;
+}
+
+@media(max-width: 768px) {
+    app-member-summaries {
+	display: none;
+    } 
+
+    .details-and-calendar {
+	margin: 0;
+	padding: 0;
+    }
+
+    .committee-details {
+    }
+
+    .committee-statistics {
+	display: none;
+    }
+
+    app-calendar {
+	display: none;
+    }
+}
+
+
+
+

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Meeting Minute</title>
+    <link rel="stylesheet" th:if="${!download}" th:href="@{/css/meeting_minute.css}">
+</head>
+<body class="english">
+<div id="a4-box">
+    <div class="introduction justify-text">
+        <p class="introduction-body">
+            On date <span th:text="${meetingHeldDate}">Date</span>,
+            <span th:text="${meetingHeldDay}">Day</span>
+            <span th:text="${partOfDay}">Part of Day</span>
+            at <span th:text="${meetingHeldTime}"></span>,
+            at <span th:text="${meetingHeldPlace}"></span>,
+            a meeting of the <span th:text="${committeeName}"></span> formed for
+            <span th:text="${meetingTitle}"></span> was held under the chairmanship
+            of the coordinator <span th:text="${coordinatorFullName}">coordinator name</span>.
+            The meeting held discussions and made decisions as follows.
+        </p>
+    </div>
+
+    <div class="attendees">
+        <h5 class="heading">Attendance:</h5>
+        <table>
+            <thead>
+            <tr>
+                <th>SN</th>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Signature</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="membership, iterStat : ${membershipsOfAttendees}">
+                <td th:text="${iterStat.index + 1}">1</td>
+                <td th:text="${membership.member.post + ' ' + membership.member.firstName + ' ' + membership.member.lastName}"></td>
+                <td th:text="${membership.role}">Role</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="decisions">
+        <h5 class="heading"><b>Decisions:</b></h5>
+        <ol>
+            <li th:each="decision : ${decisions}" th:text="${decision.decision}" class="decision">No Decisions</li>
+        </ol>
+    </div>
+
+    <p>
+        Meeting Conclusion:
+    </p>
+</div>
+</body>
+</html>

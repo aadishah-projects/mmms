@@ -1,0 +1,130 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+.manage-users-container {
+  padding: 30px;
+  max-width: 900px;
+}
+
+.heading {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: colors.$color-text-primary;
+  margin-bottom: 4px;
+}
+
+.sub-heading {
+  font-size: 0.9rem;
+  color: colors.$color-text-muted;
+  margin: 0 0 24px 0;
+}
+
+.feedback {
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+
+  &.success {
+    background: rgba(87, 242, 135, 0.1);
+    color: #57f287;
+    border: 1px solid rgba(87, 242, 135, 0.2);
+  }
+
+  &.error {
+    background: rgba(237, 66, 69, 0.1);
+    color: colors.$color-text-error;
+    border: 1px solid rgba(237, 66, 69, 0.2);
+  }
+}
+
+.users-table-wrapper {
+  overflow-x: auto;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 8px;
+  overflow: hidden;
+
+  thead {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: colors.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid colors.$color-border-primary;
+  }
+
+  td {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    color: colors.$color-text-secondary;
+    border-bottom: 1px solid colors.$color-border-primary;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+}
+
+.user-name {
+  font-weight: 500;
+  color: colors.$color-text-primary;
+}
+
+.user-username {
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.user-email {
+  color: colors.$color-text-muted;
+}
+
+.role-select {
+  background: colors.$color-background-input;
+  color: colors.$color-text-primary;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  min-width: 160px;
+
+  &:hover {
+    border-color: colors.$color-border-focus;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: colors.$color-border-focus;
+    box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+  }
+
+  option {
+    background: colors.$color-background-main;
+    color: colors.$color-text-primary;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

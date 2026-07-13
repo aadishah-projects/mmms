@@ -1,0 +1,35 @@
+<div class="documentation-container">
+  <div class="doc-header">
+    <h1>Documentation</h1>
+    <p>A comprehensive guide to create and manage your meeting minutes</p>
+  </div>
+
+  <div class="doc-main">
+    @for (section of sections; track section.id) {
+      <div class="doc-section">
+        <h2>
+          <span class="section-number">{{ section.id }}.</span>
+          {{ section.title }}
+        </h2>
+        <div class="doc-description">
+          <ol type="i">
+            @for (desc of section.description; track desc) {
+              <li>{{ desc }}</li>
+            }
+          </ol>
+        </div>
+
+        @if (section.image) {
+          <div class="doc-image-wrapper">
+            <img
+              [src]="section.image"
+              [alt]="section.title + ' preview'"
+              class="doc-image"
+              loading="lazy"
+            />
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

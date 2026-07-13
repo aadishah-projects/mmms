@@ -1,0 +1,62 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+.popup {
+  top: 85vh;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 0px;
+  max-width: 500px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  animation: fadeInUp 0.3s ease-out;
+  background: colors.$color-card-hover;
+  border: 1px solid colors.$color-border-focus;
+  .message {
+    margin: 0;
+    font-size: constants.$font-normal;
+    text-align: center;
+    line-height: 1.5;
+  }
+}
+
+.popup.Success {
+  border: 1px solid yellowgreen;
+  .message {
+    // color: colors.$color-text-primary;
+    color: yellowgreen;
+  }
+}
+
+.popup.Error {
+  border: 1px solid colors.$color-text-error;
+  .message {
+    color: colors.$color-text-error;
+  }
+}
+
+.hide-popup {
+  animation: fadeOutDown 0.3s ease-in forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+}

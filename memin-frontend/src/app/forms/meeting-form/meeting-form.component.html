@@ -1,0 +1,322 @@
+<dialog
+  appSafeCloseDialogCustom
+  [customSaveForm]="saveFormData"
+  [customRestoreForm]="restoreFormData"
+  #new_meeting_dialogue
+  class="main-dialog"
+>
+  <!-- This button is only visibile in mobile view -->
+
+  <!-- TODO: only activate this button when all form details are filled -->
+  <button
+    class="btn btn-primary next-button"
+    (click)="isMeetingDetailsPart = !isMeetingDetailsPart"
+      [disabled]="!isNextButtonInMobileViewActive()"
+  >
+    Next
+  </button>
+
+  <!-- LEFT PANEL - Member Selection -->
+  <div
+    class="invitee-selection-panel"
+    [class.activePartInMobileView]="!isMeetingDetailsPart"
+  >
+    <div class="panel-header">
+      <h2>Select Members</h2>
+      <p class="panel-subtitle">Search invitees for the meeting</p>
+
+      <button class="btn btn-primary save-button" (click)="onSubmit($event)">
+        @if (isFormSaving) {
+          Saving
+        } @else {
+          Save
+        }
+      </button>
+    </div>
+
+    <div
+      class="invitee-selection-container"
+      [formGroup]="selectInviteeFormGroup"
+    >
+      <!-- Search Section -->
+      <div class="search-section">
+        <input
+          type="text"
+          class="search-input"
+          formControlName="searchBarInput"
+          placeholder="Search members..."
+        />
+
+        <!-- Selected Members Section -->
+        @if (this.selectedInvitees.length > 0) {
+          <div class="selected-invitees-section">
+            <h3 class="section-title">Selected Invitees</h3>
+            <div class="selected-invitees-list">
+              @for (
+                selectedInvitee of selectedInvitees;
+                track selectedInvitee.memberId
+              ) {
+                <div
+                  class="selected-invitee-item"
+                  (dblclick)="onSelectedInviteeRemoval(selectedInvitee)"
+                >
+                  <div class="member-info">
+                    <span class="selected-name">
+                      {{
+                        selectedInvitee.firstName +
+                          " " +
+                          selectedInvitee.lastName
+                      }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Unselected Members Section -->
+        @if (displayedPossibleInvitees.length > 0) {
+          <div class="unselected-invitees-section">
+            <h3 class="section-title">Unselected Invitees</h3>
+          </div>
+        }
+
+        <div class="available-invitees">
+          @for (
+            displayedPossibleInvitee of displayedPossibleInvitees;
+            track displayedPossibleInvitee.memberId
+          ) {
+            <div
+              class="available-invitee-item"
+              (click)="onInviteeSelect(displayedPossibleInvitee)"
+            >
+              <span class="member-name">
+                {{
+                  displayedPossibleInvitee.firstName +
+                    " " +
+                    displayedPossibleInvitee.lastName
+                }}
+              </span>
+            </div>
+          } @empty {
+            @if (!selectedCommitteeId) {
+              <p class="empty-state">
+                Please select a committee to view the possible invitees
+              </p>
+            } @else {
+              @if (hasInviteeDataLoaded) {
+                <p class="empty-state">
+                  No possible invitees, create a new member first
+                </p>
+              }
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------------------  -->
+
+  <!-- RIGHT PANEL - Meeting Details -->
+  <div
+    class="meeting-details-panel"
+    [class.activePartInMobileView]="isMeetingDetailsPart"
+  >
+    <div class="panel-header">
+      <h2>Meeting Details</h2>
+      <p class="panel-subtitle">Meeting meeting information</p>
+    </div>
+
+    <form
+      [formGroup]="meetingFormGroup"
+      #meetingCreationForm
+      class="actual-form"
+    >
+      <!-- Committee Selection Dropdown with Search -->
+      <div class="form-group">
+        <label for="committee-search">Select Committee<span class="required-astrick">*</span></label>
+        <div class="custom-dropdown">
+          <input
+            id="committee-search"
+            type="text"
+            class="form-input"
+            [formControl]="committeeSearch"
+            placeholder="Click here to see all committees"
+            (focus)="showDropdown = true"
+            (focus)="onCommitteeSearchBarFocus()"
+            (blur)="showDropdown = false"
+            autocomplete="off"
+          />
+          @if (showAllFormErrors && selectedCommitteeId == undefined) {
+            <p class="field-error" style="margin-top: 10px">
+              (Select a valid committee)
+            </p>
+          }
+          @if (showDropdown && displayedCommitteeIdsAndNames.length > 0) {
+            <div class="dropdown-options">
+              @for (
+                committeeIdAndName of displayedCommitteeIdsAndNames;
+                track committeeIdAndName.committeeId
+              ) {
+                <div
+                  class="dropdown-option"
+                  (mousedown)="onCommitteeSelection(committeeIdAndName)"
+                >
+                  {{ committeeIdAndName.committeeName }}
+                </div>
+              }
+            </div>
+          }
+          @if (showDropdown && displayedCommitteeIdsAndNames.length === 0) {
+            <div class="dropdown-options">
+              <div
+                class="dropdown-option disabled"
+                (mousedown)="redirectToCreateCommittee()"
+              >
+                No committees found. Create one from
+                <a routerLink="../create-committee">here</a>.
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="form-element-pair">
+        <div class="form-group">
+          <label for="meeting-title">Meeting Title<span class="required-astrick">*</span></label>
+          <input
+            id="meeting-title"
+            type="text"
+            placeholder="Enter meeting title"
+            formControlName="title"
+            class="form-input"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          @if ((title.touched && title.dirty) || showAllFormErrors) {
+            @if (title.errors?.["required"]) {
+              <p class="field-error">(Meeting title is required)</p>
+            }
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="meeting-held-place">Meeting Place<span class="required-astrick">*</span></label>
+          <input
+            id="meeting-held-place"
+            type="text"
+            placeholder="Enter meeting place"
+            class="form-input"
+            name="meetingHeldPlace"
+            autocomplete="off"
+            formControlName="heldPlace"
+          />
+
+          @if ((heldPlace.touched && heldPlace.dirty) || showAllFormErrors) {
+            @if (heldPlace.errors?.["required"]) {
+              <p class="field-error">(Meeting held place is required)</p>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="form-element-pair">
+        <div class="form-group">
+          <label for="meeting-date">Meeting Date<span class="required-astrick">*</span></label>
+          <input
+            id="meeting-date"
+            type="date"
+            class="form-input"
+            name="meetingHeldDate"
+            formControlName="heldDate"
+          />
+          @if ((heldDate.touched && heldPlace.dirty) || showAllFormErrors) {
+            @if (heldDate.errors?.["required"]) {
+              <p class="field-error">(Meeting held date is required)</p>
+            }
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="meeting-held-time">Meeting Time<span class="required-astrick">*</span></label>
+          <input
+            id="meeting-held-time"
+            type="time"
+            placeholder="Meeting time"
+            class="form-input"
+            formControlName="heldTime"
+            name="meetingHeldTime"
+          />
+
+          @if ((heldTime.touched && heldPlace.dirty) || showAllFormErrors) {
+            @if (heldTime.errors?.["required"]) {
+              <p class="field-error">(Meeting held time is required)</p>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-element-pair">
+          <label>Agendas</label>
+          <button
+            class="btn btn-primary plus-button"
+            (click)="createEmptyAgenda()"
+          >
+            +
+          </button>
+        </div>
+        <div class="agendas-list">
+          @for (agenda of agendas; track agenda.agendaId; let $i = $index) {
+            <div class="agenda-item">
+              <textarea
+                #agendaInputFields
+                [(ngModel)]="agenda.agenda"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Double click to delete"
+                class="form-input"
+                autocomplete="off"
+                (dblclick)="deleteAgenda(agenda.agendaId)"
+              ></textarea>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-element-pair">
+          <label>Decisions<span class="required-astrick">*</span></label>
+          <button
+            class="btn btn-primary plus-button"
+            (click)="createEmptyDecision()"
+          >
+            +
+          </button>
+        </div>
+        @if (showAllFormErrors && hasNoNonEmptyDecisions()) {
+          <p class="field-error">(Add at least one non-empty decision)</p>
+        }
+        <div class="decisions-list">
+          @for (
+            decision of decisions;
+            track decision.decisionId;
+            let $i = $index
+          ) {
+            <div class="decision-item">
+              <textarea
+                #decisionInputFields
+                [(ngModel)]="decision.decision"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Double click to delete"
+                class="form-input"
+                autocomplete="off"
+                (dblclick)="deleteDecision(decision.decisionId)"
+              ></textarea>
+            </div>
+          }
+        </div>
+      </div>
+    </form>
+  </div>
+</dialog>

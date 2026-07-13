@@ -1,0 +1,160 @@
+////////////////////////////////////////////////////////////////////////
+//*** DO NOT CHANGE STYLING HERE, IT WILL AFFECT ALL FORMS THROUGHOUT THE APP ***
+////////////////////////////////////////////////////////////////////////
+
+
+
+
+/*
+CSS CLASSES DESCRIPTION:
+
+
+ 1. form-panel: Appears above the actual form
+    Defines styles for:
+    a. h2
+    b. panel-subtitle
+
+  2. actual-form: The form itself
+    a. flex: column
+
+  3. form-actions: holds the buttons at the bottom of the form
+    a. flex: row
+
+ADDITIONAL
+
+  4. field-error
+    a. red color with padding
+
+  5. required
+    a. red astrick for required fields
+
+  6. form-input
+    a. input field styles
+    b. placeholder styles
+    c. focus styles
+    d. hover styles
+
+*/
+
+
+
+
+// .field-error{
+//   color: colors.$color-text-error;
+//   font-size: constants.$font-medium;
+//   font-weight: constants.$font-weight-medium;
+//   margin: 0;
+//   padding: 0.25rem 0;
+// }
+
+
+// //astrick in forms
+// .required-astrick {
+//   color: colors.$color-text-error;
+//   padding-left: 4px;
+//   font-size: 0.9rem;
+//   display: inline-block;
+//   padding-bottom: 5px;
+// }
+
+
+
+// form label, .data-label {
+//   font-size: constants.$font-small;
+//   font-weight: constants.$font-weight-medium;
+//   color: colors.$color-text-secondary;
+//   text-transform: uppercase;
+//   letter-spacing: 0.5px;
+// }
+
+
+// .form-input {
+//   padding: 12px 20px;
+//   background: colors.$color-background-input;
+//   border: 1px solid colors.$color-border-primary;
+//   border-radius: 6px;
+//   color: colors.$color-text-primary;
+//   font-size: constants.$font-normal;
+//   font-family: inherit;
+//   transition: all 0.2s ease;
+
+//   &::placeholder {
+//     color: colors.$color-text-muted;
+//   }
+
+//   &:focus {
+//     outline: none;
+//     border-color: colors.$color-border-focus;
+//     background: colors.$color-background-input-hover;
+//     box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+//   }
+
+//   &:hover:not(:focus) {
+//     border-color: colors.$color-background-input;
+//     background: colors.$color-background-input-hover;
+//   }
+
+//   &.error {
+//     border-color: colors.$color-text-error;
+//   }
+// }
+
+
+// //heading section of the form
+// .panel-header {
+//   padding: 10px;
+//   border-bottom: 1px solid #202225;
+//   background: colors.$color-background-input;
+//   display: flex;
+//   flex-direction: column;
+//   justify-content: flex-start;
+//   gap: 2px;
+//   //padding for the header for left and right is kept same as padding for .actual-form
+//   padding: 20px 15px;
+
+
+//   h2 {
+//     font-size: constants.$font-xl;
+//     font-weight: constants.$font-weight-semibold;
+//     color: colors.$color-text-primary;
+//     margin: 0 0 4px 0;
+//     line-height:1; 
+//   }
+
+//   .panel-subtitle {
+//     font-size: constants.$font-medium;
+//     color: colors.$color-text-secondary;
+//     margin: 0;
+//     line-height: 1.3;
+//   }
+// }
+
+
+//<form> starts here
+
+// .actual-form {
+//   flex: 1;
+//   padding: 15px;
+//   overflow-y: auto;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 30px;
+
+//   &::-webkit-scrollbar {
+//     width: 8px;
+//   }
+
+//   &::-webkit-scrollbar-track {
+//     background: colors.$color-background-card;
+//   }
+
+//   &::-webkit-scrollbar-thumb {
+//     background: colors.$color-border-primary;
+//     border-radius: 4px;
+//   }
+
+//   &::-webkit-scrollbar-thumb:hover {
+//     background: colors.$color-background-input;
+//   }
+// }
+

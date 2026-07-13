@@ -1,0 +1,322 @@
+<dialog
+  appSafeCloseDialogCustom
+  [customSaveForm]="saveForm"
+  [customRestoreForm]="restoreForm"
+  #committee_form_dialog
+  class="main-dialog"
+>
+  <!-- This button is only visibile in mobile view -->
+
+  <!-- TODO: only activate this button when all form details are filled -->
+  <button
+    class="btn btn-primary next-button"
+    (click)="isCommitteeDetailsPart = !isCommitteeDetailsPart"
+      [disabled]="!isNextButtonInMobileViewActive()"
+  >
+    Next
+  </button>
+
+  <!-- LEFT PANEL - Member Selection -->
+  <div
+    class="member-selection-panel"
+    [class.activePartInMobileView]="!isCommitteeDetailsPart"
+  >
+    <div class="panel-header">
+      <h2>Select Members</h2>
+      <p class="panel-subtitle">Search and assign roles to committee members</p>
+      <button
+        class="btn btn-primary save-button"
+        (click)="onSubmit($event)"
+        [disabled]="isFormSaving"
+      >
+        @if (isFormSaving) {
+          Saving
+        } @else {
+          Save
+        }
+      </button>
+    </div>
+
+    <div class="member-selection-container" [formGroup]="selectMemberFormGroup">
+      <!-- Search Section -->
+
+      <div class="search-section">
+        <input
+          type="text"
+          class="search-input"
+          formControlName="searchBarInput"
+          placeholder="Search members..."
+          spellcheck="false"
+          autocomplete="off"
+        />
+        @if (showAllFormErrors && selectedMembersWithRoles.length < 1) {
+          <p class="field-error">(Select at least one member for committee)</p>
+        }
+      </div>
+
+      <!-- Selected Members Section -->
+      @if (selectedMembersWithRoles.length > 0) {
+        <div class="selected-members-section">
+          <h3 class="section-title">Selected Members</h3>
+          <div
+            class="selected-members-list"
+            cdkDropList
+            (cdkDropListDropped)="drop($event)"
+          >
+            @for (
+              selectedMemberWithRole of selectedMembersWithRoles;
+              track selectedMemberWithRole.member.memberId
+            ) {
+              @let selectedMember = selectedMemberWithRole.member;
+              <div
+                class="selected-member-item"
+                cdkDrag
+                (dblclick)="onRemoveSelectedInvitee(selectedMember)"
+              >
+                <div *cdkDragPlaceholder class="custom-placeholder"></div>
+                <div class="member-info">
+                  <span class="drag-handle" cdkDragHandle>☰</span>
+                  <span class="selected-name">
+                    {{
+                      selectedMember.firstName + " " + selectedMember.lastName
+                    }}
+                  </span>
+                </div>
+
+                <!-- the position for the options for custom-topdown is calculated when the <input> field is focused because the .dropdown-options is fixed so that is it no hidden when it overflows the selected member container  -->
+                <div class="custom-dropdown">
+                  <input
+                    type="text"
+                    class="form-input"
+                    [(ngModel)]="selectedMemberWithRole.role"
+                    [ngModelOptions]="{ standalone: true }"
+                    placeholder="Add"
+                    (focus)="
+                      showCustomDropdownForRoleSelection($event, selectedMember)
+                    "
+                    (blur)="onRoleAssign($any($event.target).value)"
+                    (keydown.enter)="onRoleAssign($any($event.target).value)"
+                    (input)="showDropdown = false"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      <!--both selected and unselected invitee uses the same drop down options 
+	  -->
+      @if (showDropdown) {
+        <div
+          class="dropdown-options"
+          [style.top.px]="dropdownTop"
+          [style.left.px]="dropdownLeft"
+        >
+          <div
+            class="dropdown-option"
+            (mousedown)="onRoleAssign('अध्यक्')"
+            (click)="showDropdown = false"
+          >
+            अध्यक्ष
+          </div>
+
+          <div
+            (mousedown)="onRoleAssign('सचिव')"
+            class="dropdown-option"
+            (click)="showDropdown = false"
+          >
+            सचिव
+          </div>
+          <div
+            (mousedown)="onRoleAssign('सह सचिव')"
+            class="dropdown-option"
+            (click)="showDropdown = false"
+          >
+            सह सचिव
+          </div>
+
+          <div
+            (mousedown)="onRoleAssign('सदस्य')"
+            class="dropdown-option"
+            (click)="showDropdown = false"
+          >
+            सदस्य
+          </div>
+
+        </div>
+      }
+
+      <!-- Unselected Members Section -->
+
+      <div class="unselected-members-section">
+        @if (displayedMembers.length > 0) {
+          <h3 class="section-title">Unselected Members</h3>
+        }
+
+        <div class="available-members">
+          @for (
+            displayedMember of displayedMembers;
+            track displayedMember.memberId
+          ) {
+            <div class="available-member-item">
+              <span class="member-name">
+                {{ displayedMember.firstName + " " + displayedMember.lastName }}
+              </span>
+              <div class="custom-dropdown">
+                <input
+                  type="text"
+                  class="form-input"
+                  placeholder="Add"
+                  (focus)="
+                    showCustomDropdownForRoleSelection($event, displayedMember)
+                  "
+                  (blur)="onRoleAssign($any($event.target).value)"
+                  (keydown.enter)="onRoleAssign($any($event.target).value)"
+                  (input)="showDropdown = false"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-state">
+              @if (selectedMembersWithRoles.length === 0) {
+                <span>Select members to add to the committee</span>
+              } @else {
+                <span>No more members found</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- RIGHT PANEL - Committee Details -->
+  <div
+    class="committee-details-panel"
+    [class.activePartInMobileView]="isCommitteeDetailsPart"
+  >
+    <div class="panel-header">
+      <h2>Committee Details</h2>
+      <p class="panel-subtitle">Configure your committee information</p>
+    </div>
+
+    <form [formGroup]="committeeFormGroup" class="actual-form">
+      <div class="form-group">
+        <label for="committee-name">Committee Name <span class="required-astrick">*</span></label>
+        <input
+          id="committee-name"
+          type="text"
+          placeholder="Enter committee name"
+          formControlName="name"
+          class="form-input"
+          autocomplete="off"
+          spellcheck="false"
+        />
+
+        @if ((name.touched && name.dirty) || showAllFormErrors) {
+          @if (name.errors?.["required"]) {
+            <p class="field-error">(Committee name is required)</p>
+          }
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="committee-description">Description<span class="required-astrick">*</span></label>
+        <textarea
+          id="committee-description"
+          placeholder="Describe the committee's purpose and objectives"
+          formControlName="description"
+          class="form-textarea"
+          rows="4"
+          autocomplete="off"
+          spellcheck="false"
+        ></textarea>
+
+        @if ((description.touched && description.dirty) || showAllFormErrors) {
+          @if (description.errors?.["required"]) {
+            <p class="field-error">(Committee description is required)</p>
+          }
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-group half-width">
+          <label for="committee-status">Status</label>
+          <select
+            id="committee-status"
+            name="projectType"
+            formControlName="status"
+            class="form-select"
+          >
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
+        </div>
+
+        <div class="form-group half-width">
+          <label for="committee-coordinator">Coordinator<span class="required-astrick">*</span></label>
+          <select
+            id="committee-coordinator"
+            formControlName="coordinator"
+            (change)="onCoordinatorSelectionOrChange()"
+            class="form-select"
+            [compareWith]="compareCoordinators"
+          >
+            @if (currentCoordinator != undefined) {
+              <option [ngValue]="currentCoordinator" disabled>
+                {{
+                  currentCoordinator.firstName +
+                    " " +
+                    currentCoordinator.lastName
+                }}
+              </option>
+            }
+            @for (member of unselectedMembers; track member.memberId) {
+              <option [ngValue]="member">
+                {{ member.firstName + " " + member.lastName }}
+              </option>
+            }
+          </select>
+
+          @if (coordinator.touched || showAllFormErrors) {
+            @if (!isCoordinatorValid()) {
+              <p class="field-error">
+                (Committee coordinator must be selected)
+              </p>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Minute Language<span class="required-astrick">*</span></label>
+        <div class="language-radio-group">
+          <label class="language-radio-item">
+            <input
+              type="radio"
+              value="ENGLISH"
+              formControlName="minuteLanguage"
+            />
+            <span>English</span>
+          </label>
+          <label class="language-radio-item">
+            <input
+              type="radio"
+              value="NEPALI"
+              formControlName="minuteLanguage"
+            />
+            <span>Nepali</span>
+          </label>
+        </div>
+        @if (showAllFormErrors) {
+          @if (!isMinuteLanguageValid()) {
+            <p class="field-error">(Minute language must be selected)</p>
+          }
+        }
+      </div>
+    </form>
+  </div>
+</dialog>

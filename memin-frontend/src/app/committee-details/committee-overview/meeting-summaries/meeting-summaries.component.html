@@ -1,0 +1,34 @@
+<div class="available-screen" (click)="closeMenuOptionsIfOpen()">
+  <h3 class="heading">Meetings</h3>
+
+  @if (showMenuOptions) {
+    <div
+      class="menu-options"
+      [class.hidden]="!showMenuOptions"
+      [style.top.px]="dropdownTop"
+      [style.right.px]="dropdownRight"
+    >
+      <div class="menu-option" (click)="onEditOptionClick($event)">Edit</div>
+      <div class="menu-option" (click)="onMinuteOptionClick($event)">
+        Minute
+      </div>
+    </div>
+  }
+  <div
+    class="meeting-summaries"
+    [class.has-summaries]="meetingSummaries().length > 0"
+  >
+    @for (meetingSummary of meetingSummaries(); track meetingSummary.id) {
+      <app-meeting-summary
+        class="meeting-card"
+        [meetingSummary]="meetingSummary"
+        (toggleMenu)="onMenuOptionClick($event)"
+      >
+      </app-meeting-summary>
+    } @empty {
+      <p class="empty-state">
+        This committee does not have any meetings as of now
+      </p>
+    }
+  </div>
+</div>

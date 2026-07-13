@@ -1,0 +1,28 @@
+<div class="available-screen" (click)="closeMenuOptionsIfOpen()">
+  @if (showMenuOptions) {
+    <div
+      class="menu-options"
+      [class.hidden]="!showMenuOptions"
+      [style.top.px]="dropdownTop"
+      [style.right.px]="dropdownRight"
+    >
+      <div class="menu-option" (click)="onEditOptionClick($event)">Edit</div>
+      <div class="menu-option">Minute</div>
+    </div>
+  }
+
+  @if (memberDetailsLoaded) {
+    <div class="heading">Member Lists</div>
+
+    <div class="member-summaries">
+      @for (memberDetail of memberDetails; track memberDetail.memberId) {
+        <app-member-summary
+          [memberDetail]="memberDetail"
+          (toggleMenu)="onMenuOptionClick($event)"
+        ></app-member-summary>
+      }
+    </div>
+    } @else {
+	<span class="loader"></span>
+    }
+</div>

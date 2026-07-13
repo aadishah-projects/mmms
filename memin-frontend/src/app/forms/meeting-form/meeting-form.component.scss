@@ -1,0 +1,556 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+.main-dialog {
+  width: 90vw;
+  max-width: 1000px;
+  height: 80vh;
+  max-height: 700px;
+  background: colors.$color-background-card;
+  border: 1px solid colors.$color-border-primary;
+  padding: 0px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+
+  &[open] {
+    display: flex; //flex container only when the dialog is open
+  }
+
+  //if we keep display: flex outside, the dialog content will be shown even when the dialog is closed
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+  }
+}
+
+.panel-header {
+  border-bottom: 1px solid colors.$color-border-primary;
+}
+
+
+//----------------------------------LEFT PANEL -------------------------------------
+
+.invitee-selection-panel {
+  flex: 1;
+  background: colors.$color-background-main;
+  border-right: 1px solid colors.$color-border-primary;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.invitee-selection-container {
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  padding: 16px;
+  overflow: auto;
+  margin-bottom: 20px;
+}
+
+.search-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  input {
+    font-family: Roboto, "Baloo", sans-serif;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: colors.$color-background-input;
+    border: 1px solid colors.$color-border-primary;
+    border-radius: 6px;
+    color: colors.$color-text-primary;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    margin-bottom: 16px;
+
+    &::placeholder {
+      color: colors.$color-text-muted;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: colors.$color-border-focus;
+      background: colors.$color-background-input-hover;
+      box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+    }
+
+    &:hover:not(:focus) {
+      border-color: colors.$color-background-input;
+      background: colors.$color-background-input-hover;
+    }
+  }
+}
+
+.selected-invitees-section {
+  margin-bottom: 20px;
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: colors.$text-main-color;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid colors.$color-border-primary;
+  }
+
+  .selected-invitees-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    gap: 8px;
+  }
+}
+
+.selected-invitee-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(88, 101, 242, 0.1);
+  }
+
+  .member-info {
+    flex: 1;
+  }
+
+  .selected-name {
+    color: colors.$text-select-highlight;
+    font-weight: 500;
+    font-size: constants.$font-normal;
+  }
+}
+
+.unselected-invitees-section {
+  margin-bottom: 12px;
+  scrollbar-gutter: stable;
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: colors.$color-text-secondary;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid colors.$color-border-primary;
+  }
+}
+
+.available-invitees {
+  flex: 1;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: colors.$color-border-primary;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: colors.$color-background-input;
+  }
+}
+
+.available-invitee-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(88, 101, 242, 0.1);
+  }
+
+  .member-name {
+    color: colors.$color-text-secondary;
+    font-size: 1rem;
+    flex: 1;
+  }
+}
+
+.role-select {
+  padding: 8px 14px;
+  background: colors.$color-background-input;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 4px;
+  color: colors.$color-text-primary;
+  font-size: constants.$font-normal;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+
+  &:focus {
+    outline: none;
+    border-color: colors.$color-border-focus;
+    background: colors.$color-background-input-hover;
+  }
+
+  &:hover:not(:focus) {
+    background: colors.$color-background-input-hover;
+  }
+
+  option {
+    background: colors.$color-background-input;
+    color: colors.$color-text-primary;
+  }
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: colors.$color-button-disabled-text;
+  font-size: 1rem;
+  font-style: italic;
+  padding: 40px 0px;
+}
+
+//----------------------------------RIGHT PANEL -------------------------------------
+
+.meeting-details-panel {
+  flex: 1.8;
+  background: colors.$color-background-card;
+  display: flex;
+  flex-direction: column;
+  // overflow: hidden;
+}
+
+.save-button {
+  position: absolute;
+  right: 15px;
+  top: 25px;
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  //have two form groups in a row share the space equally
+  &.half-width {
+    flex: 1;
+  }
+}
+
+/* Custom Dropdown Styles */
+.custom-dropdown {
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+  input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: colors.$color-background-input;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.dropdown-option {
+  padding: 10px 16px;
+  cursor: pointer;
+  color: colors.$color-text-primary;
+  transition: background 0.2s ease;
+  border: 1px solid colors.$color-border-primary;
+
+  &:hover:not(.disabled) {
+    background: colors.$color-background-input-hover;
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    color: colors.$color-text-muted;
+  }
+
+  a {
+    color: white;
+  }
+}
+
+.form-element-pair {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  .form-group {
+    min-width: 0; //without this the form-group(title and held place) overflows in flex layout in mobile layout
+    width: 50%;
+  }
+
+  .plus-button {
+    padding: 5px 10px;
+  }
+}
+
+.form-input {
+  padding: 12px 16px;
+  background: colors.$color-background-input;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  color: colors.$color-text-primary;
+  font-size: constants.$font-normal;
+  font-family: inherit;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: colors.$color-text-muted;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: colors.$color-border-focus;
+    background: colors.$color-background-input-hover;
+  }
+
+  &:hover:not(:focus) {
+    border-color: colors.$color-background-input;
+    background: colors.$color-background-input-hover;
+  }
+}
+
+//so that the + and the lable are aligned vertically
+.form-element-pair > label {
+  padding-top: 8px;
+}
+
+.decision-item > textarea,
+.agenda-item > textarea {
+  box-sizing: border-box !important;
+  width: 100%;
+}
+
+.next-button {
+  display: none;
+}
+
+textarea:has(+ .field-error),
+input:has(+ .field-error),
+select:has(+ .field-error) {
+  border: 1px solid colors.$color-text-error !important;
+}
+
+.form-input[type="date"],
+.form-input[type="time"] {
+  //render calendar in dark mode
+  color-scheme: dark;
+}
+
+//Customizing the Calendar Icon
+.form-input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.form-input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+
+//////////////////////////////////////
+//migrating from global styles
+.actual-form {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: colors.$color-background-card;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: colors.$color-border-primary;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: colors.$color-background-input;
+  }
+}
+
+
+.field-error{
+  color: colors.$color-text-error;
+  font-size: constants.$font-medium;
+  font-weight: constants.$font-weight-medium;
+  margin: 0;
+  padding: 0.25rem 0;
+}
+
+//astrick in forms
+.required-astrick {
+  color: colors.$color-text-error;
+  padding-left: 4px;
+  font-size: 0.9rem;
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+
+
+form label, .data-label {
+  font-size: constants.$font-small;
+  font-weight: constants.$font-weight-medium;
+  color: colors.$color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+
+.form-input {
+  padding: 12px 20px;
+  background: colors.$color-background-input;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  color: colors.$color-text-primary;
+  font-size: constants.$font-normal;
+  font-family: inherit;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: colors.$color-text-muted;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: colors.$color-border-focus;
+    background: colors.$color-background-input-hover;
+    box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+  }
+
+  &:hover:not(:focus) {
+    border-color: colors.$color-background-input;
+    background: colors.$color-background-input-hover;
+  }
+
+  &.error {
+    border-color: colors.$color-text-error;
+  }
+}
+
+
+//heading section of the form
+.panel-header {
+  padding: 10px;
+  border-bottom: 1px solid #202225;
+  background: colors.$color-background-input;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+  //padding for the header for left and right is kept same as padding for .actual-form
+  padding: 20px 15px;
+
+
+  h2 {
+    font-size: constants.$font-xl;
+    font-weight: constants.$font-weight-semibold;
+    color: colors.$color-text-primary;
+    margin: 0 0 4px 0;
+    line-height:1; 
+  }
+
+  .panel-subtitle {
+    font-size: constants.$font-medium;
+    color: colors.$color-text-secondary;
+    margin: 0;
+    line-height: 1.3;
+  }
+}
+
+
+
+////////////////////////////////////////////////////
+// MOBILE RESPONSIVE STYLES
+
+@media (max-width: 768px) {
+  .invitee-selection-panel,
+  .meeting-details-panel {
+    display: none;
+  }
+
+  .main-dialog {
+    width: 90vw;
+    border-radius: 8px;
+  }
+
+  .activePartInMobileView {
+    min-width: 0; //without this this flexitem expands to accomodate its content and hence its child (.actual-form) overflows dialog in width
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  .panel-subtitle {
+    display: none;
+  }
+
+  .actual-form {
+    min-width: 0;
+    flex-grow: 1;
+    padding-bottom: 20px;
+    overflow: auto;
+  }
+
+  .next-button,
+  .save-button {
+    display: block; //make next button visible in movile view
+    position: absolute;
+    //15px because the actual form has padding-right of 15px wrt dialog
+    right: 15px;
+    top: 15px;
+    font-size: 14px;
+    padding: 5px 10px;
+  }
+
+  .plus-button {
+    padding: 2px 6px !important;
+  }
+}

@@ -1,0 +1,99 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+
+.loader-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 70vh; 
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  gap: 20px;
+  padding-right: 20px;
+}
+
+.heading {
+  font-size: constants.$font-xxl;
+  font-weight: constants.$font-weight-semibold;
+}
+
+.sort-dropdown {
+  gap: 20px;
+  appearance: none;
+  padding: 8px 8px;
+  border-radius: 4px;
+  border: 1px solid colors.$color-border-primary;
+  background-color: colors.$color-background-main;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  color: colors.$color-text-primary;
+  font-family: Roboto;
+
+  &:hover {
+    border-color: colors.$color-border-focus;
+  }
+
+  &:focus {
+    border-color: colors.$color-border-focus;
+  }
+}
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, max-content));  //max-content prevents the cards to grow beyond its natural size
+  justify-content: start;
+  gap: 20px;
+  scrollbar-gutter: stable;
+  margin-right: 20px;
+}
+
+.menu-options {
+  cursor: pointer;
+  position: fixed;
+  z-index: 9999;
+  width: 100px;
+  font-size: constants.$font-large;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  background: colors.$color-background-main;
+  border-radius: 4px;
+  gap: 20px;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.2s ease-in-out,
+    visibility 0.2s ease-in-out;
+
+  .hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .menu-option {
+    text-align: left;
+    color: colors.$color-text-primary;
+    font-weight: constants.$font-weight-normal;
+  }
+
+  .menu-option:hover {
+    color: white;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .summaryCards {
+    margin-right: 0;
+    padding-bottom: 20px;
+  }
+}
+
+

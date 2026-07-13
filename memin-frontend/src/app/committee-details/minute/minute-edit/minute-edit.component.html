@@ -1,0 +1,175 @@
+<div class="minute-edit-container">
+  <div class="panel-header">
+    <div class="pair">
+      <h2>Edit Minute</h2>
+      @if (minuteDataService.hasDataChanged()) {
+        <button class="btn btn-primary" (click)="onSubmit()">Save</button>
+      }
+    </div>
+    <p class="panel-subtitle">Update meeting minute details and decisions</p>
+  </div>
+
+  <form class="actual-form">
+    <div class="form-group">
+      <label for="committee-name">Committee Name</label>
+      <input
+        #committeeNameElement="ngModel"
+        id="committee-name"
+        type="text"
+        [(ngModel)]="minuteData().committeeName"
+        placeholder="Enter committee name"
+        class="form-input"
+        name="committeeName"
+        autocomplete="off"
+      />
+      @if (
+        (committeeNameElement.touched && committeeNameElement.dirty) ||
+        showAllErrors
+      ) {
+        @if (minuteData().committeeName.trim().length < 1) {
+          <p class="field-error">(Committee name is required)</p>
+        }
+      }
+    </div>
+
+    <div class="form-group">
+      <label for="committee-description">Committee Description</label>
+      <textarea
+        #committeeDescriptionElement="ngModel"
+        id="committee-description"
+        [(ngModel)]="minuteData().committeeDescription"
+        placeholder="Enter committee description/aim "
+        class="form-textarea"
+        name="committeeDescription"
+      ></textarea>
+
+      @if (
+        (committeeDescriptionElement.touched &&
+          committeeDescriptionElement.dirty) ||
+        showAllErrors
+      ) {
+        @if (minuteData().committeeDescription.trim().length < 1) {
+          <p class="field-error">(Committee description is required)</p>
+        }
+      }
+    </div>
+
+    <div class="form-element-pair">
+      <div class="form-group">
+        <label for="meeting-date">Meeting Date</label>
+        <input
+          #meetingDateElement="ngModel"
+          id="meeting-date"
+          type="date"
+          [(ngModel)]="minuteData().meetingHeldDate"
+          class="form-input"
+          name="meetingHeldDate"
+        />
+        @if (meetingDateElement.touched && meetingDateElement.dirty) {
+          @if (
+            minuteData().meetingHeldDate.trim().length < 1 || showAllErrors
+          ) {
+            <p class="field-error">(Meeting Date is required)</p>
+          }
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="meeting-held-time">Meeting Time</label>
+        <input
+          #meetingTimeElement="ngModel"
+          id="meeting-held-time"
+          type="time"
+          [(ngModel)]="minuteData().meetingHeldTime"
+          placeholder="Meeting time"
+          class="form-input"
+          name="meetingHeldTime"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="meeting-held-place">Meeting Place</label>
+      <input
+        #meetingPlaceElement="ngModel"
+        id="meeting-held-place"
+        type="text"
+        [(ngModel)]="minuteData().meetingHeldPlace"
+        placeholder="Enter meeting held place"
+        class="form-input"
+        name="meetingHeldPlace"
+        autocomplete="off"
+        required
+      />
+      @if (
+        (meetingPlaceElement.touched && meetingPlaceElement.dirty) ||
+        showAllErrors
+      ) {
+        @if (
+          meetingPlaceElement.errors && meetingPlaceElement.errors["required"]
+        ) {
+          <p class="field-error">(Meeting place is required)</p>
+        }
+      }
+    </div>
+
+    <div class="form-group">
+      <div class="pair">
+        <label>Agendas</label>
+        <button
+          class="btn btn-primary plus-button"
+          (click)="createEmptyAgenda()"
+        >
+          +
+        </button>
+      </div>
+      <div class="decisions-list">
+        @for (agenda of minuteData().agendas; track agenda.agendaId) {
+          <div class="decision-item">
+            <input
+              #agendaInputFields
+              [(ngModel)]="agenda.agenda"
+              placeholder="Double click to delete"
+              class="form-input"
+              [name]="'agenda-' + agenda.agendaId"
+              autocomplete="off"
+              (dblclick)="deleteAgenda(agenda.agendaId)"
+            />
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="pair">
+        <label>Decisions</label>
+        <button
+          class="btn btn-primary plus-button"
+          (click)="createEmptyDecision()"
+        >
+          +
+        </button>
+      </div>
+      <div class="decisions-list">
+        @for (decision of minuteData().decisions; track decision.decisionId) {
+          <div class="decision-item">
+            <input
+              #decisionInputFields
+              [(ngModel)]="decision.decision"
+              placeholder="Enter decision"
+              class="form-input"
+              [name]="'decision-' + decision.decisionId"
+              autocomplete="off"
+              (dblclick)="deleteDecision(decision.decisionId)"
+            />
+          </div>
+        }
+
+        @if (hasNoNonEmptyDecisions()) {
+          <p class="field-error">(Add at least one non-empty decision)</p>
+        }
+      </div>
+    </div>
+  </form>
+</div>

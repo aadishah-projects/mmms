@@ -1,0 +1,20 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.committee-members-summary-heading {
+  font-size: 13px;
+  padding-top: 2px;
+  font-weight: 600;
+  color: colors.$text-main-color;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+  padding-left: 3px;
+}
+

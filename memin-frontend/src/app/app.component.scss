@@ -1,0 +1,59 @@
+@use "constants" as constants;
+
+.total-screen {
+  height: calc(100vh - constants.$header-height);
+  margin-top: constants.$header-height;
+}
+
+app-sidebar {
+  width: constants.$sidebar-width;
+  border-right: 1px solid #202225;
+}
+
+.main-content {
+  box-sizing: border-box;   //as height is set to 100% ie takes all height of .total-screen, the extra padding causes overflow which is then hidden by the parent which is .total-screen
+  margin-left: constants.$sidebar-width;
+  padding-left: 25px;
+  padding-top: 16px;
+  height: 100%;
+  padding-bottom: 20px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.main-content.login-page {
+  margin-left: 0;
+}
+
+//work around for hiding scrollbar in /overview/minute
+//removing this introduces an extra scrollbar in /overview/minute
+.main-content:has(app-minute-view) {
+    overflow: hidden;
+}
+
+////////////////////////////////////////////////////
+// MOBILE RESPONSIVE STYLES
+
+@media (max-width: 768px) {
+  .total-screen {
+    height: calc(
+      100vh - 56px - 60px - 20px
+    ); //leaving out space for header and menu and slight padding for bottom(padding-bottom isn't working idk why)
+  }
+
+  app-sidebar {
+    width: 100vw;
+    border-right: none; //overriding from desktop view
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 12px;
+  }
+
+  .main-content.login-page {
+    padding-bottom: 0;
+  }
+}

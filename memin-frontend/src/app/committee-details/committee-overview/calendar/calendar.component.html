@@ -1,0 +1,54 @@
+<div class="calendar-container">
+  <div class="header">
+    <span class="heading"> Meeting Calendar</span>
+    <div class="year-selector">
+      <!-- <label for="yearSelect">Select Year:</label> -->
+      <select id="yearSelect" [(ngModel)]="selectedYear">
+        @for (year of years; track $index) {
+          <option [value]="year">{{ year }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="calendar">
+    @for (month of months; track $index) {
+      <div class="month">
+        <h3 class="month-name">{{ getMonthName(month) }}</h3>
+        <div class="days">
+          @for (day of getDaysInMonth(selectedYear, month); track $index) {
+            <div
+              class="day"
+              [class.meeting]="isMeeting(day)"
+              [class.today]="isToday(day)"
+              (click)="onMeetingDateClick(day)"
+            >
+              {{ day.getDate() }}
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Meeting Popup -->
+@if (showPopup) {
+  <div class="popup-overlay" (click)="closePopup()">
+    <div class="popup-content" (click)="$event.stopPropagation()">
+      <div class="popup-header">
+        <h3>Meetings on {{ popupDate }}</h3>
+        <button class="close-btn" (click)="closePopup()">&times;</button>
+      </div>
+      <div class="popup-body">
+        @for (meeting of popupMeetings; track meeting.id) {
+          <div class="meeting-item" (click)="goToMeeting(meeting.id)">
+            <span class="meeting-title">{{ meeting.title }}</span>
+            <span class="meeting-time">{{ formatTime(meeting.heldTime) }}</span>
+            <span class="meeting-place">{{ meeting.heldPlace }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

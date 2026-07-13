@@ -1,0 +1,248 @@
+<div class="sidebar">
+  <nav class="sidebar-nav">
+    <a
+      href="#"
+      class="nav-item"
+      routerLink="home/my-committees"
+      routerLinkActive="selected"
+    >
+      <svg
+        class="icon"
+        fill="none"
+        width="18px"
+        height="18px"
+        viewBox="0 0 16 16"
+        stroke="white"
+        routerLinkActive="icon-selected"
+	  title="My Committees"
+      >
+        <g id="SVGRepo_bgCarrier" stroke-width="0" />
+
+        <g
+          id="SVGRepo_tracerCarrier"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+
+        <g id="SVGRepo_iconCarrier">
+          <path
+            d="M1 6V15H6V11C6 9.89543 6.89543 9 8 9C9.10457 9 10 9.89543 10 11V15H15V6L8 0L1 6Z"
+            fill="none"
+          />
+        </g>
+      </svg>
+
+      <span class="nav-text">My Committees</span>
+    </a>
+
+    @if (canWrite) {
+    <a
+      href="#"
+      class="nav-item"
+      routerLink="home/create-committee"
+      routerLinkActive="selected"
+    >
+      <svg
+        class="icon create-committee"
+        viewBox="0 0 64 64"
+        stroke-width="2"
+        stroke="white"
+        width="35px"
+        height="35px"
+        fill="none"
+        routerLinkActive="icon-selected"
+      >
+        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+        <g
+          id="SVGRepo_tracerCarrier"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ></g>
+        <g id="SVGRepo_iconCarrier">
+          <circle cx="31.89" cy="22.71" r="5.57"></circle>
+          <path
+            d="M43.16,43.74A11.28,11.28,0,0,0,31.89,32.47h0A11.27,11.27,0,0,0,20.62,43.74Z"
+          ></path>
+          <circle cx="48.46" cy="22.71" r="5.57"></circle>
+          <path
+            d="M46.87,43.74H59.73A11.27,11.27,0,0,0,48.46,32.47h0a11.24,11.24,0,0,0-5.29,1.32"
+          ></path>
+          <circle cx="15.54" cy="22.71" r="5.57"></circle>
+          <path
+            d="M17.13,43.74H4.27A11.27,11.27,0,0,1,15.54,32.47h0a11.24,11.24,0,0,1,5.29,1.32"
+          ></path>
+        </g>
+      </svg>
+      <span class="nav-text">Create Committee</span>
+    </a>
+
+    <a
+      href="#"
+      class="nav-item"
+      routerLink="home/create-member"
+      routerLinkActive="selected"
+    >
+      <svg
+        fill="white"
+        class="icon"
+        height="20px"
+        width="20px"
+        viewBox="0 0 328.5 328.5"
+        routerLinkActive="icon-selected"
+      >
+        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+        <g
+          id="SVGRepo_tracerCarrier"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ></g>
+        <g id="SVGRepo_iconCarrier">
+          <g>
+            <g>
+              <polygon
+                points="96.333,150.918 96.333,135.918 55.667,135.918 55.667,95.251 40.667,95.251 40.667,135.918 0,135.918 0,150.918 40.667,150.918 40.667,191.583 55.667,191.583 55.667,150.918 "
+              ></polygon>
+              <path
+                d="M259.383,185.941H145.858c-38.111,0-69.117,31.006-69.117,69.117v39.928H328.5v-39.928 C328.5,216.948,297.494,185.941,259.383,185.941z M313.5,279.987H91.741v-24.928c0-29.84,24.276-54.117,54.117-54.117h113.524 c29.84,0,54.117,24.277,54.117,54.117L313.5,279.987L313.5,279.987z"
+              ></path>
+              <path
+                d="M202.621,178.84c40.066,0,72.662-32.597,72.662-72.663s-32.596-72.663-72.662-72.663s-72.663,32.596-72.663,72.663 S162.555,178.84,202.621,178.84z M202.621,48.515c31.795,0,57.662,25.867,57.662,57.663s-25.867,57.663-57.662,57.663 c-31.796,0-57.663-25.868-57.663-57.663S170.825,48.515,202.621,48.515z"
+              ></path>
+            </g>
+          </g>
+        </g>
+      </svg>
+
+      <span class="nav-text">Create Member</span>
+    </a>
+
+    <a
+      href="#"
+      class="nav-item"
+      routerLink="home/create-meeting"
+      routerLinkActive="selected"
+    >
+      <svg
+        class="icon"
+        width="25px"
+        height="25px"
+        viewBox="0 0 512 512"
+        stroke="white"
+        fill="white"
+        routerLinkActive="icon-selected"
+      >
+        <path
+          d="M384,224V408a40,40,0,0,1-40,40H104a40,40,0,0,1-40-40V168a40,40,0,0,1,40-40H271.48"
+          style="
+            fill: none;
+            stroke: white;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 20px;
+          "
+        />
+        <path
+          d="M459.94,53.25a16.06,16.06,0,0,0-23.22-.56L424.35,65a8,8,0,0,0,0,11.31l11.34,11.32a8,8,0,0,0,11.34,0l12.06-12C465.19,69.54,465.76,59.62,459.94,53.25Z"
+        />
+        <path
+          d="M399.34,90,218.82,270.2a9,9,0,0,0-2.31,3.93L208.16,299a3.91,3.91,0,0,0,4.86,4.86l24.85-8.35a9,9,0,0,0,3.93-2.31L422,112.66A9,9,0,0,0,422,100L412.05,90A9,9,0,0,0,399.34,90Z"
+        />
+      </svg>
+
+      <span class="nav-text">Create Meeting</span>
+    </a>
+    }
+
+    <a
+      href="#"
+      class="nav-item"
+      routerLink="home/archives"
+      routerLinkActive="icon-selected"
+    >
+      <svg
+        class="icon"
+        height="22px"
+        width="22px"
+        viewBox="0 0 32 32"
+        fill="none"
+        stroke="currentcolor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        routerLinkActive="icon-selected"
+      >
+        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+        <g
+          id="SVGRepo_tracerCarrier"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ></g>
+        <g id="SVGRepo_iconCarrier">
+          <path
+            d="M4 28 L28 28 30 12 14 12 10 8 2 8 Z M28 12 L28 4 4 4 4 8"
+          ></path>
+        </g>
+      </svg>
+      <span class="nav-text">View Archives</span>
+    </a>
+    <a
+      href="#"
+      class="nav-item"
+      routerLink="home/members-list"
+      routerLinkActive="selected"
+    >
+      <svg
+        class="icon"
+        viewBox="0 0 25 25"
+        width="28px"
+        height="28px"
+        routerLinkActive="icon-selected"
+      >
+        <g id="SVGRepo_bgCarrier" stroke-width="1"></g>
+        <g
+          id="SVGRepo_tracerCarrier"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ></g>
+        <g id="SVGRepo_iconCarrier">
+          <path
+            d="M10.5 4.5V8.5H6.5M10.5 4.5H18.5V20.5H6.5V8.5L10.5 4.5Z"
+            stroke="white"
+            stroke-width="1"
+          ></path>
+          <path d="M16 12H12.5H9" stroke="white" stroke-width="1.2"></path>
+          <path d="M14 15H12.5H9" stroke="white" stroke-width="1.2"></path>
+        </g>
+      </svg>
+      <span class="nav-text">Members List</span>
+    </a>
+
+    @if (userRole === 'DEPARTMENT_HEAD') {
+    <a
+      href="#"
+      class="nav-item"
+      routerLink="home/manage-users"
+      routerLinkActive="selected"
+    >
+      <svg
+        class="icon"
+        viewBox="0 0 24 24"
+        width="20px"
+        height="20px"
+        fill="none"
+        stroke="white"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        routerLinkActive="icon-selected"
+      >
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+      <span class="nav-text">Manage Users</span>
+    </a>
+    }
+  </nav>
+</div>

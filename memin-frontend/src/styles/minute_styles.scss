@@ -1,0 +1,189 @@
+@use "constants" as constants;
+@use "colors" as colors;
+
+#a4-box {
+  font-family: Roboto, "Annapurna", sans-serif;
+  line-height: 1.8rem;
+  background: white;
+  color: black;
+  width: constants.$minute-width;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 30mm 20mm;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+p,
+li,
+td,
+th {
+  line-height: 1.6;
+}
+
+ol {
+  list-style-position: outside; /* number stays outside */
+}
+
+li {
+  text-indent: -1.5em; /* pulls first line back */
+  padding-left: 1.5em; /* pushes the text block forward */
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  // border: 1px solid black;
+  border: 1px solid colors.$color-border-primary;
+  text-align: left;
+  white-space: nowrap; /* Prevents line wrapping in narrow columns */
+}
+
+th:last-child,
+td:last-child {
+  width: 100%; /* Take up the remaining space */
+  white-space: normal; /* Allow wrapping in signature column */
+}
+
+.heading {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+ol {
+  padding-left: 1.2rem;
+}
+
+.justify-text {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.decision,
+.agenda {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+}
+
+.introduction,
+.decisions,
+.memberships,
+.agendas {
+  margin: 8px;
+}
+
+li,
+ol {
+  margin: 0;
+}
+
+.agenda-lists,
+.decision-lists {
+  margin-left: 13px;
+}
+
+@media (max-width: 768px) {
+  #a4-box {
+    margin: 0;
+    padding: 25px;
+    font-size: 7.5px;
+    width: 90vw !important;
+    min-height: calc(90vw * 1.414) !important; /* maintain A4 aspect ratio */
+    overflow-y: auto; /* scroll if content is too long */
+  }
+}
+
+/* Print styles */
+// @media print {
+
+//   #a4-box {
+//     position: absolute;
+//     left: 0;
+//     font-size: constants.$font-normal;
+//     top: 0;
+//     width: 210mm;
+//     min-height: auto;
+//     margin: 0;
+//     padding: 20mm;
+//     box-shadow: none;
+//     page-break-after: auto;
+//   }
+
+//   /* Prevent page breaks inside these elements */
+//   table,
+//   tr,
+//   td,
+//   th {
+//     page-break-inside: avoid;
+//   }
+
+//   .introduction,
+//   .memberships,
+//   .agendas,
+//   .decisions {
+//     page-break-inside: avoid;
+//   }
+
+//   /* Allow page breaks between list items if needed */
+//   li {
+//     page-break-inside: avoid;
+//   }
+
+//   /* Ensure proper page sizing */
+//   @page {
+//     size: A4;
+//   }
+// }
+
+// //FOR PRINTING MINUTE
+
+// @media print {
+//   /* 1. Hide everything in the body */
+
+//   @page {
+//     size: A4;
+//     margin: 25mm;
+//   }
+//   body * {
+//     visibility: hidden;
+//     margin: 0 !important;
+//   }
+
+//   //withinout this there is some margin/padding
+//   .main-content {
+//     margin: 0 !important;
+//     padding: 0 !important;
+//   }
+
+//   /* 2. Make the target div and its children visible */
+//   #a4-box,
+//   #a4-box * {
+//     visibility: visible;
+//   }
+
+//   /* 3. Position the target div at the top-left of the paper */
+//   #a4-box {
+//     position: absolute;
+//     box-shadow: none;
+//     // margin: 0 !important;
+//     // padding: 0 !important;
+//   }
+// }

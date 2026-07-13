@@ -1,0 +1,55 @@
+<div class="available-screen" (click)="closeMenuOptionsIfOpen()">
+    <div class="header-container">
+      <div class="heading">Active Committees</div>
+      <select
+        class="sort-dropdown"
+        (change)="onSortChange($event)"
+        [(ngModel)]="sortBy"
+      >
+        <option value="createdDate">Sort by Date</option>
+        <option value="title">Sort by Title</option>
+      </select>
+    </div>
+  @if (showMenuOptions) {
+    <div
+      class="menu-options"
+      [class.hidden]="!showMenuOptions"
+      [style.top.px]="dropdownTop"
+      [style.right.px]="dropdownRight"
+    >
+      <div class="menu-option" (click)="onEditOptionClick($event)">Edit</div>
+      <div class="menu-option" (click)="onNewMeetingClick($event)">
+        New Meeting
+      </div>
+      <div class="menu-option" (click)="onOverviewOptionClick($event)">
+        Overview
+      </div>
+      <div class="menu-option" (click)="onSummaryOptionClick($event)">
+        Summary
+      </div>
+      <div class="menu-option" (click)="onArchiveOptionClick($event)">
+        Archive
+      </div>
+    </div>
+  }
+
+  @if (hasCommitteesLoaded) {
+    <div class="summaryCards">
+      @for (summary of committeeSummaries; track summary.id) {
+        <app-committee-summary
+          [committeeSummary]="summary"
+          class="summaryCard"
+          routerLink="/committee-details/overview"
+          [queryParams]="{ committeeId: summary.id }"
+          (toggleMenu)="onMenuOptionClick($event)"
+        ></app-committee-summary>
+      } @empty {
+        <p>There isn't any committee available yet, create a new one please</p>
+      }
+    </div>
+  } @else {
+    <div class="loader-wrapper">
+        <span class="loader"></span>
+    </div>
+  }
+</div>

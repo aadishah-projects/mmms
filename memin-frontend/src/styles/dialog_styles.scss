@@ -1,0 +1,35 @@
+////////////////////////////////////////////////////////////////////////
+// *** DONOT CHANGE THIS FILE AS IT WILL AFFECT ALL DIALOGS THROUGHOUT THE APP **/////////////////////////////////////////////////////////////////////
+
+/*
+  DESCRIPTION;
+  1. makes the dialog a flex @container
+  2. defines the background borders and shadows
+  3. blurs the backgrounds
+*/
+
+// .main-dialog {
+//   width: 90vw;
+//   max-width: 800px;
+//   height: 80vh;
+//   max-height: 700px;
+//   background: colors.$color-background-card;
+//   border: 1px solid colors.$color-border-primary;
+//   // border-radius: 8px;
+//   padding: 0px;
+//   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+//   overflow: hidden;
+
+//   &[open] {
+//     display: flex; //flex container only when the dialog is open
+//   }
+
+//   //if we keep display: flex outside, the dialog content will be shown even when the dialog is closed
+
+
+//   &::backdrop {
+//     background: rgba(0, 0, 0, 0.7);
+//     backdrop-filter: blur(4px);
+//   }
+// }
+

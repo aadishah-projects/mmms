@@ -1,0 +1,76 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang = "en" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <title>Meeting Minute</title>-->
+<!--    <link rel="stylesheet" th:if="${!download}"  th:href="@{http://localhost:8080/css/meeting_minute.css}">-->
+<!--    <link rel="preconnect" href="https://fonts.googleapis.com">-->
+<!--    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>-->
+<!--    <link href="https://fonts.googleapis.com/css2?family=Martel:wght@200;300;400;600;700;800;900&display=swap" rel="stylesheet">-->
+<!--</head>-->
+<!--<body class="nepali">-->
+<link rel="stylesheet" th:if="${!download}"  th:href="@{http://localhost:8080/css/meeting_minute.css}">
+<div id="a4-box">
+    <div class="introduction justify-text">
+        <p class="introduction-body">
+            आज मिति <span th:text="${meetingHeldDate}">Date</span>
+            (<span th:text="${meetingHeldDateEnglish}"></span>),
+            <span th:text="${meetingHeldDay}">Day</span>
+            <span th:text="${partOfDay}">Part of Day</span>
+            <span th:text="${meetingHeldTime}"></span> बजे,
+            <span th:text="${meetingHeldPlace}"></span> मा
+            <span th:text="${committeeDescription}"></span> का लागि गठित
+            <span th:text="${committeeName}"></span> समितिका
+            संयोजक <span th:text="${coordinatorFullName}">coordinator name</span>ज्यूको
+            संयोजकत्वमा बैठक बसी देहाय बमोजिमका छलफल तथा निर्णय गरियो।
+        </p>
+    </div>
+
+    <div class="memberships">
+
+        <h5 class="heading"><b>उपस्थितिः</b></h5>
+        <table border="2" cellspacing="0" cellpadding="5">
+            <thead>
+            <tr>
+                <th>क्र.सं.</th>
+                <th>नाम</th>
+                <th>पद</th>
+                <th>हस्ताक्षर</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="membership, iterStat : ${membershipsForMinute}">
+                <td th:text="${numUtils.toNepaliNumber(iterStat.index+1)}">५</td>
+                <td th:text="${membership.member.post + ' ' + membership.member.firstNameNepali + ' ' + membership.member.lastNameNepali}"></td>
+                <td th:text="${membership.role}">संयोजक</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="agendas" th:if="${!#lists.isEmpty(agendas)}">
+        <h5 class="heading"><b>प्रस्तावहरु:</b></h5>
+        <ol class="agenda-lists" style="list-style-type: none; padding-left: 0;">
+            <li th:each="agenda, iterStat : ${agendas}"
+                class="decision"
+                th:text="${numUtils.toNepaliNumber(iterStat.index + 1)} + '. ' + ${agenda.agenda}">
+                No Agendas
+            </li>
+        </ol>
+    </div>
+
+    <div class="decisions">
+        <h5 class="heading"><b>निर्णयहरूः</b></h5>
+        <ol class="decision-lists" style="list-style-type: none; padding-left: 0;">
+            <li th:each="decision, iterStat : ${decisions}"
+                class="decision"
+                th:text="${numUtils.toNepaliNumber(iterStat.index + 1)} + '. ' + ${decision.decision}">
+                No Decisions
+            </li>
+        </ol>
+    </div>
+</div>
+<!--</body>-->
+<!--</html>-->

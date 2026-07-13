@@ -1,0 +1,92 @@
+<dialog class="main-dialog" #global_search_dialog>
+
+  <input
+    [formControl]="searchBarFormControl"
+    class="search-bar form-input"
+    type="text"
+    placeholder="Search for committees, members, decisions and agendas"
+    autocomplete="off"
+    spellcheck="false"
+  />
+
+  @if (globalSearchResult) {
+    <div class="results">
+      @if (
+        globalSearchResult.committees &&
+        globalSearchResult.committees.length > 0
+      ) {
+        <div class="committees">
+          <div class="data-label">Committees</div>
+          @for (
+            committee of globalSearchResult.committees;
+            track committee.committeeId
+          ) {
+            <div
+              class="data"
+              routerLink="/committee-details/overview"
+              [queryParams]="{ committeeId: committee.committeeId }"
+              (click)="closeDialogNow()"
+            >
+              {{ committee.committeeName }}
+            </div>
+          }
+        </div>
+      }
+
+      @if (
+        globalSearchResult.members && globalSearchResult.members.length > 0
+      ) {
+        <div class="members">
+          <div class="data-label">Members</div>
+          @for (member of globalSearchResult.members; track member.memberId) {
+            <div
+              class="data"
+              routerLink="/home"
+              [queryParams]="{ memberId: member.memberId }"
+              (click)="closeDialogNow()"
+            >
+              {{ member.firstName + " " + member.lastName }}
+            </div>
+          }
+        </div>
+      }
+
+      @if (
+        globalSearchResult.decisions && globalSearchResult.decisions.length > 0
+      ) {
+        <div class="decisions">
+          <div class="data-label">Decisions</div>
+          @for (decision of globalSearchResult.decisions; track $index) {
+            <div
+              class="data"
+              routerLink="/committee-details/overview/minute"
+              [queryParams]="{ meetingId: decision.meetingId }"
+              (click)="closeDialogNow()"
+            >
+              {{ decision.decision }}
+            </div>
+          }
+        </div>
+      }
+
+      @if (
+        globalSearchResult.agendas && globalSearchResult.agendas.length > 0
+      ) {
+        <div class="agendas">
+          <div class="data-label">Agendas</div>
+          @for (agenda of globalSearchResult.agendas; track $index) {
+            <div
+              class="data"
+              routerLink="/committee-details/overview/minute"
+              [queryParams]="{ meetingId: agenda.meetingId }"
+              (click)="closeDialogNow()"
+            >
+              {{ agenda.agenda }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</dialog>
+

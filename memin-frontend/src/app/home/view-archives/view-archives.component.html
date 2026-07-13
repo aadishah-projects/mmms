@@ -1,0 +1,17 @@
+@if (hasCommitteesLoaded) {
+<div class="heading">Inactive Committees</div>
+  <div class="summaryCards">
+    @for (summary of committeeSummaries; track summary.id) {
+      <app-committee-summary
+        [committeeSummary]="summary"
+        class="summaryCard"
+        routerLink="/committee-details/overview"
+        [queryParams]="{ committeeId: summary.id }"
+      ></app-committee-summary>
+    } @empty {
+      <p>There isn't any committee available yet, create a new one please</p>
+    }
+  </div>
+  } @else {
+    <span class="loader"></span>
+  }

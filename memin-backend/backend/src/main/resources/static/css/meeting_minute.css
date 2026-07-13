@@ -1,0 +1,123 @@
+/*@media print {*/
+/*    body {*/
+/*        margin: 0;*/
+/*    }*/
+/*}*/
+
+@media print {
+    /* Hide everything on the page by default */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Make the #a4-box and all its children visible */
+    #a4-box, #a4-box * {
+        visibility: visible;
+    }
+
+    /* Position the #a4-box to fill the entire print page */
+    #a4-box {
+        position: absolute;
+        left: 0;
+        top: 0;
+        margin: 0;
+        padding: 1in; /* Optional: adds a standard print margin */
+        box-shadow: none; /* Remove the screen shadow for printing */
+        width: auto; /* Let it fit the page width */
+        height: auto; /* Let the height adjust to content */
+    }
+}
+
+
+/*body {*/
+/*    background: #f0f0f0;*/
+/*    margin: 0;*/
+/*    padding: 2rem;*/
+/*    line-height: 1.8rem;*/
+/*}*/
+
+/*body.english {*/
+/*    font-family: 'Times New Roman', 'serif';*/
+/*}*/
+
+/*body.nepali {*/
+/*    font-family: 'martel', 'Times New Roman', sans-serif;*/
+/*}*/
+
+#a4-box {
+
+    line-height: 1.8rem;
+
+
+    width: 210mm;
+    height: 297mm;
+    margin: 0 auto;
+    /*background: white;*/
+    padding: 30mm 20mm;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+}
+
+p, li, td, th {
+    line-height: 1.6;
+}
+
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px 12px;
+    border: 1px solid black;
+    text-align: left;
+    white-space: nowrap; /* Prevents line wrapping in narrow columns */
+}
+
+th:last-child,
+td:last-child {
+    width: 100%; /* Take up the remaining space */
+    white-space: normal; /* Allow wrapping in signature column */
+}
+
+.heading {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+ol {
+    padding-left: 1.2rem;
+}
+
+.justify-text {
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+
+.decision, .agenda {
+    margin-top:0;
+    margin-bottom:8px;
+}
+
+p {
+    margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+}
+
+.introduction, .decisions, .memberships, .agendas {
+    margin: 8px;
+}
+
+li,ol {
+    margin: 0;
+}
+
+.agenda-lists, .decision-lists {
+    margin-left: 13px;
+}

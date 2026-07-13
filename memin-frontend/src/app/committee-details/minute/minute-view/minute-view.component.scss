@@ -1,0 +1,184 @@
+@use "constants" as constants;
+@use "colors" as colors;
+
+:host {
+  height: 90vh;
+  overflow: auto;
+}
+
+.minute {
+  width: 210mm;
+  height: 297mm;
+  overflow-y: auto;
+}
+
+.menu-btn-container {
+  padding-bottom: 4px;
+  position: fixed;
+  right: 650px;
+  top: 80px;
+  .menu-btn {
+    cursor: pointer;
+    background: colors.$color-background-main;
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+    border: none;
+    bottom: 3px;
+    right: 0;
+    padding: 0 6px;
+
+    border-radius: 50%;
+  }
+
+  .menu-btn:hover {
+    background: colors.$color-card-hover;
+  }
+}
+
+.minute-options {
+  position: fixed;
+  right: 600px;
+  top: 110px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: colors.$color-background-main;
+  color: colors.$color-text-primary;
+  padding: 15px;
+  gap: 20px;
+  box-sizing: border-box;
+  font-size: constants.$font-normal;
+  border: 1px solid colors.$color-border-primary;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.2s ease-in-out,
+    visibility 0.2s ease-in-out;
+}
+
+.minute-options.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.option:hover {
+  color: colors.$text-select-highlight;
+  cursor: pointer;
+}
+
+//for dialog while changing the order of meeting participants
+
+.main-dialog {
+  width: 500px;
+  height: fit-content;
+  max-height: 600px;
+  padding: 20px;
+  border-radius: 10px;
+  outline: none;
+  background: colors.$color-background-card;
+  border: 1px solid colors.$color-border-primary;
+  overflow: hidden;
+
+  &[open] {
+    display: flex; //flex container only when the dialog is open
+
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  //if we keep display: flex outside, the dialog content will be shown even when the dialog is closed
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+  }
+}
+
+.panel-header {
+  padding: 0;
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid colors.$color-border-primary;
+}
+
+.panel-subtitle {
+  color: colors.$color-text-muted;
+}
+
+.participants {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  gap: 20px;
+  padding-right: 10px;
+}
+
+.participant-info {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  height: 30px;
+  gap: 20px;
+  &:hover {
+    background: rgba(88, 101, 242, 0.1);
+  }
+}
+
+.participant-name {
+  color: colors.$color-text-primary;
+  flex-grow: 1;
+}
+
+.participant-role {
+  color: colors.$color-text-primary;
+}
+
+.panel-header {
+  color: colors.$color-text-primary;
+}
+
+//////////////////////////////////////////////////////
+//for drag and drop feature
+.drag-handle {
+  cursor: move;
+  margin-right: 10px;
+  color: #888;
+  font-size: 1.2rem;
+}
+
+// Style the ghost placeholder which appears when a member is lifted
+.custom-placeholder {
+  background: colors.$color-card-hover;
+  border: 2px dashed #999;
+  min-height: 60px;
+  opacity: 0.5;
+}
+
+
+
+@media (max-width: 768px) {
+  .minute {
+    width: 90vw !important;
+    height: calc(90vw * 1.414) !important; /* maintain A4 aspect ratio */
+    min-height: 95vh; /* avoid overflowing screen */
+    overflow-y: auto; /* scroll if content is too long */
+  }
+
+  .menu-btn-container {
+      padding-bottom: 0px;
+      position: fixed;
+      top: 80px;
+      right: 30px;
+      font-size: 5px;
+  }
+  .minute-options {
+      position: fixed;
+      top: 110px;
+      right: 30px;
+  }
+}

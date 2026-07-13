@@ -1,0 +1,113 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2 class="register-title">Create Account</h2>
+    <h3 class="register-sub-title">Join MeMin to organize your meetings!</h3>
+
+    @if (errorMessage) {
+      <div class="error-banner">
+        {{ errorMessage }}
+      </div>
+    }
+
+    <form class="register-form" [formGroup]="formData" (ngSubmit)="onSubmit()">
+      
+      <div class="input-row">
+        <div class="input-group half">
+          <label>First Name<span class="required-astrick">*</span></label>
+          <input
+            type="text"
+            formControlName="firstName"
+            class="form-input"
+            [class.error]="f['firstName'].touched && f['firstName'].invalid"
+            spellcheck="false"
+          />
+          @if ((f['firstName'].touched && f['firstName'].dirty) || showAllErrors) {
+            @if (f['firstName'].errors?.['required']) {
+              <p class="field-error">First name is required</p>
+            }
+          }
+        </div>
+
+        <div class="input-group half">
+          <label>Last Name<span class="required-astrick">*</span></label>
+          <input
+            type="text"
+            formControlName="lastName"
+            class="form-input"
+            [class.error]="f['lastName'].touched && f['lastName'].invalid"
+            spellcheck="false"
+          />
+          @if ((f['lastName'].touched && f['lastName'].dirty) || showAllErrors) {
+            @if (f['lastName'].errors?.['required']) {
+              <p class="field-error">Last name is required</p>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Username<span class="required-astrick">*</span></label>
+        <input
+          type="text"
+          formControlName="username"
+          class="form-input"
+          [class.error]="f['username'].touched && f['username'].invalid"
+          spellcheck="false"
+        />
+        @if ((f['username'].touched && f['username'].dirty) || showAllErrors) {
+          @if (f['username'].errors?.['required']) {
+            <p class="field-error">Username is required</p>
+          } @else if (f['username'].errors?.['usernameImproperFormat']) {
+            <p class="field-error">Username must not have spaces or special symbols</p>
+          }
+        }
+      </div>
+
+      <div class="input-group">
+        <label>Password<span class="required-astrick">*</span></label>
+        <input
+          type="password"
+          formControlName="password"
+          class="form-input"
+          [class.error]="f['password'].touched && f['password'].invalid"
+          spellcheck="false"
+        />
+        @if ((f['password'].touched && f['password'].dirty) || showAllErrors) {
+          @if (f['password'].errors?.['required']) {
+            <p class="field-error">Password is required</p>
+          } @else if (f['password'].errors?.['minlength']) {
+            <p class="field-error">Password must be at least 5 characters</p>
+          }
+        }
+      </div>
+
+      <div class="input-group">
+        <label>Confirm Password<span class="required-astrick">*</span></label>
+        <input
+          type="password"
+          formControlName="confirmPassword"
+          class="form-input"
+          [class.error]="f['confirmPassword'].touched && f['confirmPassword'].invalid"
+          spellcheck="false"
+        />
+        @if ((f['confirmPassword'].touched && f['confirmPassword'].dirty) || showAllErrors) {
+          @if (f['confirmPassword'].errors?.['required']) {
+            <p class="field-error">Please confirm your password</p>
+          }
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="formData.invalid || isLoading || !token"
+      >
+        @if (isLoading) {
+          <span class="spinner"></span> Registering...
+        } @else {
+          Create Account
+        }
+      </button>
+    </form>
+  </div>
+</div>

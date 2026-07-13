@@ -1,0 +1,51 @@
+@if (summaryDataLoaded) {
+<div class="committee-info">
+  <div class="name">{{ committeeExtendedSummary.name }}</div>
+  <div class="description">{{ committeeExtendedSummary.description }}</div>
+</div>
+
+<div class="meetings">
+  @for ( meetingExtendedSummary of committeeExtendedSummary.meetings; track
+  meetingExtendedSummary.meetingId ) {
+  <div class="meeting">
+    <div class="meeting-info">
+      <div class="header">
+        {{ meetingExtendedSummary.meetingHeldDate }} ·
+        {{ meetingExtendedSummary.meetingHeldTime }} ·
+        {{ meetingExtendedSummary.meetingHeldPlace }}
+      </div>
+
+      @if ( meetingExtendedSummary.agendas &&
+      meetingExtendedSummary.agendas.length > 0 ) {
+      <div class="agendas">
+        <div class="data-label">Agendas</div>
+        @for (agenda of meetingExtendedSummary.agendas; track $index) {
+        <div class="agenda">{{ agenda }}</div>
+        }
+      </div>
+      }
+
+      <div class="decisions">
+        <div class="data-label">Decisions</div>
+        @for (decision of meetingExtendedSummary.decisions; track $index) {
+        <div class="decision">{{ decision }}</div>
+        }
+      </div>
+    </div>
+
+    <div class="invitees">
+      @if ( meetingExtendedSummary.inviteeNames &&
+      meetingExtendedSummary.inviteeNames.length > 0 ) {
+      <div class="data-label">Invitees</div>
+      @for ( inviteeName of meetingExtendedSummary.inviteeNames; track $index )
+      {
+      <div class="invitee">{{ inviteeName }}</div>
+      } } @else {
+      <div class="data-label">Invitees</div>
+      <div class="invitee">No Invitees</div>
+      }
+    </div>
+  </div>
+  }
+</div>
+}

@@ -1,0 +1,624 @@
+@use "colors" as colors;
+@use "constants" as constants;
+
+@import "@angular/cdk/overlay-prebuilt.css";
+
+///////////////////////////////
+//styling for the custom role dropdown
+
+.custom-dropdown {
+  box-sizing: border-box;
+  position: static;
+  input {
+    height: 33px;
+    border-radius: 2px;
+    box-sizing: border-box;
+  }
+  input[type="text"] {
+    field-sizing: content;
+    min-width: 13ch;
+    max-width: 200px;
+  }
+}
+
+.dropdown-options {
+  position: fixed;
+  width: 13ch; //keep the dropdown options width same as input field
+  max-height: 300px;
+  overflow-y: auto;
+  background: colors.$color-background-input;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  margin-top: 4px;
+}
+
+.dropdown-option {
+  padding: 10px 16px;
+  cursor: pointer;
+  color: colors.$color-text-primary;
+  transition: background 0.2s ease;
+  border: 1px solid colors.$color-border-primary;
+
+  &:hover:not(.disabled) {
+    background: colors.$color-background-input-hover;
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    color: colors.$color-text-muted;
+  }
+
+  a {
+    color: white;
+  }
+}
+
+////////////////////////////////////
+//for the main dialog
+
+.main-dialog {
+  width: 90vw;
+  max-width: 1200px;
+  height: 73%;
+  max-height: 700px;
+  background: colors.$color-background-card;
+  border: 1px solid colors.$color-border-primary;
+  padding: 0px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+
+  &[open] {
+    display: flex; //flex container only when the dialog is open
+  }
+
+  //if we keep display: flex outside, the dialog content will be shown even when the dialog is closed
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+  }
+}
+
+//////////////////////////////////
+//for drag and drop feature
+.drag-handle {
+  cursor: move;
+  margin-right: 10px;
+  color: #888;
+  font-size: 1.2rem;
+}
+
+// Style the ghost placeholder which appears when a member is lifted
+.custom-placeholder {
+  background: colors.$color-card-hover;
+  border: 2px dashed #999;
+  min-height: 60px;
+  opacity: 0.5;
+}
+
+/////////////////////////////////////////////////
+
+//-LEFT PANEL
+
+.panel-header {
+  border-bottom: 1px solid colors.$color-border-primary;
+}
+
+.member-selection-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+  gap: 20px;
+  min-height: 0;
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  input {
+    font-family: Roboto, "Baloo", sans-serif;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: colors.$color-background-input;
+    border: 1px solid colors.$color-border-primary;
+    border-radius: 6px;
+    color: colors.$color-text-primary;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+
+    &::placeholder {
+      color: colors.$color-text-muted;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: colors.$color-border-focus;
+      background: colors.$color-background-input-hover;
+      box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+    }
+
+    &:hover:not(:focus) {
+      border-color: colors.$color-background-input;
+      background: colors.$color-background-input-hover;
+    }
+  }
+}
+
+.selected-members-section {
+  max-height: 45%;
+  min-height: 0; //prevents the height to grow as per the its content
+  display: flex;
+  flex-direction: column;
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: colors.$text-main-color;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid colors.$color-border-primary;
+  }
+
+  .selected-members-list {
+    max-height: 100%; //height selected such that it accomodates exactly 3 members
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex-grow: 1;
+    gap: 8px;
+    overflow: auto;
+    scrollbar-gutter: stable;
+
+    .selected-member-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      margin-bottom: 4px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+      overflow: visible;
+
+      &:hover {
+        background: rgba(88, 101, 242, 0.1);
+      }
+
+      .member-info {
+        flex: 1;
+      }
+
+      .selected-name {
+        color: colors.$text-select-highlight;
+        font-weight: 500;
+        font-size: constants.$font-normal;
+      }
+    }
+  }
+}
+
+.unselected-members-section {
+  max-height: 100%;
+  height: 45%; //first take 45% of the available height (also taking account of height of search bar)
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: colors.$color-text-secondary;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid colors.$color-border-primary;
+  }
+
+  .available-members {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    maxi-height: 100%;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: colors.$color-border-primary;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: colors.$color-background-input;
+    }
+
+    .available-member-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      margin-bottom: 4px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(88, 101, 242, 0.1);
+      }
+
+      .member-name {
+        color: colors.$color-text-secondary;
+        font-size: 1rem;
+        flex: 1;
+      }
+    }
+  }
+}
+
+.role-select {
+  padding: 8px 14px;
+  background: colors.$color-background-input;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 4px;
+  color: colors.$color-text-primary;
+  font-size: constants.$font-normal;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+
+  &:focus {
+    outline: none;
+    border-color: colors.$color-border-focus;
+    background: colors.$color-background-input-hover;
+  }
+
+  &:hover:not(:focus) {
+    background: colors.$color-background-input-hover;
+  }
+
+  option {
+    background: colors.$color-background-input;
+    color: colors.$color-text-primary;
+  }
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: colors.$color-button-disabled-text;
+  font-size: 1rem;
+  font-style: italic;
+  padding: 40px 0px;
+}
+
+////////////////////////////////////////////////////
+
+//RIGHT PANEL
+
+.member-selection-panel {
+  flex: 1;
+  background: colors.$color-background-main;
+  border-right: 1px solid colors.$color-border-primary;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.committee-details-panel {
+  flex: 1;
+  background: colors.$color-background-card;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.save-button {
+  position: absolute;
+  //15px because the actual form has padding-right of 15px wrt dialog
+  right: 15px;
+  top: 25px;
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  //have two form groups in a row share the space equally
+  &.half-width {
+    flex: 1;
+  }
+}
+
+textarea:has(+ .field-error),
+input:has(+ .field-error),
+select:has(+ .field-error) {
+  border: 1px solid colors.$color-text-error !important;
+}
+
+#committee-description {
+  &::-webkit-scrollbar {
+    width: 11px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: colors.$color-background-card;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: colors.$color-border-primary;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #40444b;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  padding: 12px 16px;
+  background: colors.$color-background-input;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  color: colors.$color-text-primary;
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: colors.$color-text-muted;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: colors.$color-border-focus;
+    background: colors.$color-background-input-hover;
+  }
+
+  &:hover:not(:focus) {
+    border-color: colors.$color-background-input;
+    background: colors.$color-background-input-hover;
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.form-select {
+  cursor: pointer;
+
+  option {
+    background: colors.$color-background-input;
+    color: colors.$color-text-primary;
+  }
+}
+
+.language-radio-group {
+  display: flex;
+  gap: 50px;
+  align-items: center;
+  margin-top: 3px;
+}
+
+.language-radio-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: colors.$color-text-primary;
+  text-transform: none;
+  font-size: constants.$font-normal;
+}
+
+.language-radio-item input[type="radio"] {
+  appearance: none; // removes default browser style
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid colors.$color-border-primary;
+  border-radius: 50%;
+  background-color: grey;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.language-radio-item input[type="radio"]:checked {
+  background-color: colors.$color-button-primary;
+}
+
+.language-radio-item input[type="radio"]:hover {
+  border-color: #666;
+}
+
+.next-button {
+  display: none;
+}
+
+////////////////////////////////////////////
+//migrating from global styles
+
+.actual-form {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: colors.$color-background-card;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: colors.$color-border-primary;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: colors.$color-background-input;
+  }
+}
+
+.field-error {
+  color: colors.$color-text-error;
+  font-size: constants.$font-medium;
+  font-weight: constants.$font-weight-medium;
+  margin: 0;
+  padding: 0.25rem 0;
+}
+
+//astrick in forms
+.required-astrick {
+  color: colors.$color-text-error;
+  padding-left: 4px;
+  display: inline-block;
+}
+
+form label,
+.data-label {
+  font-size: constants.$font-small;
+  font-weight: constants.$font-weight-medium;
+  color: colors.$color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-input {
+  padding: 12px 20px;
+  background: colors.$color-background-input;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  color: colors.$color-text-primary;
+  font-size: constants.$font-normal;
+  font-family: inherit;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: colors.$color-text-muted;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: colors.$color-border-focus;
+    background: colors.$color-background-input-hover;
+    box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+  }
+
+  &:hover:not(:focus) {
+    border-color: colors.$color-background-input;
+    background: colors.$color-background-input-hover;
+  }
+
+  &.error {
+    border-color: colors.$color-text-error;
+  }
+}
+
+//heading section of the form
+.panel-header {
+  padding: 10px;
+  border-bottom: 1px solid #202225;
+  background: colors.$color-background-input;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+  //padding for the header for left and right is kept same as padding for .actual-form
+  padding: 20px 15px;
+
+  h2 {
+    font-size: constants.$font-xl;
+    font-weight: constants.$font-weight-semibold;
+    color: colors.$color-text-primary;
+    margin: 0 0 4px 0;
+    line-height: 1;
+  }
+
+  .panel-subtitle {
+    font-size: constants.$font-medium;
+    color: colors.$color-text-secondary;
+    margin: 0;
+    line-height: 1.3;
+  }
+}
+
+////////////////////////////////////////////////////
+// MOBILE RESPONSIVE STYLES
+
+@media (max-width: 768px) {
+  .main-dialog {
+    height: 80vh;
+    border-radius: 8px;
+  }
+
+  .committee-details-panel,
+  .member-selection-panel {
+    display: none;
+  }
+
+  .activePartInMobileView {
+    display: block;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .actual-form {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable; // Reserve space for scrollbar
+  }
+
+  .panel-subtitle {
+    display: none;
+  }
+
+  .available-members {
+    padding-bottom: 20px;
+  }
+
+  .next-button,
+  .save-button {
+    display: block; //make next button visible in movile view
+
+    position: absolute;
+    //15px because the actual form has padding-right of 15px wrt dialog
+    right: 15px;
+    top: 15px;
+    font-size: 14px;
+    padding: 5px 10px;
+  }
+}
