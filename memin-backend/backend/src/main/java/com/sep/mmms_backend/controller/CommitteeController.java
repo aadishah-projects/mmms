@@ -123,6 +123,15 @@ public class CommitteeController {
         return ResponseEntity.ok(new Response(ResponseMessages.COMMITTEE_MEMBERS_RETRIEVED_SUCCESSFULLY, membersOfCommittee));
     }
 
+    @PatchMapping("/committee/{committeeId}/secretary")
+    public ResponseEntity<Response> assignSecretary(
+            @PathVariable int committeeId, 
+            @RequestParam(required = false) Integer memberId, 
+            Authentication authentication) {
+        committeeService.assignSecretary(committeeId, memberId, authentication.getName());
+        return ResponseEntity.ok(new Response("Secretary updated successfully"));
+    }
+
     @GetMapping("/committee-summary")
     public ResponseEntity<Response> getCommitteeSummary(@RequestParam(required=true) int committeeId, Authentication authentication) {
         return ResponseEntity.ok(new Response(committeeService.getCommitteeExtendedSummary(committeeId, authentication.getName())));

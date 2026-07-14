@@ -33,4 +33,6 @@ public class CommitteeCreationDto {
 
     @NotNull(message = "committee coordinator is missing")
     Integer coordinatorId;
+
+    Integer secretaryId;
 }

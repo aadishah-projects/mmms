@@ -59,7 +59,7 @@ public class AppUser {
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
-    AppRole role = AppRole.SECRETARY;
+    AppRole role = AppRole.DEPARTMENT_MEMBER;
 
     @Column(name = "linked_member_id")
     Integer linkedMemberId;

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS members (
 CREATE TABLE IF NOT EXISTS committees (
                                           committee_id INT AUTO_INCREMENT PRIMARY KEY,
                                           committee_coordinator_id INT NOT NULL,
+                                          committee_secretary_id INT,
                                           committee_description TEXT,
                                           committee_uuid VARCHAR(36) NOT NULL UNIQUE,
     committee_name VARCHAR(255) NOT NULL,
@@ -117,3 +118,6 @@ CREATE TABLE IF NOT EXISTS agendas (
 
     FOREIGN KEY (meeting_id) REFERENCES meetings(meeting_id)
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+ALTER TABLE app_users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'DEPARTMENT_MEMBER';
+ALTER TABLE app_users ADD COLUMN IF NOT EXISTS linked_member_id INT;

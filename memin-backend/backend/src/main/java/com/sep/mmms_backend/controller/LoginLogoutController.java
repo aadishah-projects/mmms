@@ -19,16 +19,26 @@ import org.springframework.web.bind.annotation.*;
 public class LoginLogoutController {
 
     private final com.sep.mmms_backend.service.AppUserService appUserService;
+    private final com.sep.mmms_backend.repository.CommitteeRepository committeeRepository;
 
-    public LoginLogoutController(com.sep.mmms_backend.service.AppUserService appUserService) {
+    public LoginLogoutController(com.sep.mmms_backend.service.AppUserService appUserService, com.sep.mmms_backend.repository.CommitteeRepository committeeRepository) {
         this.appUserService = appUserService;
+        this.committeeRepository = committeeRepository;
     }
 
     // "/login" is a secure rest end point handled by Spring Security
     @GetMapping("/login")
     public ResponseEntity<Response> tryLogin(Authentication authentication) {
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(authentication.getName());
-        java.util.Map<String, Object> loginData = java.util.Map.of("role", user.getRole().name());
+        boolean isSecretary = false;
+        if (user.getLinkedMemberId() != null) {
+            isSecretary = !committeeRepository.getSecretaryActiveCommittees(user.getLinkedMemberId()).isEmpty();
+        }
+        
+        java.util.Map<String, Object> loginData = java.util.Map.of(
+            "role", user.getRole().name(),
+            "isSecretary", isSecretary
+        );
         return new ResponseEntity<Response>(new Response(ResponseMessages.LOGIN_SUCCESSFUL, loginData), HttpStatus.OK);
     }
 

@@ -29,11 +29,11 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain getSecurityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((config)-> {
-            config.requestMatchers("/h2-console/**","/css/**", "/templates/**", "/isAuthenticated", "/register", "/previewMeetingMinute", "/api/register-with-token").permitAll();
-            config.requestMatchers("/api/invite/**").hasAnyRole("SECRETARY", "DEPARTMENT_HEAD");
-            config.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/committee").hasAnyRole("SECRETARY", "DEPARTMENT_HEAD");
-            config.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/meeting").hasAnyRole("SECRETARY", "DEPARTMENT_HEAD");
-            config.requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/minute").hasAnyRole("SECRETARY", "DEPARTMENT_HEAD");
+            config.requestMatchers("/h2-console/**","/css/**", "/templates/**", "/isAuthenticated", "/register", "/previewMeetingMinute", "/api/register-with-token", "/error").permitAll();
+            config.requestMatchers("/api/invite/**").hasRole("DEPARTMENT_HEAD");
+            config.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/committee").hasRole("DEPARTMENT_HEAD");
+            config.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/meeting").authenticated();
+            config.requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/minute").authenticated();
             config.requestMatchers("/api/users/**").hasRole("DEPARTMENT_HEAD");
             config.requestMatchers("/api/**").authenticated();
         });

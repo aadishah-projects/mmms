@@ -57,4 +57,10 @@ public interface CommitteeRepository extends JpaRepository<Committee, Integer>, 
 
     @Query("Select c from Committee c where c.status= 'INACTIVE'")
     List<Committee> getSystemInActiveCommittees();
+
+    @Query("SELECT c FROM Committee c WHERE c.secretary.id = :memberId AND c.status = 'ACTIVE'")
+    List<Committee> getSecretaryActiveCommittees(@Param("memberId") Integer memberId);
+
+    @Query("SELECT c FROM Committee c WHERE c.secretary.id = :memberId AND c.status = 'INACTIVE'")
+    List<Committee> getSecretaryInActiveCommittees(@Param("memberId") Integer memberId);
 }

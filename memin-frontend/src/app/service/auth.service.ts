@@ -16,6 +16,9 @@ export class AuthService {
   private userRole = new BehaviorSubject<string | null>(null);
   userRole$ = this.userRole.asObservable();
 
+  private isSecretary = new BehaviorSubject<boolean>(false);
+  isSecretary$ = this.isSecretary.asObservable();
+
   constructor(private httpClient: HttpClient, private router: Router) {
     this.checkAuthOnLoad();
   }
@@ -29,6 +32,9 @@ export class AuthService {
         next: (response) => {
           if (response.mainBody && (response.mainBody as any).role) {
             this.userRole.next((response.mainBody as any).role);
+          }
+          if (response.mainBody && (response.mainBody as any).isSecretary !== undefined) {
+            this.isSecretary.next((response.mainBody as any).isSecretary);
           }
           this.loggedIn.next(true);
         },
@@ -59,6 +65,9 @@ export class AuthService {
           console.log(response.message);
           if (response.mainBody && response.mainBody.role) {
             this.userRole.next(response.mainBody.role);
+          }
+          if (response.mainBody && response.mainBody.isSecretary !== undefined) {
+            this.isSecretary.next(response.mainBody.isSecretary);
           }
           this.router.navigateByUrl('/home/my-committees');
 	  this.loggedIn.next(true);

@@ -95,6 +95,15 @@ public class CommitteeService {
             throw new CoordinatorDoesNotExistException(ExceptionMessages.COORDINATOR_DOES_NOT_EXIST);
         }
         committee.setCoordinator(coordinatorOptional.get());
+
+        if (committeeCreationDto.getSecretaryId() != null) {
+            Optional<Member> secretaryOptional = memberRepository.findMemberByIdNoException(committeeCreationDto.getSecretaryId());
+            if (secretaryOptional.isEmpty()) {
+                throw new MemberDoesNotExistException(ExceptionMessages.MEMBER_DOES_NOT_EXIST, committeeCreationDto.getSecretaryId());
+            }
+            committee.setSecretary(secretaryOptional.get());
+        }
+
         return committee;
     }
 
@@ -123,6 +132,7 @@ public class CommitteeService {
         existingCommittee.setMinuteLanguage(committee.getMinuteLanguage());
         existingCommittee.setMaxNoOfMeetings(committee.getMaxNoOfMeetings());
         existingCommittee.setCoordinator(committee.getCoordinator());
+        existingCommittee.setSecretary(committee.getSecretary());
 
         List<CommitteeMembership> newMemberships = committee.getMemberships();
 
@@ -232,7 +242,14 @@ public class CommitteeService {
             return committeeRepository.getSystemActiveCommittees();
         } else if (user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER) {
             if (user.getLinkedMemberId() != null) {
-                return committeeRepository.getMemberActiveCommittees(user.getLinkedMemberId());
+                List<Committee> memberCommittees = committeeRepository.getMemberActiveCommittees(user.getLinkedMemberId());
+                List<Committee> secretaryCommittees = committeeRepository.getSecretaryActiveCommittees(user.getLinkedMemberId());
+                
+                Set<Committee> uniqueCommittees = new HashSet<>();
+                uniqueCommittees.addAll(memberCommittees);
+                uniqueCommittees.addAll(secretaryCommittees);
+                
+                return new ArrayList<>(uniqueCommittees);
             }
             return new ArrayList<>();
         }
@@ -245,7 +262,14 @@ public class CommitteeService {
             return committeeRepository.getSystemInActiveCommittees();
         } else if (user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER) {
             if (user.getLinkedMemberId() != null) {
-                return committeeRepository.getMemberInActiveCommittees(user.getLinkedMemberId());
+                List<Committee> memberCommittees = committeeRepository.getMemberInActiveCommittees(user.getLinkedMemberId());
+                List<Committee> secretaryCommittees = committeeRepository.getSecretaryInActiveCommittees(user.getLinkedMemberId());
+                
+                Set<Committee> uniqueCommittees = new HashSet<>();
+                uniqueCommittees.addAll(memberCommittees);
+                uniqueCommittees.addAll(secretaryCommittees);
+                
+                return new ArrayList<>(uniqueCommittees);
             }
             return new ArrayList<>();
         }
@@ -282,7 +306,9 @@ public class CommitteeService {
             hasAccess = true;
         } else if (isMember) {
             if (user.getLinkedMemberId() != null) {
-                hasAccess = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
+                boolean isSecretary = committee.getSecretary() != null && committee.getSecretary().getId().equals(user.getLinkedMemberId());
+                boolean isCommitteeMember = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
+                hasAccess = isSecretary || isCommitteeMember;
             }
         } else if (committee.getCreatedBy().equals(username)) {
             hasAccess = true;
@@ -322,4 +348,23 @@ public class CommitteeService {
         return committeeRepository.findCommitteeById(committeeId);
     }
 
+    @Transactional
+    public void assignSecretary(int committeeId, Integer memberId, String username) {
+        Committee committee = getCommitteeIfAccessible(committeeId, username);
+        com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
+        
+        if (user.getRole() != com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD) {
+            throw new IllegalOperationException("Only DEPARTMENT_HEAD can assign a secretary");
+        }
+
+        if (memberId == null) {
+            committee.setSecretary(null);
+        } else {
+            Member member = memberRepository.findAccessibleMember(memberId, username)
+                    .orElseThrow(() -> new MemberDoesNotExistException(ExceptionMessages.MEMBER_DOES_NOT_EXIST, memberId));
+            committee.setSecretary(member);
+        }
+        
+        committeeRepository.save(committee);
+    }
 }

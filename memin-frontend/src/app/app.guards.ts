@@ -126,5 +126,20 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
   };
 };
 
-export const secretaryOrDeptHeadGuard = roleGuard(['SECRETARY', 'DEPARTMENT_HEAD']);
+export const hasWriteAccessGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  let userRole: string | null = null;
+  let isSecretary: boolean = false;
+
+  authService.userRole$.subscribe(r => userRole = r);
+  authService.isSecretary$.subscribe(s => isSecretary = s);
+
+  if (userRole === 'DEPARTMENT_HEAD' || isSecretary) {
+    return true;
+  }
+  return router.parseUrl('/home/my-committees');
+};
+
 export const deptHeadGuard = roleGuard(['DEPARTMENT_HEAD']);

@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { ErrorComponent } from './error/error.component';
 import { HomeComponent } from './home/home.component';
-import { committeeRouteGuard, isAuthenticated, isNotAuthenticated, meetingRouteGuard, memberRouteGuard, secretaryOrDeptHeadGuard, deptHeadGuard } from './app.guards';
+import { committeeRouteGuard, isAuthenticated, isNotAuthenticated, meetingRouteGuard, memberRouteGuard, hasWriteAccessGuard, deptHeadGuard } from './app.guards';
 import { CommitteeSummariesComponent } from './home/committee-summaries/committee-summaries.component';
 import { SearchBarComponent } from './search-bar/search-bar.component';
 import { CreateCommitteeComponent } from './home/create-committee/create-committee.component';
@@ -54,21 +54,21 @@ export const routes: Routes = [
       {
         path: 'create-committee',
         component: CreateCommitteeComponent,
-        canActivate: [secretaryOrDeptHeadGuard]
+        canActivate: [deptHeadGuard]
       },
       {
         path: 'create-member',
         component: CreateMemberComponent,
-        canActivate: [secretaryOrDeptHeadGuard]
+        canActivate: [deptHeadGuard]
       },
       {
         path: 'create-meeting',
         component: CreateMeetingComponent,
-        canActivate: [secretaryOrDeptHeadGuard]
+        canActivate: [hasWriteAccessGuard]
       },
       {
 	// it is not a children to members-list because children's require <router-outlet> and it is an independent page to members list 
-	canActivate: [memberRouteGuard, secretaryOrDeptHeadGuard],
+	canActivate: [memberRouteGuard, deptHeadGuard],
 	path: 'members-list/edit',
 	component: EditMemberComponent
       },
@@ -95,7 +95,7 @@ export const routes: Routes = [
     path: 'committee-details/overview/meeting/edit',
     component: EditMeetingComponent,
     canMatch: [isAuthenticated],
-    canActivate: [meetingRouteGuard, committeeRouteGuard, secretaryOrDeptHeadGuard]
+    canActivate: [meetingRouteGuard, committeeRouteGuard, hasWriteAccessGuard]
   },
 
   {
@@ -114,7 +114,7 @@ export const routes: Routes = [
         component: CommitteeOverviewComponent,
       },
       {
-        canActivate: [committeeRouteGuard, secretaryOrDeptHeadGuard],
+        canActivate: [committeeRouteGuard, hasWriteAccessGuard],
         path: 'edit',
         component: EditCommitteeComponent,
       },

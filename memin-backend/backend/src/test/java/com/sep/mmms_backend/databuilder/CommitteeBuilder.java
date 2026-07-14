@@ -24,6 +24,7 @@ public class CommitteeBuilder {
     private List<CommitteeMembership> memberships = new LinkedList<>();
     private AppUser createdBy;
     private CommitteeStatus status = CommitteeStatus.ACTIVE;
+    private Member coordinator;
 
     /**
      *must reference a saved 'createdBy' AppUser entity. A committee can also have 'membership' but not compulsary
@@ -59,6 +60,11 @@ public class CommitteeBuilder {
         return this;
     }
 
+    public CommitteeBuilder withCoordinator(Member coordinator) {
+        this.coordinator = coordinator;
+        return this;
+    }
+
     public Committee build() {
         Committee committee = new Committee();
         committee.setName(this.name);
@@ -70,6 +76,10 @@ public class CommitteeBuilder {
         committee.setMeetings(this.meetings);
         committee.setCreatedBy(this.createdBy.getUsername());
         committee.setStatus(this.status);
+        if (this.coordinator == null) {
+            this.coordinator = MemberBuilder.builder().withFirstName("Coord").withLastName("Inator").build();
+        }
+        committee.setCoordinator(this.coordinator);
         return committee;
     }
 }

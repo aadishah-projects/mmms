@@ -68,7 +68,9 @@ public class CheckCommitteeAccessAspect {
             hasAccess = true;
         } else if (isMember) {
             if (user.getLinkedMemberId() != null) {
-                hasAccess = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
+                boolean isSecretary = committee.getSecretary() != null && committee.getSecretary().getId().equals(user.getLinkedMemberId());
+                boolean isCommitteeMember = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
+                hasAccess = isSecretary || isCommitteeMember;
             }
         } else if (committee.getCreatedBy().equals(username)) {
             hasAccess = true;
@@ -84,7 +86,9 @@ public class CheckCommitteeAccessAspect {
                 hasMeetingAccess = true;
             } else if (isMember) {
                 if (user.getLinkedMemberId() != null) {
-                    hasMeetingAccess = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
+                    boolean isSecretary = committee.getSecretary() != null && committee.getSecretary().getId().equals(user.getLinkedMemberId());
+                    boolean isCommitteeMember = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
+                    hasMeetingAccess = isSecretary || isCommitteeMember;
                 }
             } else if (meeting.getCreatedBy().equals(username)) {
                 hasMeetingAccess = true;

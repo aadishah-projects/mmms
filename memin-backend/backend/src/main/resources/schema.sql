@@ -8,7 +8,9 @@ CREATE TABLE app_users
     lastname  VARCHAR(50),
     username  VARCHAR(50) UNIQUE,
     email     VARCHAR(100),
-    password VARCHAR(100)
+    password VARCHAR(100),
+    role VARCHAR(50),
+    linked_member_id INT
 );
 
 CREATE TABLE members (
@@ -30,7 +32,8 @@ CREATE TABLE members (
 
 CREATE TABLE committees (
         committee_id INT AUTO_INCREMENT PRIMARY KEY,
-        committee_coordinator_id INT NOT NULL ,
+        committee_coordinator_id INT NOT NULL,
+        committee_secretary_id INT,
         committee_description TEXT,
         committee_uuid VARCHAR(36) NOT NULL UNIQUE,
         committee_name VARCHAR(255) NOT NULL,

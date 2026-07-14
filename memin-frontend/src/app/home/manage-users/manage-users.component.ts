@@ -23,7 +23,7 @@ interface UserDto {
 export class ManageUsersComponent implements OnInit {
   users: UserDto[] = [];
   isLoaded = false;
-  availableRoles = ['SECRETARY', 'DEPARTMENT_HEAD', 'DEPARTMENT_MEMBER', 'COMMITTEE_MEMBER', 'GUEST'];
+  availableRoles = ['DEPARTMENT_HEAD', 'DEPARTMENT_MEMBER', 'COMMITTEE_MEMBER', 'GUEST'];
   feedbackMessage: string | null = null;
   feedbackType: 'success' | 'error' = 'success';
 

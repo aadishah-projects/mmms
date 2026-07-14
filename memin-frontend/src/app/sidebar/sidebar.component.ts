@@ -18,7 +18,9 @@ import { AuthService } from '../service/auth.service';
 })
 export class SidebarComponent implements OnInit {
   userRole: string | null = null;
+  isSecretary: boolean = false;
   private roleSub!: Subscription;
+  private secSub!: Subscription;
 
   constructor(private route: ActivatedRoute, private authService: AuthService) {}
 
@@ -26,16 +28,22 @@ export class SidebarComponent implements OnInit {
     this.roleSub = this.authService.userRole$.subscribe(role => {
       this.userRole = role;
     });
+    this.secSub = this.authService.isSecretary$.subscribe(isSec => {
+      this.isSecretary = isSec;
+    });
   }
 
   ngOnDestroy() {
     if (this.roleSub) {
       this.roleSub.unsubscribe();
     }
+    if (this.secSub) {
+      this.secSub.unsubscribe();
+    }
   }
 
   get canWrite(): boolean {
-    return this.userRole === 'SECRETARY' || this.userRole === 'DEPARTMENT_HEAD';
+    return this.isSecretary || this.userRole === 'DEPARTMENT_HEAD';
   }
 
   // Method to get only the committeeId query parameter and ignoring other query parameters if any

@@ -54,9 +54,13 @@ public class Committee {
     @Enumerated(EnumType.STRING)
     private MinuteLanguage minuteLanguage;
 
-    @OneToOne
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "committee_coordinator_id", referencedColumnName = "member_id", nullable = false)
     private Member coordinator;
+
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "committee_secretary_id", referencedColumnName = "member_id")
+    private Member secretary;
 
     @Column(name = "committee_created_by", updatable = false, nullable = false)
     @CreatedBy

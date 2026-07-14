@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS members (
 CREATE TABLE IF NOT EXISTS committees (
     committee_id SERIAL PRIMARY KEY,
     committee_coordinator_id INT NOT NULL,
+    committee_secretary_id INT,
     committee_description TEXT,
     committee_uuid VARCHAR(36) NOT NULL UNIQUE,
     committee_name VARCHAR(255) NOT NULL,
@@ -130,5 +131,6 @@ CREATE TABLE IF NOT EXISTS invite_tokens (
     FOREIGN KEY (committee_id) REFERENCES committees(committee_id)
 );
 
-ALTER TABLE app_users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'SECRETARY';
+ALTER TABLE app_users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'DEPARTMENT_MEMBER';
 ALTER TABLE app_users ADD COLUMN IF NOT EXISTS linked_member_id INT;
+ALTER TABLE committees ADD COLUMN IF NOT EXISTS committee_secretary_id INT REFERENCES members(member_id);

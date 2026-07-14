@@ -17,6 +17,7 @@ public class CommitteeOverviewDto {
     private int meetingCount;
     private int decisionCount;
     private String coordinatorName;
+    private String secretaryName;
     private LocalDate firstMeetingDate;
     private LocalDate lastMeetingDate;
     private List<DateAndMeetingIdsDto> meetings;

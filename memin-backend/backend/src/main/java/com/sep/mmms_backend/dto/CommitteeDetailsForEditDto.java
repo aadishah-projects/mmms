@@ -14,6 +14,7 @@ public class CommitteeDetailsForEditDto {
     public Integer maxNoOfMeetings;
     public MinuteLanguage minuteLanguage;
     public MemberSearchResultDto coordinator;
+    public MemberSearchResultDto secretary;
     public List<MemberSearchResultWithRoleDto> membersWithRoles;
 
     public CommitteeDetailsForEditDto(Committee committee) {
@@ -24,6 +25,9 @@ public class CommitteeDetailsForEditDto {
         this.maxNoOfMeetings = committee.getMaxNoOfMeetings();
         this.minuteLanguage = committee.getMinuteLanguage();
         this.coordinator = new MemberSearchResultDto(committee.getCoordinator());
+        if(committee.getSecretary() != null) {
+            this.secretary = new MemberSearchResultDto(committee.getSecretary());
+        }
 
         this.membersWithRoles = committee.getSortedMemberships().stream().map(membership -> new MemberSearchResultWithRoleDto(new MemberSearchResultDto(membership.getMember()), membership.getRole())).toList();
     }

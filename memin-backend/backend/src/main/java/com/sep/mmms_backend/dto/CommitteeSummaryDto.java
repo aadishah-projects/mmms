@@ -18,6 +18,7 @@ public class CommitteeSummaryDto {
     private LocalDate createdDate;
     private Integer numberOfMeetings;
     private Integer numberOfMembers;
+    private String secretaryName;
 
     public CommitteeSummaryDto(Committee committee) {
         this.id = committee.getId();
@@ -31,5 +32,8 @@ public class CommitteeSummaryDto {
         this.createdDate = committee.getCreatedDate();
         this.numberOfMeetings = committee.getMeetings().size();
         this.numberOfMembers = committee.getMemberships().size();
+        if(committee.getSecretary() != null) {
+            this.secretaryName = committee.getSecretary().getFirstName() + " " + committee.getSecretary().getLastName();
+        }
     }
 }
