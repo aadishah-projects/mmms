@@ -28,6 +28,31 @@
         </div>
 
         <div class="detail-item">
+          <span class="label">Secretary</span>
+          @if (!isAssigningSecretary) {
+            <span class="value">
+              {{ committeeOverview.secretaryName || "Not assigned" }}
+              @if (isDepartmentHead) {
+                <button class="secretary-action" (click)="startAssigningSecretary()">
+                  {{ committeeOverview.secretaryName ? "Change" : "Assign" }}
+                </button>
+              }
+            </span>
+          } @else {
+            <span class="value secretary-edit">
+              <select [(ngModel)]="selectedSecretaryId">
+                <option [ngValue]="null">— None —</option>
+                @for (member of membersOfCommittee; track member.id) {
+                  <option [ngValue]="member.id">{{ member.name }}</option>
+                }
+              </select>
+              <button class="secretary-action save" (click)="saveSecretary()">Save</button>
+              <button class="secretary-action" (click)="cancelAssigningSecretary()">Cancel</button>
+            </span>
+          }
+        </div>
+
+        <div class="detail-item">
           <span class="label">Minute Langugage</span>
           <span class="value">{{ committeeOverview.language.charAt(0) + committeeOverview.language.slice(1).toLowerCase() }}</span>
         </div>
@@ -72,6 +97,12 @@
         </div>
       </div>
     </div>
+
+    @if (canCreateMeeting) {
+      <button class="new-meeting-btn" (click)="createMeetingForThisCommittee()">
+        + New Meeting
+      </button>
+    }
 
     <app-meeting-summaries [meetingSummaries]="meetingSummaries">
     </app-meeting-summaries>

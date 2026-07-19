@@ -192,6 +192,14 @@ public class CommitteeService {
 
         committeeOverview.setCoordinatorName(committee.getCoordinator().getFirstName() + " " + committee.getCoordinator().getLastName());
 
+        // Expose the currently assigned secretary (nullable) so the committee page can
+        // display it and pre-select it in the assignment control.
+        Member secretary = committee.getSecretary();
+        if (secretary != null) {
+            committeeOverview.setSecretaryName(secretary.getFirstName() + " " + secretary.getLastName());
+            committeeOverview.setSecretaryId(secretary.getId());
+        }
+
         if (!committee.getMeetings().isEmpty()) {
             Map<LocalDate, List<Meeting>> dateAndMeetingIdMap = new HashMap<>();
 

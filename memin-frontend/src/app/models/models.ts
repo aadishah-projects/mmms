@@ -58,6 +58,8 @@ export class CommitteeOverviewDto {
   meetingCount: number = 0;
   decisionCount: number = 0;
   coordinatorName: string = '';
+  secretaryName: string | null = null;
+  secretaryId: number | null = null;
   firstMeetingDate: string = '';
   lastMeetingDate: string = '';
   meetingDates: string[] = [];
