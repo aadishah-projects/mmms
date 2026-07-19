@@ -151,7 +151,9 @@ public class MeetingService {
 
     @CheckCommitteeAccess
     public List<MeetingSummaryDto> getMeetingOfCommittee(Committee committee, String username) {
-        List<Meeting> meetings = new ArrayList<>(committee.getMeetings());
+        // Reload the meetings with their agendas eagerly fetched so MeetingSummaryDto
+        // can include agenda items (committee.getMeetings() leaves agendas lazy).
+        List<Meeting> meetings = meetingRepository.findByCommitteeIdWithAgendas(committee.getId());
         return meetings.stream().map(MeetingSummaryDto::new).toList();
     }
 

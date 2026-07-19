@@ -34,5 +34,18 @@
         <span class="value">{{ meetingSummary().heldPlace }}</span>
       </div>
     </div>
+
+    <div class="agendas">
+      <span class="label">Agendas</span>
+      @if (meetingSummary().agendas && meetingSummary().agendas.length > 0) {
+        <ul class="agenda-list">
+          @for (agenda of meetingSummary().agendas; track $index) {
+            <li>{{ agenda }}</li>
+          }
+        </ul>
+      } @else {
+        <span class="value empty">No agendas</span>
+      }
+    </div>
   </div>
 </div>

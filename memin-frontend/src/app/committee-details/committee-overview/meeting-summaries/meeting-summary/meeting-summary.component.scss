@@ -85,6 +85,43 @@
   }
 }
 
+.agendas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid colors.$color-border-primary;
+
+  .label {
+    font-size: constants.$font-small;
+    font-weight: constants.$font-weight-semibold;
+    text-transform: uppercase;
+    color: colors.$color-text-muted;
+    letter-spacing: 0.5px;
+  }
+
+  .agenda-list {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    li {
+      font-size: constants.$font-medium;
+      color: colors.$color-text-primary;
+      line-height: 1.4;
+    }
+  }
+
+  .value.empty {
+    font-size: constants.$font-medium;
+    color: colors.$color-text-muted;
+    font-style: italic;
+  }
+}
+
 .menu-btn-container {
   bottom: 4px;
 

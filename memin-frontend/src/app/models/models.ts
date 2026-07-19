@@ -47,6 +47,7 @@ export class MeetingSummaryDto {
   heldTime: number[] = []; //HH:mm:ss
   heldPlace: string = '';
   createdDate: string = '';
+  agendas: string[] = [];
 }
 
 export class CommitteeOverviewDto {
