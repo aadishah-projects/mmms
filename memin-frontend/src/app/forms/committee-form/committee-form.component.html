@@ -317,6 +317,27 @@
           }
         }
       </div>
+
+      <div class="form-group">
+        <label for="committee-minute-template">Minute Opening Paragraph</label>
+        <textarea
+          id="committee-minute-template"
+          rows="4"
+          formControlName="minuteOpeningTemplate"
+          placeholder="Leave blank to use the default opening paragraph."
+        ></textarea>
+        <p class="field-hint">
+          Optional. Placeholders:
+          <code>{{ '{committeeName}' }}</code>,
+          <code>{{ '{committeeDescription}' }}</code>,
+          <code>{{ '{date}' }}</code>,
+          <code>{{ '{day}' }}</code>,
+          <code>{{ '{partOfDay}' }}</code>,
+          <code>{{ '{time}' }}</code>,
+          <code>{{ '{place}' }}</code>,
+          <code>{{ '{coordinator}' }}</code>
+        </p>
+      </div>
     </form>
   </div>
 </dialog>

@@ -1,21 +1,25 @@
 <div #processedMinute>
   <div id="a4-box" [attr.contenteditable]="isEditable()">
     <div class="introduction justify-text">
-      <p class="introduction-body">
-        आज मिति
-        <span>{{ toNepaliDate(minuteData().meetingHeldDate) }}</span> (<span>{{
-          minuteData().meetingHeldDate | date : "yyyy/MM/dd"
-        }}</span
-        >),
-        <span>{{ getDay(minuteData().meetingHeldDate) + " " }}</span>
-        <span>{{ minuteData().partOfDay + " " }}</span>
-        <span>{{ toNepaliDigits(minuteData().meetingHeldTime) }}</span> बजे,
-        <span>{{ minuteData().meetingHeldPlace }}</span> मा
-        <span>{{ minuteData().committeeDescription }}</span> का लागि गठित
-        <span>{{ minuteData().committeeName }}</span> समितिका संयोजक
-        <span>{{ minuteData().coordinatorFullName }}</span
-        >ज्यूको संयोजकत्वमा बैठक बसी देहाय बमोजिमका छलफल तथा निर्णय गरियो।
-      </p>
+      @if (minuteData().openingParagraph) {
+        <p class="introduction-body">{{ minuteData().openingParagraph }}</p>
+      } @else {
+        <p class="introduction-body">
+          आज मिति
+          <span>{{ toNepaliDate(minuteData().meetingHeldDate) }}</span> (<span>{{
+            minuteData().meetingHeldDate | date : "yyyy/MM/dd"
+          }}</span
+          >),
+          <span>{{ getDay(minuteData().meetingHeldDate) + " " }}</span>
+          <span>{{ minuteData().partOfDay + " " }}</span>
+          <span>{{ toNepaliDigits(minuteData().meetingHeldTime) }}</span> बजे,
+          <span>{{ minuteData().meetingHeldPlace }}</span> मा
+          <span>{{ minuteData().committeeDescription }}</span> का लागि गठित
+          <span>{{ minuteData().committeeName }}</span> समितिका संयोजक
+          <span>{{ minuteData().coordinatorFullName }}</span
+          >ज्यूको संयोजकत्वमा बैठक बसी देहाय बमोजिमका छलफल तथा निर्णय गरियो।
+        </p>
+      }
     </div>
 
     <div class="memberships">

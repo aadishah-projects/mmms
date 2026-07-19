@@ -1,22 +1,26 @@
 <div #processedMinute>
   <div id="a4-box" [attr.contenteditable]="isEditable()">
     <div class="introduction justify-text">
-      <p class="introduction-body">
-        On
-        <span>{{
-          minuteData().meetingHeldDate | date : "EEEE, dd MMMM yyyy"
-        }}</span>
-        <!-- (<span>{{ minuteData().meetingHeldDateNepali }}</span -->
-        <!-- >)-->, at <span>{{ minuteData().meetingHeldTime }}</span> in the
-        <span>{{ minuteData().partOfDay }}</span
-        >, a meeting of the
-        <span>{{ minuteData().committeeName }}</span> committee, formed to
-        <span>{{ minuteData().committeeDescription }}</span
-        >, was held at <span>{{ minuteData().meetingHeldPlace }}</span>
-        under the chairmanship of
-        <span>{{ minuteData().coordinatorFullName }}</span
-        >. The following discussions and decisions were made.
-      </p>
+      @if (minuteData().openingParagraph) {
+        <p class="introduction-body">{{ minuteData().openingParagraph }}</p>
+      } @else {
+        <p class="introduction-body">
+          On
+          <span>{{
+            minuteData().meetingHeldDate | date : "EEEE, dd MMMM yyyy"
+          }}</span>
+          <!-- (<span>{{ minuteData().meetingHeldDateNepali }}</span -->
+          <!-- >)-->, at <span>{{ minuteData().meetingHeldTime }}</span> in the
+          <span>{{ minuteData().partOfDay }}</span
+          >, a meeting of the
+          <span>{{ minuteData().committeeName }}</span> committee, formed to
+          <span>{{ minuteData().committeeDescription }}</span
+          >, was held at <span>{{ minuteData().meetingHeldPlace }}</span>
+          under the chairmanship of
+          <span>{{ minuteData().coordinatorFullName }}</span
+          >. The following discussions and decisions were made.
+        </p>
+      }
     </div>
 
     <div class="memberships">
