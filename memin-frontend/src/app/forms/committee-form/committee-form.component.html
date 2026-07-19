@@ -319,6 +319,20 @@
       </div>
 
       <div class="form-group">
+        <label for="committee-minute-header">Minute Header / Letterhead</label>
+        <textarea
+          id="committee-minute-header"
+          rows="3"
+          formControlName="minuteHeaderTemplate"
+          placeholder="Optional. Shown at the top of the minute (e.g. institution / office name)."
+        ></textarea>
+        <p class="field-hint">
+          Optional, one line each. Supports the same placeholders (e.g.
+          <code>{{ '{committeeName}' }}</code>).
+        </p>
+      </div>
+
+      <div class="form-group">
         <label for="committee-minute-template">Minute Opening Paragraph</label>
         <textarea
           id="committee-minute-template"

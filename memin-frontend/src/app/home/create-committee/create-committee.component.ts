@@ -43,6 +43,7 @@ export class CreateCommitteeComponent implements OnInit {
     maxNoOfMeetings: 0,
     minuteLanguage: null,
     minuteOpeningTemplate: '',
+    minuteHeaderTemplate: '',
     selectedMembersWithRoles: [],
     unselectedMembers: [],
   };

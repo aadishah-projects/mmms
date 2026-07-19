@@ -1,5 +1,11 @@
 <div #processedMinute>
   <div id="a4-box" [attr.contenteditable]="isEditable()">
+    @if (minuteData().header) {
+      <div
+        class="minute-header"
+        style="white-space: pre-line; text-align: center; font-weight: 600; margin-bottom: 14px;"
+      >{{ minuteData().header }}</div>
+    }
     <div class="introduction justify-text">
       @if (minuteData().openingParagraph) {
         <p class="introduction-body">{{ minuteData().openingParagraph }}</p>
