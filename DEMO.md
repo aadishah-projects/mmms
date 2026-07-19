@@ -74,9 +74,7 @@ the middle, calendar on the right.
   saving clears the secretary.
 - A secretary gains **write access** to that committee (can create/edit its
   meetings and minutes) — that's why the next feature's button also appears for them.
-
-*(Known cosmetic issue: the member dropdown currently lists each member several
-times — a pre-existing duplicate-members bug, already flagged for a follow-up fix.)*
+- The member dropdown lists each committee member exactly once.
 
 ---
 
