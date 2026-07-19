@@ -8,6 +8,7 @@ import com.sep.mmms_backend.service.CommitteeService;
 import com.sep.mmms_backend.service.MemberService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ public class CommitteeController {
     }
 
 
+    // Transactional so the committee's lazy memberships (walked by CommitteeDetailsForEditDto)
+    // can initialize while the DTO is built — the app runs with open-in-view=false.
+    @Transactional(readOnly = true)
     @GetMapping("/committee-details-for-edit-page")
     public ResponseEntity<Response> getCommitteeDetailsForEditPage(@RequestParam int committeeId, Authentication authentication) {
         Committee committee = this.committeeService.getCommitteeIfAccessible(committeeId, authentication.getName());
