@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +31,11 @@ public class MeetingMinuteController {
         this.meetingService = meetingService;
     }
 
+    // Read the meeting and build the minute data in one transaction so the meeting's
+    // (and committee's) lazy collections — agendas, decisions, invitees, memberships —
+    // can initialize while the DTO is assembled. The app runs with
+    // spring.jpa.open-in-view=false, so there is otherwise no session open here.
+    @Transactional(readOnly = true)
     @GetMapping("api/data-for-minute")
     public ResponseEntity<Response> getDataForMinute( @RequestParam int meetingId, Authentication authentication) {
         Meeting meeting =  meetingService.findMeetingById(meetingId);
