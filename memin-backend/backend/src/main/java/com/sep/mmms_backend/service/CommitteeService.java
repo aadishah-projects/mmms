@@ -345,7 +345,11 @@ public class CommitteeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public CommitteeExtendedSummaryDto getCommitteeExtendedSummary(int committeeId, String username) {
+        // Build the DTO inside a transaction so the meetings/agendas/decisions/invitees
+        // collections (loaded lazily here) can initialize — the app runs with
+        // spring.jpa.open-in-view=false, so there is no session open otherwise.
         Committee committee = getCommitteeIfAccessible(committeeId, username);
         return new CommitteeExtendedSummaryDto(committee);
     }
