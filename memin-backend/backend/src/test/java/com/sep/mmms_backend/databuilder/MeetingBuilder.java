@@ -32,7 +32,7 @@ public class MeetingBuilder {
 
 
     private List<Member> attendees = new LinkedList<>();
-    private List<Decision> decisions = new ArrayList<>();
+    private Set<Decision> decisions = new HashSet<>();
 
     /**
      * 'saved committee' , 'at least one saved Atteendee' and 'unsaved decisions' is mandatory for save operation in this entity
@@ -73,7 +73,7 @@ public class MeetingBuilder {
         return this;
     }
 
-    public MeetingBuilder withDecisions(List<Decision> decisions) {
+    public MeetingBuilder withDecisions(Set<Decision> decisions) {
         this.decisions = decisions;
         return this;
     }

@@ -25,7 +25,7 @@ public class CommitteeCreationDto {
 
     //TODO implement a non blank validator for this
 //    @NotBlank(message="minute language is required")
-    private MinuteLanguage minuteLanguage;
+    private MinuteLanguage minuteLanguage = MinuteLanguage.ENGLISH;
 
     //member id and role
     //this annotation causes the json's 'key' to be used as the 'key' of the map

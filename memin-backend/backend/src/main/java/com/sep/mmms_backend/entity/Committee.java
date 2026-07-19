@@ -79,7 +79,7 @@ public class Committee {
     private LocalDate modifiedDate;
 
     @OneToMany(mappedBy = "committee", cascade = CascadeType.REMOVE)
-    private List<Meeting> meetings = new ArrayList<>();
+    private Set<Meeting> meetings = new HashSet<>();
 
     @OneToMany(mappedBy = "committee", cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE}, orphanRemoval = true)
     private List<CommitteeMembership> memberships = new ArrayList<>();

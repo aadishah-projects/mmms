@@ -76,7 +76,7 @@ public class TestDataHelper {
 
     public void createValidMeeting () {
         Decision decision = DecisionBuilder.builder().build();
-        List<Decision> decisions = new ArrayList<>();
+        Set<Decision> decisions = new HashSet<>();
         decisions.add(decision);
 
         List<Member> attendees = new LinkedList<>();
@@ -92,7 +92,7 @@ public class TestDataHelper {
 
 
         //set 'meetings' field in the committee object
-        LinkedList<Meeting> meetings = new LinkedList<>();
+        Set<Meeting> meetings = new HashSet<>();
         meetings.add(meeting);
         committee.setMeetings(meetings);
     }

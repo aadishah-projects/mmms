@@ -20,7 +20,7 @@ import java.util.Set;
 public class CommitteeBuilder {
     private String name = "committeeName";
     private String description = "committeeDescription";
-    private List<Meeting> meetings = new LinkedList<>();
+    private Set<Meeting> meetings = new HashSet<>();
     private List<CommitteeMembership> memberships = new LinkedList<>();
     private AppUser createdBy;
     private CommitteeStatus status = CommitteeStatus.ACTIVE;
@@ -45,7 +45,7 @@ public class CommitteeBuilder {
     }
 
     //NOTE: while saving a Committee, even if the meetings field is populated, nothing happens, because there is not CascadeType.PERSIST
-    public CommitteeBuilder withMembers(List<Meeting> meetings) {
+    public CommitteeBuilder withMembers(Set<Meeting> meetings) {
         this.meetings = meetings;
         return this;
     }

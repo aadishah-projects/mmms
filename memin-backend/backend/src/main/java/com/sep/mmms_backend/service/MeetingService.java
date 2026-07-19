@@ -151,7 +151,7 @@ public class MeetingService {
 
     @CheckCommitteeAccess
     public List<MeetingSummaryDto> getMeetingOfCommittee(Committee committee, String username) {
-        List<Meeting> meetings = committee.getMeetings();
+        List<Meeting> meetings = new ArrayList<>(committee.getMeetings());
         return meetings.stream().map(MeetingSummaryDto::new).toList();
     }
 
@@ -213,7 +213,7 @@ public class MeetingService {
             }
         }
 
-        List<Decision> existingDecisions = existingMeeting.getDecisions();
+        List<Decision> existingDecisions = new ArrayList<>(existingMeeting.getDecisions());
 
         //remove decisions that are NOT in the new list
         existingDecisions.removeIf(existing -> meetingCreationDto.getDecisions().stream().noneMatch(newDecision -> newDecision.getDecisionId() == existing.getDecisionId()));

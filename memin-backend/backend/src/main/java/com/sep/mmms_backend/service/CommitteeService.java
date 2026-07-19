@@ -13,7 +13,7 @@ import com.sep.mmms_backend.repository.CommitteeRepository;
 import com.sep.mmms_backend.repository.MemberRepository;
 import com.sep.mmms_backend.validators.EntityValidator;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -186,7 +186,7 @@ public class CommitteeService {
         committeeOverview.setLanguage(committee.getMinuteLanguage());
         int decisionCount = 0;
         for (Meeting meeting : committee.getMeetings()) {
-            decisionCount = +meeting.getDecisions().size();
+            decisionCount += meeting.getDecisions().size();
         }
         committeeOverview.setDecisionCount(decisionCount);
 
@@ -236,11 +236,12 @@ public class CommitteeService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public List<Committee> getAllActiveCommittees(String username) {
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
         if (user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD) {
             return committeeRepository.getSystemActiveCommittees();
-        } else if (user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER) {
+        } else if (user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.SECRETARY) {
             if (user.getLinkedMemberId() != null) {
                 List<Committee> memberCommittees = committeeRepository.getMemberActiveCommittees(user.getLinkedMemberId());
                 List<Committee> secretaryCommittees = committeeRepository.getSecretaryActiveCommittees(user.getLinkedMemberId());
@@ -256,11 +257,12 @@ public class CommitteeService {
         return committeeRepository.getAllActiveCommittees(username);
     }
 
+    @Transactional(readOnly = true)
     public List<Committee> getAllInactiveCommittees(String username) {
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
         if (user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD) {
             return committeeRepository.getSystemInActiveCommittees();
-        } else if (user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER) {
+        } else if (user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.SECRETARY) {
             if (user.getLinkedMemberId() != null) {
                 List<Committee> memberCommittees = committeeRepository.getMemberInActiveCommittees(user.getLinkedMemberId());
                 List<Committee> secretaryCommittees = committeeRepository.getSecretaryInActiveCommittees(user.getLinkedMemberId());
@@ -299,7 +301,7 @@ public class CommitteeService {
         
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
         boolean isDeptHead = user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD;
-        boolean isMember = user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER;
+        boolean isMember = user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.SECRETARY;
         
         boolean hasAccess = false;
         if (isDeptHead) {

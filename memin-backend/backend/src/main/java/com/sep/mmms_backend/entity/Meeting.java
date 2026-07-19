@@ -11,8 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -91,7 +90,7 @@ public class Meeting {
     public List<Member> invitees = new ArrayList<>();
 
     @OneToMany(mappedBy = "meeting", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
-    private List<Decision> decisions = new ArrayList<>();
+    private Set<Decision> decisions = new HashSet<>();
 
     @OneToMany(mappedBy = "meeting", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<Agenda> agendas = new ArrayList<>();

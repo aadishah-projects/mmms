@@ -81,7 +81,7 @@ public class MeetingRepositoryTest {
            attendees.add(member);
 
            Decision decision = DecisionBuilder.builder().withDecisionText("Decision").build();
-           List<Decision> decisions = new LinkedList<>();
+           Set<Decision> decisions = new HashSet<>();
 
            decisions.add(decision);
            meeting = MeetingBuilder.builder().withAttendees(attendees).withCommittee(committee).withDecisions(decisions).build();
@@ -93,7 +93,7 @@ public class MeetingRepositoryTest {
            //Then:
            Meeting foundMeeting = meetingRepository.findById(savedMeeting.getId()).orElse(null);
            Assertions.assertThat(foundMeeting).isNotNull();
-           Meeting m =  foundMeeting.getDecisions().getFirst().getMeeting();
+           Meeting m =  foundMeeting.getDecisions().iterator().next().getMeeting();
 
            Assertions.assertThat(foundMeeting.getCreatedBy()).isNotNull();
            Assertions.assertThat(foundMeeting.getUpdatedBy()).isNotNull();
@@ -139,7 +139,7 @@ public class MeetingRepositoryTest {
            attendees.add(attendee2);
 
            Decision decision = DecisionBuilder.builder().withDecisionText("Test Decision").build();
-           List<Decision> decisions = new LinkedList<>();
+           Set<Decision> decisions = new HashSet<>();
            decisions.add(decision);
 
            meeting = MeetingBuilder.builder()
@@ -177,7 +177,7 @@ public class MeetingRepositoryTest {
            // Create multiple decisions
            Decision decision1 = DecisionBuilder.builder().withDecisionText("Decision 1").build();
            Decision decision2 = DecisionBuilder.builder().withDecisionText("Decision 2").build();
-           List<Decision> decisions = new LinkedList<>();
+           Set<Decision> decisions = new HashSet<>();
            decisions.add(decision1);
            decisions.add(decision2);
 
@@ -225,7 +225,7 @@ public class MeetingRepositoryTest {
            attendees.add(member);
 
            Decision decision = DecisionBuilder.builder().withDecisionText("Approved project timeline").build();
-           List<Decision> decisions = new LinkedList<>();
+           Set<Decision> decisions = new HashSet<>();
            decisions.add(decision);
 
            meeting = MeetingBuilder.builder()
@@ -261,7 +261,7 @@ public class MeetingRepositoryTest {
 
            Assertions.assertThat(foundMeeting.getDecisions()).isNotNull();
            Assertions.assertThat(foundMeeting.getDecisions()).hasSize(1);
-           Assertions.assertThat(foundMeeting.getDecisions().getFirst().getDecision()).isEqualTo("Approved project timeline");
+           Assertions.assertThat(foundMeeting.getDecisions().iterator().next().getDecision()).isEqualTo("Approved project timeline");
        }
    }
 }
