@@ -31,7 +31,7 @@ public class CommitteeSummaryDto {
         this.status = committee.getStatus();
         this.createdDate = committee.getCreatedDate();
         this.numberOfMeetings = committee.getMeetings().size();
-        this.numberOfMembers = committee.getMemberships().size();
+        this.numberOfMembers = committee.getSortedMemberships().size();
         if(committee.getSecretary() != null) {
             this.secretaryName = committee.getSecretary().getFirstName() + " " + committee.getSecretary().getLastName();
         }

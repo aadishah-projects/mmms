@@ -97,8 +97,18 @@ public class Committee {
 
     public List<CommitteeMembership> getSortedMemberships() {
         if (sortedMemberships == null) {
-            sortedMemberships = new ArrayList<>(memberships);
-            sortedMemberships.sort(Comparator.comparingInt(CommitteeMembership::getOrder));
+            // The multi-collection fetch graph (memberships + meetings + decisions) returns
+            // the same membership repeated via a cartesian product, so de-duplicate by member
+            // before sorting. (committee, member) is unique, so this drops only bogus repeats.
+            Set<Integer> seenMemberIds = new HashSet<>();
+            ArrayList<CommitteeMembership> distinct = new ArrayList<>();
+            for (CommitteeMembership membership : memberships) {
+                if (seenMemberIds.add(membership.getMember().getId())) {
+                    distinct.add(membership);
+                }
+            }
+            distinct.sort(Comparator.comparingInt(CommitteeMembership::getOrder));
+            sortedMemberships = distinct;
         }
         return sortedMemberships;
     }

@@ -181,7 +181,7 @@ public class CommitteeService {
         committeeOverview.setName(committee.getName());
         committeeOverview.setDescription(committee.getDescription());
         committeeOverview.setCreatedDate(committee.getCreatedDate());
-        committeeOverview.setMemberCount(committee.getMemberships().size());
+        committeeOverview.setMemberCount(committee.getSortedMemberships().size());
         committeeOverview.setMeetingCount(committee.getMeetings().size());
         committeeOverview.setLanguage(committee.getMinuteLanguage());
         int decisionCount = 0;
