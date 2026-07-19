@@ -27,6 +27,8 @@ public class MinuteDataDto {
     // Resolved per-committee opening paragraph (placeholders substituted). Null when the
     // committee has no custom template — the frontend then renders its built-in default.
     String openingParagraph;
+    // Resolved per-committee header/letterhead (placeholders substituted). Null when unset.
+    String header;
     List<DecisionDto> decisions;
     List<AgendaDto> agendas;
     List<CommitteeMembershipDto> participants;

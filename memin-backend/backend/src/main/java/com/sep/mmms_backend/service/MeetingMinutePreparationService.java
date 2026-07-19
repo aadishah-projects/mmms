@@ -72,18 +72,18 @@ public class MeetingMinutePreparationService {
 
         minuteData.setParticipants(getParticipants(committee, meeting));
 
-        minuteData.setOpeningParagraph(resolveOpeningParagraph(committee, minuteData));
+        minuteData.setOpeningParagraph(substitutePlaceholders(committee.getMinuteOpeningTemplate(), minuteData));
+        minuteData.setHeader(substitutePlaceholders(committee.getMinuteHeaderTemplate(), minuteData));
 
         return minuteData;
     }
 
     /**
-     * Substitutes the committee's editable opening-paragraph template with this meeting's
-     * values. Returns null when the committee has no template so the frontend falls back
-     * to its built-in default opening paragraph.
+     * Substitutes a committee's editable minute template (opening paragraph or header) with
+     * this meeting's values. Returns null when the template is empty so the frontend falls
+     * back to its built-in default / renders nothing.
      */
-    private String resolveOpeningParagraph(Committee committee, MinuteDataDto data) {
-        String template = committee.getMinuteOpeningTemplate();
+    private String substitutePlaceholders(String template, MinuteDataDto data) {
         if (template == null || template.isBlank()) {
             return null;
         }

@@ -77,6 +77,7 @@ public class CommitteeService {
         committee.setStatus(committeeCreationDto.getStatus());
         committee.setMinuteLanguage(committeeCreationDto.getMinuteLanguage());
         committee.setMinuteOpeningTemplate(committeeCreationDto.getMinuteOpeningTemplate());
+        committee.setMinuteHeaderTemplate(committeeCreationDto.getMinuteHeaderTemplate());
 
         if (committeeCreationDto.getMaximumNumberOfMeetings() != null)
             committee.setMaxNoOfMeetings(committeeCreationDto.getMaximumNumberOfMeetings());
@@ -132,6 +133,7 @@ public class CommitteeService {
         existingCommittee.setStatus(committee.getStatus());
         existingCommittee.setMinuteLanguage(committee.getMinuteLanguage());
         existingCommittee.setMinuteOpeningTemplate(committee.getMinuteOpeningTemplate());
+        existingCommittee.setMinuteHeaderTemplate(committee.getMinuteHeaderTemplate());
         existingCommittee.setMaxNoOfMeetings(committee.getMaxNoOfMeetings());
         existingCommittee.setCoordinator(committee.getCoordinator());
         existingCommittee.setSecretary(committee.getSecretary());

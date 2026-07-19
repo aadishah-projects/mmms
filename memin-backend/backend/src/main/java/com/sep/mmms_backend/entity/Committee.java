@@ -60,6 +60,11 @@ public class Committee {
     @Column(name = "committee_minute_opening_template", columnDefinition = "TEXT")
     private String minuteOpeningTemplate;
 
+    // Per-committee editable header/letterhead shown at the top of the minute
+    // (e.g. institution/office name). Supports the same placeholders. Null = no header.
+    @Column(name = "committee_minute_header_template", columnDefinition = "TEXT")
+    private String minuteHeaderTemplate;
+
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "committee_coordinator_id", referencedColumnName = "member_id", nullable = false)
     private Member coordinator;

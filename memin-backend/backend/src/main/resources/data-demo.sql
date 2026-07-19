@@ -9,5 +9,9 @@ UPDATE app_users SET role = 'DEPARTMENT_HEAD', linked_member_id = 1 WHERE userna
 -- template feature is demoable (committee 1 shows a custom intro; others use the default).
 UPDATE committees
 SET committee_minute_opening_template =
-'आज मिति {date} ({day}) {partOfDay} {time} बजे {place} मा {committeeName} समितिको बैठक संयोजक {coordinator} ज्यूको अध्यक्षतामा बसी देहाय बमोजिम छलफल तथा निर्णय गरियोः'
+'आज मिति {date} ({day}) {partOfDay} {time} बजे {place} मा {committeeName} समितिको बैठक संयोजक {coordinator} ज्यूको अध्यक्षतामा बसी देहाय बमोजिम छलफल तथा निर्णय गरियोः',
+    committee_minute_header_template =
+'त्रिभुवन विश्वविद्यालय
+इन्जिनियरिङ अध्ययन संस्थान
+{committeeName}'
 WHERE committee_id = 1;
