@@ -27,6 +27,9 @@ public class CommitteeCreationDto {
 //    @NotBlank(message="minute language is required")
     private MinuteLanguage minuteLanguage = MinuteLanguage.ENGLISH;
 
+    // Optional per-committee opening paragraph template for the minute (supports placeholders).
+    private String minuteOpeningTemplate;
+
     //member id and role
     //this annotation causes the json's 'key' to be used as the 'key' of the map
     List<MemberIdWithRoleDto> members = new ArrayList<>();

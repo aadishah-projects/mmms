@@ -43,6 +43,7 @@ CREATE TABLE committees (
         committee_modified_date DATE NOT NULL,
         committee_status VARCHAR(255) NOT NULL,
         committee_minute_language VARCHAR(255) NOT NULL,
+        committee_minute_opening_template TEXT,
         committee_max_no_of_meetings INT,
         FOREIGN KEY (committee_coordinator_id) REFERENCES members(member_id)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

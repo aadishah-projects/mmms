@@ -54,6 +54,12 @@ public class Committee {
     @Enumerated(EnumType.STRING)
     private MinuteLanguage minuteLanguage;
 
+    // Per-committee editable opening paragraph for the meeting minute. May contain
+    // placeholders like {committeeName}, {date}, {time}, {place}, {coordinator}, etc.
+    // Null means "use the built-in default opening paragraph".
+    @Column(name = "committee_minute_opening_template", columnDefinition = "TEXT")
+    private String minuteOpeningTemplate;
+
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "committee_coordinator_id", referencedColumnName = "member_id", nullable = false)
     private Member coordinator;

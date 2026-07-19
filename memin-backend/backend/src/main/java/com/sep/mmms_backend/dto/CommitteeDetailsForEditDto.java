@@ -13,6 +13,7 @@ public class CommitteeDetailsForEditDto {
     public CommitteeStatus status;
     public Integer maxNoOfMeetings;
     public MinuteLanguage minuteLanguage;
+    public String minuteOpeningTemplate;
     public MemberSearchResultDto coordinator;
     public MemberSearchResultDto secretary;
     public List<MemberSearchResultWithRoleDto> membersWithRoles;
@@ -24,6 +25,7 @@ public class CommitteeDetailsForEditDto {
         this.status = committee.getStatus();
         this.maxNoOfMeetings = committee.getMaxNoOfMeetings();
         this.minuteLanguage = committee.getMinuteLanguage();
+        this.minuteOpeningTemplate = committee.getMinuteOpeningTemplate();
         this.coordinator = new MemberSearchResultDto(committee.getCoordinator());
         if(committee.getSecretary() != null) {
             this.secretary = new MemberSearchResultDto(committee.getSecretary());
