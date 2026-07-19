@@ -23,6 +23,7 @@ interface UserDto {
 export class ManageUsersComponent implements OnInit {
   users: UserDto[] = [];
   isLoaded = false;
+  loadError = false;
   availableRoles = ['DEPARTMENT_HEAD', 'DEPARTMENT_MEMBER', 'COMMITTEE_MEMBER', 'GUEST'];
   feedbackMessage: string | null = null;
   feedbackType: 'success' | 'error' = 'success';
@@ -34,6 +35,7 @@ export class ManageUsersComponent implements OnInit {
   }
 
   loadUsers(): void {
+    this.loadError = false;
     this.httpClient
       .get<Response<UserDto[]>>(BACKEND_URL + '/api/users', { withCredentials: true })
       .subscribe({
@@ -42,6 +44,8 @@ export class ManageUsersComponent implements OnInit {
           this.isLoaded = true;
         },
         error: (error) => {
+          // Don't leave the page stuck on the loader — surface a retryable error.
+          this.loadError = true;
           console.error('Failed to load users', error);
         },
       });

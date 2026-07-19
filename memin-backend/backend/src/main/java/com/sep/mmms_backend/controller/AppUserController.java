@@ -71,7 +71,9 @@ public class AppUserController {
             map.put("lastName", user.getLastName());
             map.put("username", user.getUsername());
             map.put("email", user.getEmail());
-            map.put("role", user.getRole().name());
+            // A user can exist without a role yet (e.g. seeded/invited-but-unassigned);
+            // guard against NPE so the whole user list doesn't fail to load.
+            map.put("role", user.getRole() != null ? user.getRole().name() : null);
             return map;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(new Response("Users loaded successfully", userList));

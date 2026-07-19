@@ -41,6 +41,11 @@
         </tbody>
       </table>
     </div>
+  } @else if (loadError) {
+    <div class="load-error">
+      <p>Could not load users. Please try again.</p>
+      <button class="retry-btn" (click)="loadUsers()">Retry</button>
+    </div>
   } @else {
     <span class="loader"></span>
   }
