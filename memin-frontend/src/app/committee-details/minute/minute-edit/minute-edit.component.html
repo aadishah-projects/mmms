@@ -1,12 +1,14 @@
 <div class="minute-edit-container">
   <div class="panel-header">
     <div class="pair">
-      <h2>Edit Minute</h2>
+      <h2>Draft / Edit Minute</h2>
       @if (minuteDataService.hasDataChanged()) {
-        <button class="btn btn-primary" (click)="onSubmit()">Save</button>
+        <button class="btn btn-primary" type="button" (click)="onSubmit()" [disabled]="saveInProgress || aiInProgress">
+          {{ saveInProgress ? 'Saving...' : 'Save' }}
+        </button>
       }
     </div>
-    <p class="panel-subtitle">Update meeting minute details and decisions</p>
+    <p class="panel-subtitle">Create or update the meeting minute</p>
     @if (!minuteData().minuteContentHtml) {
       <button type="button" class="btn btn-secondary" (click)="startFullEditor()">Open full editor</button>
     } @else {
@@ -20,9 +22,9 @@
       id="ai-minute-prompt"
       name="aiPrompt"
       [(ngModel)]="aiPrompt"
-      placeholder="Roughly describe the discussion, decisions, actions, and tone you want in the minute"
+      placeholder="Optional: add discussion notes, actions, tone, or a translation instruction. Meeting details are included automatically."
     ></textarea>
-    <button type="button" class="btn btn-primary" (click)="generateAiMinute()" [disabled]="aiInProgress || !aiPrompt.trim()">
+    <button type="button" class="btn btn-primary" (click)="generateAiMinute()" [disabled]="aiInProgress">
       {{ aiInProgress ? 'Generating...' : 'Use AI to draft minute' }}
     </button>
   </div>

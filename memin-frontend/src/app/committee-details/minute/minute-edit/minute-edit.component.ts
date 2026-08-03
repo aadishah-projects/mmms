@@ -26,6 +26,7 @@ export class MinuteEditComponent implements OnInit {
   httpParams = new HttpParams();
   aiPrompt = '';
   aiInProgress = false;
+  saveInProgress = false;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -80,7 +81,7 @@ export class MinuteEditComponent implements OnInit {
   }
 
   generateAiMinute(): void {
-    if (!this.aiPrompt.trim() || this.aiInProgress) return;
+    if (this.aiInProgress) return;
     this.aiInProgress = true;
     const meetingId = this.httpParams.get('meetingId');
     this.httpClient
@@ -95,9 +96,14 @@ export class MinuteEditComponent implements OnInit {
           this.aiInProgress = false;
           this.popupService.showPopup('AI minute draft generated. Review it before saving.', 'Success', 3000);
         },
-        error: () => {
+        error: (error) => {
           this.aiInProgress = false;
-          this.popupService.showPopup('AI minute generation failed. Check the AI configuration.', 'Error', 3000);
+          const message = error?.error?.message;
+          this.popupService.showPopup(
+            message || 'AI minute generation failed. Check the AI configuration.',
+            'Error',
+            3000,
+          );
         },
       });
   }
@@ -204,6 +210,7 @@ export class MinuteEditComponent implements OnInit {
     // previously saved custom draft is cleared on the server.
     minuteUpdateDto.htmlContent = this.minuteData().minuteContentHtml ?? '';
 
+    this.saveInProgress = true;
     this.httpClient
       .patch<
         Response<Object>
@@ -211,6 +218,8 @@ export class MinuteEditComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('TODO: handle this properly' + response.message);
+          this.saveInProgress = false;
+          this.minuteDataService.markSaved();
           this.router.navigate(['./committee-details/overview'], {
             queryParamsHandling: 'preserve',
           });
@@ -219,7 +228,9 @@ export class MinuteEditComponent implements OnInit {
         },
 
         error: (error) => {
-	  this.popupService.showPopup("Minute Edit Failed!", "Error", 2000);
+	  this.saveInProgress = false;
+          const message = error?.error?.message || 'Minute save failed. Please try again.';
+	  this.popupService.showPopup(message, "Error", 4000);
         },
       });
 

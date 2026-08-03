@@ -317,6 +317,28 @@
           }
         </div>
       </div>
+
+      @if (!isEditPage()) {
+        <div class="ai-draft-panel">
+          <label for="new-minute-ai-prompt">AI minute assistant</label>
+          <textarea
+            id="new-minute-ai-prompt"
+            name="newMinuteAiPrompt"
+            [(ngModel)]="aiDraftPrompt"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Optional: add discussion notes, actions, tone, or a translation instruction. Meeting details and attendees are included automatically."
+            class="form-input"
+          ></textarea>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="onSubmitWithAi($event)"
+            [disabled]="isFormSaving"
+          >
+            Save meeting and draft minute with AI
+          </button>
+        </div>
+      }
     </form>
   </div>
 </dialog>

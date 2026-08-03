@@ -1,1 +1,6 @@
-    <app-meeting-form (formSaveEvent)="onFormSave($event)" [isEditPage]="false" [meetingFormData]="meetingFormData"></app-meeting-form>
+    <app-meeting-form
+      (formSaveEvent)="onFormSave($event)"
+      (draftWithAiEvent)="onDraftWithAi($event)"
+      [isEditPage]="false"
+      [meetingFormData]="meetingFormData"
+    ></app-meeting-form>

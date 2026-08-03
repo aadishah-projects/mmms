@@ -49,6 +49,7 @@ public class MeetingMinuteController {
         return ResponseEntity.ok(new Response("Meeting Minute Data: ", minuteData));
     }
 
+    @Transactional
     @PostMapping("api/meetings/{meetingId}/ai-minute")
     @org.springframework.web.bind.annotation.ResponseBody
     public ResponseEntity<Response> generateAiMinute(

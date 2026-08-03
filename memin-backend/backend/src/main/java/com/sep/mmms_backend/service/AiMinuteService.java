@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestClientException;
 
 import java.util.List;
@@ -40,55 +41,87 @@ public class AiMinuteService {
             throw new IllegalOperationException("AI minute drafting is not configured. Set LLM_BASE_URL and LLM_API_KEY.");
         }
 
+        String existingMinute = minuteData.getMinuteContentHtml();
+        String instructions = roughPrompt == null || roughPrompt.isBlank()
+                ? "Draft the minute using all supplied meeting information. Do not invent missing facts."
+                : roughPrompt.trim();
         String prompt = "Meeting details:\n" +
+                "Meeting title: " + minuteData.getMeetingTitle() + "\n" +
                 "Committee: " + minuteData.getCommitteeName() + "\n" +
                 "Description: " + minuteData.getCommitteeDescription() + "\n" +
+                "Minute language: " + minuteData.getMinuteLanguage() + "\n" +
                 "Date: " + minuteData.getMeetingHeldDate() + "\n" +
+                "Date in local language: " + minuteData.getMeetingHeldDateNepali() + "\n" +
+                "Day: " + minuteData.getMeetingHeldDay() + "\n" +
                 "Time: " + minuteData.getMeetingHeldTime() + "\n" +
+                "Part of day: " + minuteData.getPartOfDay() + "\n" +
                 "Place: " + minuteData.getMeetingHeldPlace() + "\n" +
                 "Coordinator: " + minuteData.getCoordinatorFullName() + "\n" +
+                "Header text: " + minuteData.getHeader() + "\n" +
+                "Opening paragraph: " + minuteData.getOpeningParagraph() + "\n" +
                 "Participants: " + minuteData.getParticipants().stream()
                 .map(participant -> participant.getFullName() + " (" + participant.getRole() + ")")
                 .toList() + "\n" +
                 "Agendas: " + minuteData.getAgendas().stream().map(item -> item.getAgenda()).toList() + "\n" +
                 "Existing decisions: " + minuteData.getDecisions().stream().map(item -> item.getDecision()).toList() + "\n\n" +
-                "Additional rough instructions from the minute writer:\n" + roughPrompt.trim();
+                (existingMinute == null || existingMinute.isBlank()
+                        ? ""
+                        : "Existing minute HTML draft (preserve its useful structure when applicable):\n"
+                        + existingMinute + "\n\n") +
+                "Additional instructions from the minute writer:\n" + instructions;
 
         String systemPrompt = "You are a formal meeting-minute writer. Draft a complete, professional minute " +
                 "from the meeting facts and rough instructions. Return only an HTML fragment, without Markdown " +
                 "code fences and without an outer #a4-box element. Include a clear opening paragraph, an " +
                 "attendance table with a signature column, an agenda section when agendas exist, and a numbered " +
                 "decisions section. Do not invent names, dates, votes, or decisions; use only the supplied facts " +
-                "and clearly phrase any rough instruction as a proposed draft.";
+                "and clearly phrase any rough instruction as a proposed draft. If the rough instructions request " +
+                "translation, translate every human-readable label and sentence in the supplied meeting data or " +
+                "existing draft into the requested language, while preserving names, numbers, dates, and HTML " +
+                "structure unless the instruction says otherwise.";
 
         Map<String, Object> request = Map.of(
                 "model", model,
                 "max_tokens", maxTokens,
                 "system", systemPrompt,
-                "messages", List.of(Map.of("role", "user", "content", prompt))
+                "messages", List.of(Map.of("role", "user", "content", prompt)),
+                "stream", false
         );
 
         try {
-            Map<?, ?> response = restClientBuilder.baseUrl(baseUrl).build()
+                Map<?, ?> response = restClientBuilder.baseUrl(baseUrl).build()
                     .post()
                     .uri("/v1/messages")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .header("x-api-key", apiKey)
-                    .header("Authorization", "Bearer " + apiKey)
+                    .header("api-key", apiKey)
                     .header("anthropic-version", "2023-06-01")
                     .body(request)
                     .retrieve()
                     .body(Map.class);
 
-            JsonNode content = objectMapper.valueToTree(response).path("content");
-            String generated = content.isArray() && !content.isEmpty()
-                    ? content.get(0).path("text").asText("")
-                    : "";
+            JsonNode responseNode = objectMapper.valueToTree(response);
+            JsonNode content = responseNode == null ? null : responseNode.path("content");
+            StringBuilder generatedText = new StringBuilder();
+            if (content != null && content.isArray()) {
+                for (JsonNode contentBlock : content) {
+                    String text = contentBlock.path("text").asText("");
+                    if (!text.isBlank()) {
+                        if (!generatedText.isEmpty()) {
+                            generatedText.append("\n");
+                        }
+                        generatedText.append(text);
+                    }
+                }
+            }
+            String generated = generatedText.toString();
             generated = removeCodeFences(generated).trim();
             if (generated.isBlank()) {
                 throw new IllegalOperationException("The AI service returned an empty minute draft");
             }
             return generated;
+        } catch (RestClientResponseException exception) {
+            throw new IllegalOperationException(
+                    "The AI service rejected the minute request (HTTP " + exception.getStatusCode().value() + ")");
         } catch (RestClientException exception) {
             throw new IllegalOperationException("The AI minute service could not be reached");
         }

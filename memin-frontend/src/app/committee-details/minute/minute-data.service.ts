@@ -34,17 +34,7 @@ export class MinuteDataService {
 	    this.hasMinuteDataLoaded = true;
 
 	    //originalDataString should no contain invitees because when invitee order changs, 'Save' button should not appear
-            const originalData = {
-              committeeName: this.minuteData().committeeName,
-              committeeDescription: this.minuteData().committeeDescription,
-              meetingHeldDate: this.minuteData().meetingHeldDate,
-              meetingHeldTime: this.minuteData().meetingHeldTime,
-              meetingHeldPlace: this.minuteData().meetingHeldPlace,
-              agendas: this.minuteData().agendas,
-              decisions: this.minuteData().decisions,
-              minuteContentHtml: this.minuteData().minuteContentHtml,
-            };
-            this.originalDataString = JSON.stringify(originalData);
+            this.markSaved();
             console.log(response.mainBody);
           },
           error: (response) => {
@@ -62,16 +52,31 @@ export class MinuteDataService {
     this.minuteData.update((data) => ({ ...data, minuteContentHtml: htmlContent }));
   }
 
+  markSaved(): void {
+    const data = this.minuteData();
+    this.originalDataString = JSON.stringify({
+      committeeName: data.committeeName,
+      committeeDescription: data.committeeDescription,
+      meetingHeldDate: data.meetingHeldDate,
+      meetingHeldTime: data.meetingHeldTime,
+      meetingHeldPlace: data.meetingHeldPlace,
+      agendas: data.agendas,
+      decisions: data.decisions,
+      minuteContentHtml: data.minuteContentHtml,
+    });
+  }
+
   hasDataChanged(): boolean {
+    const data = this.minuteData();
     const newData = {
-      committeeName: this.minuteData().committeeName,
-      committeeDescription: this.minuteData().committeeDescription,
-      meetingHeldDate: this.minuteData().meetingHeldDate,
-      meetingHeldTime: this.minuteData().meetingHeldTime,
-      meetingHeldPlace: this.minuteData().meetingHeldPlace,
-      agendas: this.minuteData().agendas,
-      decisions: this.minuteData().decisions,
-      minuteContentHtml: this.minuteData().minuteContentHtml,
+      committeeName: data.committeeName,
+      committeeDescription: data.committeeDescription,
+      meetingHeldDate: data.meetingHeldDate,
+      meetingHeldTime: data.meetingHeldTime,
+      meetingHeldPlace: data.meetingHeldPlace,
+      agendas: data.agendas,
+      decisions: data.decisions,
+      minuteContentHtml: data.minuteContentHtml,
     };
 
     if (

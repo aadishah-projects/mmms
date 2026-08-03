@@ -27,6 +27,29 @@
   border-bottom: 1px solid colors.$color-border-primary;
 }
 
+.ai-draft-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 14px;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  background: colors.$color-background-card;
+
+  label {
+    color: colors.$color-text-secondary;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  textarea {
+    min-height: 70px;
+    resize: vertical;
+  }
+}
+
 
 //----------------------------------LEFT PANEL -------------------------------------
 

@@ -61,6 +61,7 @@ public class MeetingMinutePreparationService {
         minuteData.setMeetingHeldTime(meetingHeldTime);
 
         minuteData.setMeetingHeldPlace(meeting.getHeldPlace());
+        minuteData.setMeetingTitle(meeting.getTitle());
 
         minuteData.setCommitteeDescription(committee.getDescription());
 

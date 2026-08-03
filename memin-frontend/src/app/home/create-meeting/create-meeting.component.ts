@@ -16,6 +16,8 @@ import { PopupService } from "../../popup/popup.service";
 })
 export class CreateMeetingComponent  {
 
+  private aiPromptForNewMinute: string | null = null;
+
   constructor(private httpClient: HttpClient,private router: Router, private popupService: PopupService) {
     
   }
@@ -37,6 +39,8 @@ export class CreateMeetingComponent  {
   onFormSave(requestBody: MeetingCreationDto) {
 
     console.log(requestBody);
+    const aiPrompt = this.aiPromptForNewMinute;
+    this.aiPromptForNewMinute = null;
 
     this.httpClient
       .post<Response<MeetingSummaryDto>>(
@@ -49,8 +53,29 @@ export class CreateMeetingComponent  {
       .subscribe({
         next: (response) => {
           console.log(response.message);
-          this.router.navigate(['/home/my-committees']);
-	  this.popupService.showPopup("Meeting Created!", "Success", 2000);
+          const meetingId = response.mainBody.id;
+          if (aiPrompt !== null) {
+            this.httpClient
+              .post<Response<{ htmlContent: string }>>(
+                `${BACKEND_URL}/api/meetings/${meetingId}/ai-minute`,
+                { roughPrompt: aiPrompt },
+                { withCredentials: true },
+              )
+              .subscribe({
+                next: () => {
+                  this.navigateToMinute(requestBody.committeeId, meetingId);
+                  this.popupService.showPopup('Meeting created and AI minute drafted.', 'Success', 3000);
+                },
+                error: (error) => {
+                  this.navigateToMinute(requestBody.committeeId, meetingId);
+                  const message = error?.error?.message || 'AI minute generation failed. You can retry from the minute editor.';
+                  this.popupService.showPopup(message, 'Error', 4000);
+                },
+              });
+          } else {
+            this.navigateToMinute(requestBody.committeeId, meetingId);
+            this.popupService.showPopup("Meeting Created!", "Success", 2000);
+          }
         },
 
         error: (error) => {
@@ -58,6 +83,16 @@ export class CreateMeetingComponent  {
 	  this.popupService.showPopup("Meeting Creation Failed!", "Error", 2000);
         },
       });
+  }
+
+  onDraftWithAi(prompt: string) {
+    this.aiPromptForNewMinute = prompt;
+  }
+
+  private navigateToMinute(committeeId: number, meetingId: number) {
+    this.router.navigate(['/committee-details/overview/minute'], {
+      queryParams: { committeeId, meetingId },
+    });
   }
   
 } 

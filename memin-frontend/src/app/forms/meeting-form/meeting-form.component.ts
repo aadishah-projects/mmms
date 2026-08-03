@@ -57,6 +57,7 @@ import { Response } from '../../response/response';
 export class MeetingForm implements OnInit {
   //outputs
   formSaveEvent = output<MeetingCreationDto>();
+  draftWithAiEvent = output<string>();
 
   //inputs
   isEditPage = input.required<boolean>();
@@ -104,6 +105,7 @@ export class MeetingForm implements OnInit {
   //for agenda and decision we will use two way binding as the input should be associated with DecisionDto not a string(as id is needed for edit page);
   agendas: AgendaDto[] = [];
   decisions: DecisionDto[] = [];
+  aiDraftPrompt = '';
 
   ngOnInit(): void {
     //initializing the form groups and controls for both right and left panel
@@ -419,7 +421,7 @@ export class MeetingForm implements OnInit {
   showAllFormErrors = false;
   isFormSaving = false;
 
-  onSubmit($event: Event) {
+  onSubmit($event: Event, draftWithAi = false) {
     $event.preventDefault();
     if (
       this.meetingFormGroup.invalid ||
@@ -449,10 +451,17 @@ export class MeetingForm implements OnInit {
     );
 
     this.isFormSaving = true;
+    if (draftWithAi) {
+      this.draftWithAiEvent.emit(this.aiDraftPrompt.trim());
+    }
     this.formSaveEvent.emit(requestBody);
 
     //TODO: should be done in the create meeting or edit meeting as request might fail as well
     localStorage.removeItem(this.FORM_NAME);
+  }
+
+  onSubmitWithAi($event: Event) {
+    this.onSubmit($event, true);
   }
 
   count = -1; //unique negative number which is assigned as the decision or agenda id which is used for deletion
