@@ -2,6 +2,7 @@ package com.sep.mmms_backend.entity;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -42,6 +43,10 @@ public class Member {
 
     @Column(name="member_institution", nullable = true)
     private String institution;
+
+    @Email
+    @Column(name = "member_email")
+    private String email;
 
     @Column(name = "member_created_by", updatable = false, nullable = false)
     @CreatedBy

@@ -6,6 +6,7 @@ import com.sep.mmms_backend.entity.*;
 import com.sep.mmms_backend.exceptions.*;
 import com.sep.mmms_backend.repository.MeetingRepository;
 import com.sep.mmms_backend.repository.MemberRepository;
+import com.sep.mmms_backend.repository.AppUserRepository;
 import com.sep.mmms_backend.validators.EntityValidator;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -19,14 +20,18 @@ public class MeetingService {
     private final MeetingRepository meetingRepository;
     private final MemberRepository memberRepository;
     private final EntityValidator entityValidator;
+    private final AppUserRepository appUserRepository;
+    private final EmailService emailService;
 
-    public MeetingService(MeetingRepository meetingRepository, MemberRepository memberRepository, EntityValidator entityValidator) {
+    public MeetingService(MeetingRepository meetingRepository, MemberRepository memberRepository, EntityValidator entityValidator, AppUserRepository appUserRepository, EmailService emailService) {
         this.meetingRepository = meetingRepository;
         this.entityValidator = entityValidator;
         this.memberRepository = memberRepository;
+        this.appUserRepository = appUserRepository;
+        this.emailService = emailService;
     }
 
-    //TODO: Create Tests
+    @Transactional
     @CheckCommitteeAccess
     public Meeting saveNewMeeting(MeetingCreationDto meetingCreationDto, Committee committee, String username) {
         entityValidator.validate(meetingCreationDto);
@@ -64,7 +69,9 @@ public class MeetingService {
             memberRepository.validateWhetherAllMembersAreFound(requestedInvitees, foundMembers);
             meeting.setInvitees(foundMembers);
         }
-        return meetingRepository.save(meeting);
+        Meeting savedMeeting = meetingRepository.save(meeting);
+        notifyMeetingInvitees(savedMeeting, savedMeeting.getInvitees(), username);
+        return savedMeeting;
     }
 
 
@@ -182,9 +189,13 @@ public class MeetingService {
     }
 
 
+    @Transactional
     public Meeting updateExistingMeeting(MeetingCreationDto meetingCreationDto, Integer meetingId, String username) {
         entityValidator.validate(meetingCreationDto);
         Meeting existingMeeting = getMeetingIfAccessible(meetingId, username);
+        Set<Integer> existingInviteeIds = existingMeeting.getInvitees().stream()
+                .map(Member::getId)
+                .collect(Collectors.toSet());
 
         //reassign the updated values
         existingMeeting.setTitle(meetingCreationDto.getTitle());
@@ -257,6 +268,42 @@ public class MeetingService {
                 existingMeeting.getInvitees().add(member.get());
             }
         }
-        return meetingRepository.save(existingMeeting);
+        Meeting savedMeeting = meetingRepository.save(existingMeeting);
+        List<Member> newlyAddedInvitees = savedMeeting.getInvitees().stream()
+                .filter(invitee -> !existingInviteeIds.contains(invitee.getId()))
+                .toList();
+        notifyMeetingInvitees(savedMeeting, newlyAddedInvitees, username);
+        return savedMeeting;
+    }
+
+    @Transactional
+    public int sendMeetingInvites(Integer meetingId, String username) {
+        Meeting meeting = getMeetingIfAccessible(meetingId, username);
+        return notifyMeetingInvitees(meeting, meeting.getInvitees(), username);
+    }
+
+    private int notifyMeetingInvitees(Meeting meeting, Collection<Member> invitees, String inviterUsername) {
+        AppUser inviter = appUserServiceForEmail(inviterUsername);
+        String inviterName = inviter.getFirstName() + " " + inviter.getLastName();
+        int sentCount = 0;
+
+        for (Member invitee : invitees) {
+            String email = invitee.getEmail();
+            if ((email == null || email.isBlank()) && invitee.getId() != null) {
+                email = appUserRepository.findFirstByLinkedMemberId(invitee.getId())
+                        .map(AppUser::getEmail)
+                        .orElse(null);
+            }
+            if (email != null && !email.isBlank()
+                    && emailService.sendMeetingInviteEmail(email, meeting, inviterName)) {
+                sentCount++;
+            }
+        }
+        return sentCount;
+    }
+
+    private AppUser appUserServiceForEmail(String username) {
+        return appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new UserDoesNotExistException(ExceptionMessages.USER_DOES_NOT_EXIST));
     }
 }

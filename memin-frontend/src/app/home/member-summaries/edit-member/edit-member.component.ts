@@ -37,6 +37,7 @@ export class EditMemberComponent implements OnInit {
     title: '',
     post: '',
     institution: '',
+    email: '',
   };
 
   ngOnInit() {
@@ -63,6 +64,7 @@ export class EditMemberComponent implements OnInit {
             this.memberFormData.title = mainBody.title;
             this.memberFormData.post = mainBody.post;
             this.memberFormData.institution = mainBody.institution;
+            this.memberFormData.email = mainBody.email || '';
             this.hasDataLoaded = true;
             console.log(response.mainBody);
           },

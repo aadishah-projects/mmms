@@ -21,8 +21,9 @@ CREATE TABLE members (
                          member_last_name VARCHAR(255) NOT NULL,
 
                          member_post VARCHAR(255),
-                         member_title VARCHAR(255) NOT NULL,
-                         member_institution VARCHAR(255),
+    member_title VARCHAR(255) NOT NULL,
+    member_institution VARCHAR(255),
+    member_email VARCHAR(255),
 
                          member_created_by VARCHAR(255) NOT NULL,
                          member_created_date DATE NOT NULL,
@@ -128,4 +129,17 @@ CREATE TABLE agendas (
                            agenda_modified_date DATE NOT NULL,
 
                            FOREIGN KEY (meeting_id) REFERENCES meetings(meeting_id)
+) ;
+
+CREATE TABLE invite_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
+    invited_by VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    committee_id INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (committee_id) REFERENCES committees(committee_id)
 ) ;

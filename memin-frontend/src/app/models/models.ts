@@ -11,6 +11,7 @@ export interface MemberDetails {
   post: string;
   title: string;
   institution: string;
+  email: string;
 }
 
 export class CommitteeCreationDto {
@@ -130,6 +131,7 @@ export class MemberDetailsDto {
   title: string = '';
   post: string = '';
   institution: string = '';
+  email: string = '';
 }
 
 export class MemberCreationDto {
@@ -138,6 +140,7 @@ export class MemberCreationDto {
   title: string = '';
   post: string = '';
   institution: string = '';
+  email: string = '';
 }
 
 export class MeetingCreationDto {
@@ -167,6 +170,7 @@ export class CommitteeDetailsForEditDto {
     post: '',
     title:'',
     institution: '',
+    email: '',
   };
   membersWithRoles: MemberDetailsWithRole[] = [];
 }
@@ -179,6 +183,7 @@ export class MemberDetailsWithRole {
     post: '',
     title: '',
     institution: '',
+    email: '',
   };
   role: string = '';
 }
@@ -247,6 +252,7 @@ export interface MemberFormData {
   post: string;
   title: string;
   institution: string;
+  email: string;
 }
 
 export interface MeetingFormData {

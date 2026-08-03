@@ -30,7 +30,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain getSecurityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((config)-> {
             config.requestMatchers("/h2-console/**","/css/**", "/templates/**", "/isAuthenticated", "/register", "/previewMeetingMinute", "/api/register-with-token", "/error").permitAll();
-            config.requestMatchers("/api/invite/**").hasRole("DEPARTMENT_HEAD");
+            config.requestMatchers(org.springframework.http.HttpMethod.GET, "/api/invite/*").permitAll();
+            config.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/invite").hasRole("DEPARTMENT_HEAD");
             config.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/committee").hasRole("DEPARTMENT_HEAD");
             config.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/meeting").authenticated();
             config.requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/minute").authenticated();

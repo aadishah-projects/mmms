@@ -41,6 +41,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
   post!: FormControl<string>;
   title!: FormControl<string>;
   institution!: FormControl<string>;
+  email!: FormControl<string>;
 
   memberFormGroup!: FormGroup<{
     firstName: FormControl<string>;
@@ -48,6 +49,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
     post: FormControl<string>;
     title: FormControl<string>;
     institution: FormControl<string>;
+    email: FormControl<string>;
   }>;
 
   ngOnInit(): void {
@@ -70,6 +72,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
 
 
     this.institution = new FormControl(this.memberFormData().institution, {nonNullable: true });
+    this.email = new FormControl(this.memberFormData().email, {nonNullable: true, validators: [Validators.email] });
 
     
     this.memberFormGroup = new FormGroup({
@@ -78,6 +81,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
       post: this.post,
       title: this.title,
       institution: this.institution,
+      email: this.email,
     });
   }
 
@@ -102,6 +106,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
     memberCreationDto.post = this.post.value!;
     memberCreationDto.title = this.title.value!;
     memberCreationDto.institution = this.institution.value!;
+    memberCreationDto.email = this.email.value!;
     localStorage.removeItem(this.FORM_NAME);
     this.formSaveEvent.emit(memberCreationDto);
     this.diag()!.nativeElement.close();

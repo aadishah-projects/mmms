@@ -19,6 +19,56 @@
   margin: 0 0 24px 0;
 }
 
+.invite-form {
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.invite-form-heading {
+  color: colors.$color-text-primary;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.invite-form-help {
+  color: colors.$color-text-muted;
+  font-size: 0.85rem;
+  margin: 0 0 14px;
+}
+
+.invite-form-fields {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.invite-input {
+  flex: 1;
+  min-width: 200px;
+  background: colors.$color-background-input;
+  color: colors.$color-text-primary;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: inherit;
+}
+
+.invite-button {
+  padding: 8px 14px;
+  border: 1px solid colors.$color-border-focus;
+  border-radius: 6px;
+  background: colors.$color-text-primary;
+  color: colors.$color-background-main;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+}
+
 .feedback {
   padding: 10px 16px;
   border-radius: 6px;
@@ -121,6 +171,20 @@
   option {
     background: colors.$color-background-main;
     color: colors.$color-text-primary;
+  }
+}
+
+@media (max-width: 700px) {
+  .invite-form-fields {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .invite-input,
+  .invite-form-fields .role-select,
+  .invite-button {
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 

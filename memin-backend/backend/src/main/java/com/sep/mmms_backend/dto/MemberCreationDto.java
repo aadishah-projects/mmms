@@ -20,4 +20,7 @@ public class MemberCreationDto {
     private String post;  //example: IMO Cheif, Campus Chief
 
     private String institution;
+
+    @Email(message = "member's email must be valid")
+    private String email;
 }

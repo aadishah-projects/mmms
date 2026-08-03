@@ -5,8 +5,10 @@ import com.sep.mmms_backend.dto.RegisterWithTokenDto;
 import com.sep.mmms_backend.entity.AppUser;
 import com.sep.mmms_backend.entity.Committee;
 import com.sep.mmms_backend.entity.InviteToken;
+import com.sep.mmms_backend.entity.Member;
 import com.sep.mmms_backend.exceptions.IllegalOperationException;
 import com.sep.mmms_backend.repository.InviteTokenRepository;
+import com.sep.mmms_backend.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,22 +23,30 @@ public class InviteService {
     private final EmailService emailService;
     private final AppUserService appUserService;
     private final CommitteeService committeeService;
+    private final MemberRepository memberRepository;
     
-    public InviteService(InviteTokenRepository inviteTokenRepository, EmailService emailService, AppUserService appUserService, CommitteeService committeeService) {
+    public InviteService(InviteTokenRepository inviteTokenRepository, EmailService emailService, AppUserService appUserService, CommitteeService committeeService, MemberRepository memberRepository) {
         this.inviteTokenRepository = inviteTokenRepository;
         this.emailService = emailService;
         this.appUserService = appUserService;
         this.committeeService = committeeService;
+        this.memberRepository = memberRepository;
     }
 
     @Transactional
     public void createInvite(InviteRequestDto requestDto, String inviterUsername) {
+        String email = requestDto.getEmail().trim().toLowerCase();
+
+        if (appUserService.emailExists(email)) {
+            throw new IllegalOperationException("An account already exists for this email address");
+        }
+
         Committee committee = null;
         if (requestDto.getCommitteeId() != null) {
             committee = committeeService.findCommitteeById(requestDto.getCommitteeId());
         }
 
-        Optional<InviteToken> existing = inviteTokenRepository.findByEmailAndUsedFalse(requestDto.getEmail());
+        Optional<InviteToken> existing = inviteTokenRepository.findByEmailAndUsedFalse(email);
         if (existing.isPresent()) {
             InviteToken token = existing.get();
             token.setUsed(true);
@@ -45,7 +55,7 @@ public class InviteService {
 
         InviteToken inviteToken = InviteToken.builder()
                 .token(UUID.randomUUID().toString())
-                .email(requestDto.getEmail())
+                .email(email)
                 .invitedBy(inviterUsername)
                 .role(requestDto.getRole())
                 .committee(committee)
@@ -57,17 +67,28 @@ public class InviteService {
         
         AppUser inviter = appUserService.loadUserByUsername(inviterUsername);
         String inviterName = inviter.getFirstName() + " " + inviter.getLastName();
-        emailService.sendInviteEmail(requestDto.getEmail(), inviteToken.getToken(), inviterName);
+        if (!emailService.sendInviteEmail(email, inviteToken.getToken(), inviterName)) {
+            throw new IllegalOperationException("Could not send the invitation email. Configure the application's SMTP settings and try again.");
+        }
     }
 
-    @Transactional
-    public void consumeInvite(RegisterWithTokenDto requestDto) {
-        InviteToken inviteToken = inviteTokenRepository.findByToken(requestDto.getToken())
+    @Transactional(readOnly = true)
+    public InviteToken getValidInvite(String token) {
+        InviteToken inviteToken = inviteTokenRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalOperationException("Invalid invite token"));
 
         if (inviteToken.getUsed() || inviteToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new IllegalOperationException("Invite token is expired or already used");
         }
+        if (inviteToken.getCommittee() != null) {
+            inviteToken.getCommittee().getName();
+        }
+        return inviteToken;
+    }
+
+    @Transactional
+    public void consumeInvite(RegisterWithTokenDto requestDto) {
+        InviteToken inviteToken = getValidInvite(requestDto.getToken());
 
         AppUser newUser = new AppUser();
         newUser.setFirstName(requestDto.getFirstName());
@@ -77,6 +98,9 @@ public class InviteService {
         newUser.setPassword(requestDto.getPassword());
         newUser.setConfirmPassword(requestDto.getConfirmPassword());
         newUser.setRole(inviteToken.getRole());
+
+        Optional<Member> linkedMember = memberRepository.findFirstByEmailIgnoreCase(inviteToken.getEmail());
+        linkedMember.ifPresent(member -> newUser.setLinkedMemberId(member.getId()));
 
         appUserService.saveNewUser(newUser);
 

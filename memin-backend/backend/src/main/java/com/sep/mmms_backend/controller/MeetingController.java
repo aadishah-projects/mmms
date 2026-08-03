@@ -66,4 +66,10 @@ public class MeetingController {
        return ResponseEntity.ok(new Response(ResponseMessages.MEETING_UPDATION_SUCCESS));
     }
 
+    @PostMapping("/meeting/{meetingId}/send-invites")
+    public ResponseEntity<Response> sendMeetingInvites(@PathVariable Integer meetingId, Authentication authentication) {
+        int sentCount = meetingService.sendMeetingInvites(meetingId, authentication.getName());
+        return ResponseEntity.ok(new Response("Meeting invitations sent", sentCount));
+    }
+
 }

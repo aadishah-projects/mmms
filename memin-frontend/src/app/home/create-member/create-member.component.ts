@@ -20,6 +20,7 @@ export class CreateMemberComponent {
     post: '',
     title: '',
     institution: '',
+    email: '',
   };
 
   constructor(

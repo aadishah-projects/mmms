@@ -3,6 +3,13 @@
     <h2 class="register-title">Create Account</h2>
     <h3 class="register-sub-title">Join MeMin to organize your meetings!</h3>
 
+    @if (inviteLoaded) {
+      <div class="invite-summary">
+        <div>Invitation for <strong>{{ inviteEmail }}</strong></div>
+        <div>Authority: <strong>{{ formatRole(inviteRole) }}</strong></div>
+      </div>
+    }
+
     @if (errorMessage) {
       <div class="error-banner">
         {{ errorMessage }}
@@ -100,7 +107,7 @@
       <button
         type="submit"
         class="btn btn-primary"
-        [disabled]="formData.invalid || isLoading || !token"
+        [disabled]="formData.invalid || isLoading || !token || !inviteLoaded"
       >
         @if (isLoading) {
           <span class="spinner"></span> Registering...

@@ -101,6 +101,15 @@ export class AuthService {
     });
   }
 
+  getInviteDetails(token: string) {
+    return this.httpClient.get<Response<{
+      email: string;
+      role: string;
+      committeeName: string | null;
+      expiresAt: string;
+    }>>(`${BACKEND_URL}/api/invite/${encodeURIComponent(token)}`);
+  }
+
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
   }

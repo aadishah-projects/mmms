@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS members (
     member_post VARCHAR(255),
     member_title VARCHAR(255) NOT NULL,
     member_institution VARCHAR(255),
+    member_email VARCHAR(255),
 
     member_created_by VARCHAR(255) NOT NULL,
     member_created_date DATE NOT NULL,
@@ -121,3 +122,17 @@ CREATE TABLE IF NOT EXISTS agendas (
 
 ALTER TABLE app_users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'DEPARTMENT_MEMBER';
 ALTER TABLE app_users ADD COLUMN IF NOT EXISTS linked_member_id INT;
+ALTER TABLE members ADD COLUMN IF NOT EXISTS member_email VARCHAR(255);
+
+CREATE TABLE IF NOT EXISTS invite_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
+    invited_by VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    committee_id INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (committee_id) REFERENCES committees(committee_id)
+);

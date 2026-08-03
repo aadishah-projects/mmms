@@ -8,8 +8,10 @@ import com.sep.mmms_backend.dto.MemberWithoutCommitteeDto;
 import com.sep.mmms_backend.entity.Committee;
 import com.sep.mmms_backend.entity.CommitteeMembership;
 import com.sep.mmms_backend.entity.Member;
+import com.sep.mmms_backend.entity.AppUser;
 import com.sep.mmms_backend.exceptions.ExceptionMessages;
 import com.sep.mmms_backend.exceptions.MemberDoesNotExistException;
+import com.sep.mmms_backend.repository.AppUserRepository;
 import com.sep.mmms_backend.repository.MemberRepository;
 import com.sep.mmms_backend.validators.EntityValidator;
 import org.springframework.stereotype.Service;
@@ -24,10 +26,12 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final EntityValidator entityValidator;
+    private final AppUserRepository appUserRepository;
 
-    public MemberService(MemberRepository memberRepository, EntityValidator entityValidator) {
+    public MemberService(MemberRepository memberRepository, EntityValidator entityValidator, AppUserRepository appUserRepository) {
         this.memberRepository = memberRepository;
         this.entityValidator = entityValidator;
+        this.appUserRepository = appUserRepository;
     }
 
 
@@ -46,7 +50,10 @@ public class MemberService {
         }
         if (memberDto.getPost() != null)
             member.setPost(memberDto.getPost());
-        return memberRepository.save(member);
+        member.setEmail(normalizeEmail(memberDto.getEmail()));
+        Member savedMember = memberRepository.save(member);
+        linkExistingAccount(savedMember);
+        return savedMember;
     }
 
     @Transactional
@@ -58,11 +65,29 @@ public class MemberService {
         member.setLastName(memberCreationDto.getLastName());
         member.setTitle(memberCreationDto.getTitle());
         member.setPost(memberCreationDto.getPost());
+        member.setEmail(normalizeEmail(memberCreationDto.getEmail()));
 
         if(memberCreationDto.getInstitution() != null && !memberCreationDto.getInstitution().isBlank()) {
             member.setInstitution(memberCreationDto.getInstitution());
         }
-        memberRepository.save(member);
+        Member savedMember = memberRepository.save(member);
+        linkExistingAccount(savedMember);
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null || email.isBlank() ? null : email.trim().toLowerCase();
+    }
+
+    private void linkExistingAccount(Member member) {
+        if (member.getEmail() == null || member.getEmail().isBlank()) {
+            return;
+        }
+        appUserRepository.findFirstByEmailIgnoreCase(member.getEmail()).ifPresent(user -> {
+            if (user.getLinkedMemberId() == null) {
+                user.setLinkedMemberId(member.getId());
+                appUserRepository.save(user);
+            }
+        });
     }
 
     @Transactional

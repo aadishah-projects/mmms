@@ -52,16 +52,31 @@ public class AppUserService {
      * @return savedUser
      */
     public AppUser saveNewUser(AppUser appUser) {
-        appUser.setUid(0);   //don't try to update the existing data
+        appUser.setUid(null);   //don't try to update the existing data
         if(appUserRepository.existsByUsername(appUser.getUsername())) {
             throw new UsernameAlreadyExistsException(ExceptionMessages.USERNAME_ALREADY_EXISTS.toString(), appUser.getUsername());
         }
+
+        if (appUser.getEmail() != null && appUserRepository.existsByEmailIgnoreCase(appUser.getEmail())) {
+            throw new IllegalOperationException("An account already exists for this email address");
+        }
+
+        BindingResult bindingResult = new BeanPropertyBindingResult(appUser, "user");
+        validator.validate(appUser, bindingResult);
+        if (bindingResult.hasErrors()) {
+            throw new ValidationFailureException(ExceptionMessages.VALIDATION_FAILED, bindingResult);
+        }
+
         appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
         return appUserRepository.save(appUser);
     }
 
     public List<AppUser> getAllUsers() {
         return appUserRepository.findAll();
+    }
+
+    public boolean emailExists(String email) {
+        return email != null && appUserRepository.existsByEmailIgnoreCase(email.trim());
     }
 
     public AppUser updateUserRole(Integer userId, AppRole newRole) {

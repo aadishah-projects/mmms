@@ -9,6 +9,29 @@
     <div class="heading">Manage Users</div>
     <p class="sub-heading">Assign roles to registered users</p>
 
+    <form class="invite-form" (ngSubmit)="sendInvite()">
+      <div class="invite-form-heading">Invite a new user</div>
+      <p class="invite-form-help">The recipient will choose their own username and password. The selected authority is applied after registration.</p>
+      <div class="invite-form-fields">
+        <input
+          class="invite-input"
+          type="email"
+          name="inviteEmail"
+          [(ngModel)]="inviteEmail"
+          placeholder="person@pcampus.edu.np"
+          required
+        />
+        <select class="role-select" name="inviteRole" [(ngModel)]="inviteRole">
+          @for (role of availableRoles; track role) {
+            <option [value]="role">{{ formatRole(role) }}</option>
+          }
+        </select>
+        <button class="invite-button" type="submit" [disabled]="isInviting">
+          {{ isInviting ? 'Sending...' : 'Send invitation' }}
+        </button>
+      </div>
+    </form>
+
     <div class="users-table-wrapper">
       <table class="users-table">
         <thead>

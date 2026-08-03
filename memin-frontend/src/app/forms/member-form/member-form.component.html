@@ -133,6 +133,24 @@
             autocomplete="off"
           />
       </div>
+
+      <div class="form-group">
+        <label for="control-email">Email</label>
+        <input
+          id="control-email"
+          type="email"
+          formControlName="email"
+          class="form-input"
+          placeholder="member@pcampus.edu.np"
+          spellcheck="false"
+          autocomplete="email"
+        />
+        @if ((email.touched && email.dirty) || showAllErrors) {
+          @if (email.errors?.["email"]) {
+            <p class="field-error">Enter a valid email address</p>
+          }
+        }
+      </div>
     </form>
   </div>
 </dialog>

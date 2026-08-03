@@ -31,6 +31,8 @@ public interface MemberRepository extends JpaRepository<Member, Integer>, JpaSpe
 
     public List<Member> findAllMembersByCreatedBy(String username);
 
+    Optional<Member> findFirstByEmailIgnoreCase(String email);
+
 
 
 

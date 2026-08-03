@@ -19,8 +19,16 @@ export class CommitteeSummariesComponent {
   sortBy: 'createdDate' | 'title' = 'createdDate';
   constructor(private httpClient: HttpClient, private router: Router) {}
   hasCommitteesLoaded = false;
+  loadError: string | null = null;
 
   ngOnInit(): void {
+    this.loadCommittees();
+  }
+
+  loadCommittees(): void {
+    this.hasCommitteesLoaded = false;
+    this.loadError = null;
+
     this.httpClient
       .get<Response<CommitteeSummary[]>>(
         BACKEND_URL + '/api/my-active-committees',
@@ -34,8 +42,11 @@ export class CommitteeSummariesComponent {
           this.sortCommittees();
           this.hasCommitteesLoaded = true;
         },
-        error: (response) => {
-          console.log('error fetching committee');
+        error: (error) => {
+          console.error('Error fetching active committees', error);
+          this.loadError =
+            'Could not load active committees. Check that the backend is running and try again.';
+          this.hasCommitteesLoaded = true;
         },
       });
   }

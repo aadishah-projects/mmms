@@ -24,7 +24,10 @@ export class ManageUsersComponent implements OnInit {
   users: UserDto[] = [];
   isLoaded = false;
   loadError = false;
-  availableRoles = ['DEPARTMENT_HEAD', 'DEPARTMENT_MEMBER', 'COMMITTEE_MEMBER', 'GUEST'];
+  availableRoles = ['DEPARTMENT_HEAD', 'DEPARTMENT_MEMBER', 'COMMITTEE_MEMBER', 'SECRETARY', 'GUEST'];
+  inviteEmail = '';
+  inviteRole = 'DEPARTMENT_MEMBER';
+  isInviting = false;
   feedbackMessage: string | null = null;
   feedbackType: 'success' | 'error' = 'success';
 
@@ -72,6 +75,38 @@ export class ManageUsersComponent implements OnInit {
           this.feedbackType = 'error';
           this.clearFeedback();
           console.error('Role update failed', error);
+        },
+      });
+  }
+
+  sendInvite(): void {
+    const email = this.inviteEmail.trim().toLowerCase();
+    if (!email || !email.endsWith('@pcampus.edu.np') || this.isInviting) {
+      this.feedbackMessage = 'Enter a valid @pcampus.edu.np email address.';
+      this.feedbackType = 'error';
+      return;
+    }
+
+    this.isInviting = true;
+    this.httpClient
+      .post<Response<any>>(
+        `${BACKEND_URL}/api/invite`,
+        { email, role: this.inviteRole },
+        { withCredentials: true }
+      )
+      .subscribe({
+        next: () => {
+          this.inviteEmail = '';
+          this.feedbackMessage = `Invitation sent to ${email}. They can create their username and password from the email link.`;
+          this.feedbackType = 'success';
+          this.isInviting = false;
+          this.clearFeedback();
+        },
+        error: (error) => {
+          this.feedbackMessage = error.error?.message || 'Could not send invitation. Please try again.';
+          this.feedbackType = 'error';
+          this.isInviting = false;
+          this.clearFeedback();
         },
       });
   }

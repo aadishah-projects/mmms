@@ -14,6 +14,9 @@ import { validateUsernameFormat } from '../login/login.validators';
 export class RegisterComponent implements OnInit {
   isLoading = false;
   token: string | null = null;
+  inviteEmail: string | null = null;
+  inviteRole: string | null = null;
+  inviteLoaded = false;
   errorMessage: string | null = null;
   showAllErrors = false;
 
@@ -36,11 +39,28 @@ export class RegisterComponent implements OnInit {
       this.token = params['token'];
       if (!this.token) {
         this.errorMessage = "No registration token provided. Please use the link sent to your email.";
+        return;
       }
+
+      this.authService.getInviteDetails(this.token).subscribe({
+        next: (response) => {
+          this.inviteEmail = response.mainBody.email;
+          this.inviteRole = response.mainBody.role;
+          this.inviteLoaded = true;
+        },
+        error: (err) => {
+          this.inviteLoaded = false;
+          this.errorMessage = err.error?.message || 'This invitation is invalid, expired, or already used.';
+        }
+      });
     });
   }
 
   get f() { return this.formData.controls; }
+
+  formatRole(role: string | null): string {
+    return role ? role.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+  }
 
   onSubmit(): void {
     if (this.formData.invalid) {
@@ -53,7 +73,7 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
-    if (!this.token) {
+    if (!this.token || !this.inviteLoaded) {
       this.errorMessage = "Invalid or missing token.";
       return;
     }

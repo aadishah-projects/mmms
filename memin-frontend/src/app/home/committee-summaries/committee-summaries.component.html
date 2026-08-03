@@ -33,7 +33,14 @@
     </div>
   }
 
-  @if (hasCommitteesLoaded) {
+  @if (loadError) {
+    <div class="load-error" role="alert">
+      <p>{{ loadError }}</p>
+      <button type="button" class="retry-button" (click)="loadCommittees()">
+        Try again
+      </button>
+    </div>
+  } @else if (hasCommitteesLoaded) {
     <div class="summaryCards">
       @for (summary of committeeSummaries; track summary.id) {
         <app-committee-summary

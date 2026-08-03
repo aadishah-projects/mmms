@@ -10,6 +10,29 @@
     height: 70vh; 
 }
 
+.load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20vh;
+  color: colors.$color-text-primary;
+  text-align: center;
+}
+
+.load-error p {
+  margin: 0;
+}
+
+.retry-button {
+  padding: 8px 14px;
+  border: 1px solid colors.$color-border-focus;
+  border-radius: 4px;
+  background: colors.$color-background-main;
+  color: colors.$color-text-primary;
+  cursor: pointer;
+}
+
 .header-container {
   display: flex;
   align-items: center;
