@@ -84,6 +84,7 @@ export class MinuteViewComponent {
   minuteData = inject(MinuteDataService).getMinuteData();
   minuteNepali1 = viewChild(MinuteNepali1Component);
   minuteEnglish1 = viewChild(MinuteEnglish1Component);
+  customProcessedMinute = viewChild<ElementRef<HTMLDivElement>>('customProcessedMinute');
 
   constructor(private httpClient: HttpClient) {}
 
@@ -92,10 +93,12 @@ export class MinuteViewComponent {
   onWordFileDownload($event: Event) {
     $event.preventDefault();
     this.showMinuteOptions = false;
-    if (this.minuteData().minuteLanguage == 'ENGLISH') {
+    if (this.minuteData().minuteContentHtml) {
+      this.htmlContent = this.customProcessedMinute()?.nativeElement.innerHTML;
+    } else if (this.minuteData().minuteLanguage == 'ENGLISH') {
       this.htmlContent =
         this.minuteEnglish1()?.processedMinute()?.nativeElement?.innerHTML;
-    } else if ((this.minuteData().minuteLanguage = 'NEPALI')) {
+    } else if (this.minuteData().minuteLanguage == 'NEPALI') {
       this.htmlContent =
         this.minuteNepali1()?.processedMinute()?.nativeElement?.innerHTML;
     }

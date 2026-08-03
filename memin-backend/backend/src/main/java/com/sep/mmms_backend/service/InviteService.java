@@ -4,15 +4,18 @@ import com.sep.mmms_backend.dto.InviteRequestDto;
 import com.sep.mmms_backend.dto.RegisterWithTokenDto;
 import com.sep.mmms_backend.entity.AppUser;
 import com.sep.mmms_backend.entity.Committee;
+import com.sep.mmms_backend.entity.CommitteeMembership;
 import com.sep.mmms_backend.entity.InviteToken;
 import com.sep.mmms_backend.entity.Member;
 import com.sep.mmms_backend.exceptions.IllegalOperationException;
+import com.sep.mmms_backend.repository.CommitteeMembershipRepository;
 import com.sep.mmms_backend.repository.InviteTokenRepository;
 import com.sep.mmms_backend.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,13 +27,15 @@ public class InviteService {
     private final AppUserService appUserService;
     private final CommitteeService committeeService;
     private final MemberRepository memberRepository;
+    private final CommitteeMembershipRepository committeeMembershipRepository;
     
-    public InviteService(InviteTokenRepository inviteTokenRepository, EmailService emailService, AppUserService appUserService, CommitteeService committeeService, MemberRepository memberRepository) {
+    public InviteService(InviteTokenRepository inviteTokenRepository, EmailService emailService, AppUserService appUserService, CommitteeService committeeService, MemberRepository memberRepository, CommitteeMembershipRepository committeeMembershipRepository) {
         this.inviteTokenRepository = inviteTokenRepository;
         this.emailService = emailService;
         this.appUserService = appUserService;
         this.committeeService = committeeService;
         this.memberRepository = memberRepository;
+        this.committeeMembershipRepository = committeeMembershipRepository;
     }
 
     @Transactional
@@ -43,7 +48,7 @@ public class InviteService {
 
         Committee committee = null;
         if (requestDto.getCommitteeId() != null) {
-            committee = committeeService.findCommitteeById(requestDto.getCommitteeId());
+            committee = committeeService.getCommitteeIfAccessible(requestDto.getCommitteeId(), inviterUsername);
         }
 
         Optional<InviteToken> existing = inviteTokenRepository.findByEmailAndUsedFalse(email);
@@ -99,12 +104,51 @@ public class InviteService {
         newUser.setConfirmPassword(requestDto.getConfirmPassword());
         newUser.setRole(inviteToken.getRole());
 
-        Optional<Member> linkedMember = memberRepository.findFirstByEmailIgnoreCase(inviteToken.getEmail());
-        linkedMember.ifPresent(member -> newUser.setLinkedMemberId(member.getId()));
+        Member linkedMember = memberRepository.findFirstByEmailIgnoreCase(inviteToken.getEmail()).orElse(null);
+        if (inviteToken.getCommittee() != null && linkedMember == null) {
+            linkedMember = createMemberForInvite(inviteToken, requestDto);
+        }
+        if (linkedMember != null) {
+            newUser.setLinkedMemberId(linkedMember.getId());
+        }
 
         appUserService.saveNewUser(newUser);
 
+        if (inviteToken.getCommittee() != null) {
+            addMemberToCommittee(inviteToken.getCommittee(), linkedMember);
+        }
+
         inviteToken.setUsed(true);
         inviteTokenRepository.save(inviteToken);
+    }
+
+    private Member createMemberForInvite(InviteToken inviteToken, RegisterWithTokenDto requestDto) {
+        LocalDate today = LocalDate.now();
+        Member member = new Member();
+        member.setFirstName(requestDto.getFirstName());
+        member.setLastName(requestDto.getLastName());
+        member.setTitle("Member");
+        member.setEmail(inviteToken.getEmail());
+        member.setCreatedBy(inviteToken.getInvitedBy());
+        member.setCreatedDate(today);
+        member.setModifiedBy(inviteToken.getInvitedBy());
+        member.setModifiedDate(today);
+        return memberRepository.save(member);
+    }
+
+    private void addMemberToCommittee(Committee committee, Member member) {
+        boolean alreadyMember = committeeMembershipRepository
+                .findMembershipBetweenCommitteeAndMember(committee.getId(), member.getId())
+                .isPresent();
+        if (alreadyMember) {
+            return;
+        }
+
+        CommitteeMembership membership = new CommitteeMembership();
+        membership.setCommittee(committee);
+        membership.setMember(member);
+        membership.setRole("Member");
+        membership.setOrder(committee.getMemberships().size() + 1);
+        committeeMembershipRepository.save(membership);
     }
 }

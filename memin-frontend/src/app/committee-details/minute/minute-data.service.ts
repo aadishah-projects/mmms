@@ -42,6 +42,7 @@ export class MinuteDataService {
               meetingHeldPlace: this.minuteData().meetingHeldPlace,
               agendas: this.minuteData().agendas,
               decisions: this.minuteData().decisions,
+              minuteContentHtml: this.minuteData().minuteContentHtml,
             };
             this.originalDataString = JSON.stringify(originalData);
             console.log(response.mainBody);
@@ -57,6 +58,10 @@ export class MinuteDataService {
     return this.minuteData;
   }
 
+  setMinuteContentHtml(htmlContent: string | null): void {
+    this.minuteData.update((data) => ({ ...data, minuteContentHtml: htmlContent }));
+  }
+
   hasDataChanged(): boolean {
     const newData = {
       committeeName: this.minuteData().committeeName,
@@ -66,6 +71,7 @@ export class MinuteDataService {
       meetingHeldPlace: this.minuteData().meetingHeldPlace,
       agendas: this.minuteData().agendas,
       decisions: this.minuteData().decisions,
+      minuteContentHtml: this.minuteData().minuteContentHtml,
     };
 
     if (

@@ -51,6 +51,58 @@
 .actual-form {
   padding: 15px;
 }
+
+.ai-draft-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 15px;
+  border-bottom: 1px solid colors.$color-border-primary;
+
+  label {
+    color: colors.$color-text-secondary;
+    font-size: constants.$font-small;
+    font-weight: constants.$font-weight-medium;
+    text-transform: uppercase;
+  }
+
+  textarea {
+    min-height: 64px;
+    resize: vertical;
+    padding: 10px;
+    background: colors.$color-background-input;
+    border: 1px solid colors.$color-border-primary;
+    border-radius: 6px;
+    color: colors.$color-text-primary;
+    font: inherit;
+  }
+}
+
+.full-minute-editor {
+  flex: 1;
+  margin: 15px;
+  padding: 24px;
+  overflow: auto;
+  background: white;
+  color: #222;
+  border: 1px solid colors.$color-border-primary;
+  outline: none;
+  line-height: 1.5;
+
+  &:focus {
+    border-color: colors.$color-border-focus;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 6px;
+    border: 1px solid #777;
+  }
+}
 .form-element-pair {
   display:flex;
   gap:10px;

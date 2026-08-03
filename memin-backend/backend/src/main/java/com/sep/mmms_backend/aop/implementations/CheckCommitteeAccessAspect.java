@@ -61,7 +61,7 @@ public class CheckCommitteeAccessAspect {
 
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
         boolean isDeptHead = user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD;
-        boolean isMember = user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER;
+        boolean isMember = user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.SECRETARY;
 
         boolean hasAccess = false;
         if (isDeptHead) {

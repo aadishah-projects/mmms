@@ -47,7 +47,16 @@
   </div>
 </dialog>
 
-@if (minuteData() != undefined && minuteData().minuteLanguage === "NEPALI") {
+@if (minuteData().minuteContentHtml) {
+<div #customProcessedMinute class="minute custom-minute">
+  <div
+    id="a4-box"
+    [attr.contenteditable]="isEditMode"
+    [innerHTML]="minuteData().minuteContentHtml"
+    (click)="$event.stopPropagation()"
+  ></div>
+</div>
+} @else if (minuteData() != undefined && minuteData().minuteLanguage === "NEPALI") {
 <app-minute-nepali-1
   [minuteData]="minuteData()"
   [isEditable]="isEditMode"

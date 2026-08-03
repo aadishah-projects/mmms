@@ -340,8 +340,8 @@
           formControlName="minuteOpeningTemplate"
           placeholder="Leave blank to use the default opening paragraph."
         ></textarea>
-        <p class="field-hint">
-          Optional. Placeholders:
+      <p class="field-hint">
+        Optional. Placeholders:
           <code>{{ '{committeeName}' }}</code>,
           <code>{{ '{committeeDescription}' }}</code>,
           <code>{{ '{date}' }}</code>,
@@ -350,6 +350,25 @@
           <code>{{ '{time}' }}</code>,
           <code>{{ '{place}' }}</code>,
           <code>{{ '{coordinator}' }}</code>
+      </p>
+      </div>
+
+      <div class="form-group">
+        <label for="committee-minute-full-template">Full Minute Template</label>
+        <textarea
+          id="committee-minute-full-template"
+          rows="12"
+          formControlName="minuteTemplateHtml"
+          class="form-textarea minute-template-editor"
+          placeholder="Optional HTML template"
+        ></textarea>
+        <p class="field-hint">
+          Use HTML and placeholders such as
+          <code>{{ '{{committeeName}}' }}</code>,
+          <code>{{ '{{date}}' }}</code>,
+          <code>{{ '{{attendance}}' }}</code>,
+          <code>{{ '{{agendas}}' }}</code>, and
+          <code>{{ '{{decisions}}' }}</code>. Each meeting can be edited separately afterward.
         </p>
       </div>
     </form>

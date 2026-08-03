@@ -24,6 +24,8 @@ export class MinuteEditComponent implements OnInit {
   minuteData = this.minuteDataService.getMinuteData();
   count = -1; //unique negative number which is assigned as the decision or agenda id which is used for deletion
   httpParams = new HttpParams();
+  aiPrompt = '';
+  aiInProgress = false;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -50,6 +52,58 @@ export class MinuteEditComponent implements OnInit {
         (d) => d.decision && d.decision.length > 0,
       ).length < 1
     );
+  }
+
+  onFullContentInput(event: Event): void {
+    const element = event.target as HTMLElement;
+    this.minuteDataService.setMinuteContentHtml(element.innerHTML);
+  }
+
+  startFullEditor(): void {
+    const data = this.minuteData();
+    const attendance = data.participants
+      .map((participant, index) => `<tr><td>${index + 1}</td><td>${this.escapeHtml(participant.fullName)}</td><td>${this.escapeHtml(participant.role)}</td><td></td></tr>`)
+      .join('');
+    const agendas = data.agendas.map((agenda) => `<li>${this.escapeHtml(agenda.agenda)}</li>`).join('');
+    const decisions = data.decisions.map((decision) => `<li>${this.escapeHtml(decision.decision)}</li>`).join('');
+    this.minuteDataService.setMinuteContentHtml(`
+      <h1>${this.escapeHtml(data.committeeName)} — Meeting Minute</h1>
+      <p>${this.escapeHtml(data.openingParagraph ?? `Meeting held on ${data.meetingHeldDate} at ${data.meetingHeldPlace}.`)}</p>
+      <h2>Attendance</h2>
+      <table border="1"><thead><tr><th>S.N.</th><th>Name</th><th>Position</th><th>Signature</th></tr></thead><tbody>${attendance}</tbody></table>
+      <h2>Agendas</h2><ol>${agendas}</ol>
+      <h2>Decisions</h2><ol>${decisions}</ol>`);
+  }
+
+  useStructuredEditor(): void {
+    this.minuteDataService.setMinuteContentHtml(null);
+  }
+
+  generateAiMinute(): void {
+    if (!this.aiPrompt.trim() || this.aiInProgress) return;
+    this.aiInProgress = true;
+    const meetingId = this.httpParams.get('meetingId');
+    this.httpClient
+      .post<Response<{ htmlContent: string }>>(
+        `${BACKEND_URL}/api/meetings/${meetingId}/ai-minute`,
+        { roughPrompt: this.aiPrompt.trim() },
+        { withCredentials: true },
+      )
+      .subscribe({
+        next: (response) => {
+          this.minuteDataService.setMinuteContentHtml(response.mainBody.htmlContent);
+          this.aiInProgress = false;
+          this.popupService.showPopup('AI minute draft generated. Review it before saving.', 'Success', 3000);
+        },
+        error: () => {
+          this.aiInProgress = false;
+          this.popupService.showPopup('AI minute generation failed. Check the AI configuration.', 'Error', 3000);
+        },
+      });
+  }
+
+  private escapeHtml(value: string): string {
+    return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character] ?? character));
   }
 
   
@@ -128,7 +182,7 @@ export class MinuteEditComponent implements OnInit {
       this.minuteData().meetingHeldDate.trim().length <1 ||
 	this.minuteData().meetingHeldTime.trim().length < 1 ||
 	this.minuteData().meetingHeldPlace.trim().length < 1 ||
-	this.hasNoNonEmptyDecisions()
+	(!this.minuteData().minuteContentHtml && this.hasNoNonEmptyDecisions())
     ) {
       this.showAllErrors = true;
       return;
@@ -146,6 +200,9 @@ export class MinuteEditComponent implements OnInit {
     minuteUpdateDto.meetingHeldPlace = this.minuteData().meetingHeldPlace;
     minuteUpdateDto.decisions = this.minuteData().decisions;
     minuteUpdateDto.agendas = this.minuteData().agendas;
+    // Send an empty value when switching back to structured fields so the
+    // previously saved custom draft is cleared on the server.
+    minuteUpdateDto.htmlContent = this.minuteData().minuteContentHtml ?? '';
 
     this.httpClient
       .patch<

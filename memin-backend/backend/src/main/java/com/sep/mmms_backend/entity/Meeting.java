@@ -44,6 +44,11 @@ public class Meeting {
     @Column(name = "meeting_held_place")
     private String heldPlace;
 
+    // A meeting-specific edited/generated minute. When null, the committee
+    // template or the built-in language template is used.
+    @Column(name = "meeting_minute_content_html", columnDefinition = "TEXT")
+    private String minuteContentHtml;
+
     @Column(name = "created_by", updatable = false, nullable = false)
     @CreatedBy
     private String createdBy;

@@ -6,6 +6,7 @@ import com.sep.mmms_backend.exceptions.PasswordChangeNotAllowedException;
 import com.sep.mmms_backend.exceptions.UnauthorizedUpdateException;
 import com.sep.mmms_backend.exceptions.UserDoesNotExistException;
 import com.sep.mmms_backend.repository.AppUserRepository;
+import com.sep.mmms_backend.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class AppUserServiceTest {
     
     @MockitoBean
     private AppUserRepository appUserRepository;
+
+    @MockitoBean
+    private MemberRepository memberRepository;
     
     @Autowired
     private AppUserService appUserService;
@@ -186,5 +190,25 @@ public class AppUserServiceTest {
         assertEquals("john.doe@example.com", result.getEmail()); // Should remain unchanged
         verify(appUserRepository, times(1)).findByUsername(currentUsername);
         verify(appUserRepository, times(1)).save(any(AppUser.class));
+    }
+
+    @Test
+    public void saveNewUser_KeepsPasswordConfirmationInSyncAfterEncoding() {
+        AppUser newUser = AppUser.builder()
+                .firstName("Jane")
+                .lastName("Doe")
+                .username("jane_doe")
+                .email("jane.doe@example.com")
+                .password("password123")
+                .confirmPassword("password123")
+                .build();
+        when(appUserRepository.save(any(AppUser.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AppUser savedUser = appUserService.saveNewUser(newUser);
+
+        assertNotEquals("password123", savedUser.getPassword());
+        assertEquals(savedUser.getPassword(), savedUser.getConfirmPassword());
+        verify(appUserRepository).save(newUser);
     }
 }

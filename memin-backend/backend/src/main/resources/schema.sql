@@ -46,6 +46,7 @@ CREATE TABLE committees (
         committee_minute_language VARCHAR(255) NOT NULL,
         committee_minute_opening_template TEXT,
         committee_minute_header_template TEXT,
+        committee_minute_template_html TEXT,
         committee_max_no_of_meetings INT,
         FOREIGN KEY (committee_coordinator_id) REFERENCES members(member_id)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -72,6 +73,7 @@ CREATE TABLE meetings (
           meeting_held_date DATE NOT NULL,
           meeting_held_time TIME NOT NULL,  -- Added this line for LocalTime
           meeting_held_place VARCHAR(255) NOT NULL,
+          meeting_minute_content_html TEXT,
           created_by VARCHAR(255) NOT NULL,
           updated_by VARCHAR(255) NOT NULL,
           created_date DATE NOT NULL,

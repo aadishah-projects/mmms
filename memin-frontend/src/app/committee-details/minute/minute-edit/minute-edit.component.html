@@ -7,7 +7,34 @@
       }
     </div>
     <p class="panel-subtitle">Update meeting minute details and decisions</p>
+    @if (!minuteData().minuteContentHtml) {
+      <button type="button" class="btn btn-secondary" (click)="startFullEditor()">Open full editor</button>
+    } @else {
+      <button type="button" class="btn btn-secondary" (click)="useStructuredEditor()">Use structured fields</button>
+    }
   </div>
+
+  <div class="ai-draft-panel">
+    <label for="ai-minute-prompt">AI minute assistant</label>
+    <textarea
+      id="ai-minute-prompt"
+      name="aiPrompt"
+      [(ngModel)]="aiPrompt"
+      placeholder="Roughly describe the discussion, decisions, actions, and tone you want in the minute"
+    ></textarea>
+    <button type="button" class="btn btn-primary" (click)="generateAiMinute()" [disabled]="aiInProgress || !aiPrompt.trim()">
+      {{ aiInProgress ? 'Generating...' : 'Use AI to draft minute' }}
+    </button>
+  </div>
+
+  @if (minuteData().minuteContentHtml) {
+    <div
+      class="full-minute-editor"
+      contenteditable="true"
+      [innerHTML]="minuteData().minuteContentHtml"
+      (input)="onFullContentInput($event)"
+    ></div>
+  } @else {
 
   <form class="actual-form">
     <div class="form-group">
@@ -172,4 +199,5 @@
       </div>
     </div>
   </form>
+  }
 </div>

@@ -11,7 +11,7 @@
 
     <form class="invite-form" (ngSubmit)="sendInvite()">
       <div class="invite-form-heading">Invite a new user</div>
-      <p class="invite-form-help">The recipient will choose their own username and password. The selected authority is applied after registration.</p>
+      <p class="invite-form-help">The recipient will choose their own username and password. The selected authority and committee are applied after registration.</p>
       <div class="invite-form-fields">
         <input
           class="invite-input"
@@ -24,6 +24,12 @@
         <select class="role-select" name="inviteRole" [(ngModel)]="inviteRole">
           @for (role of availableRoles; track role) {
             <option [value]="role">{{ formatRole(role) }}</option>
+          }
+        </select>
+        <select class="role-select" name="inviteCommitteeId" [(ngModel)]="inviteCommitteeId">
+          <option [ngValue]="null">No committee</option>
+          @for (committee of committees; track committee.id) {
+            <option [ngValue]="committee.id">{{ committee.name }}</option>
           }
         </select>
         <button class="invite-button" type="submit" [disabled]="isInviting">

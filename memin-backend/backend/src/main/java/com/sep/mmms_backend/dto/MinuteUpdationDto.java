@@ -30,4 +30,7 @@ public class MinuteUpdationDto {
 
     List<DecisionDto> decisions;
     List<AgendaDto> agendas;
+
+    // Optional full HTML content produced by the visual editor or AI assistant.
+    String htmlContent;
 }

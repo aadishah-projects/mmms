@@ -65,6 +65,11 @@ public class Committee {
     @Column(name = "committee_minute_header_template", columnDefinition = "TEXT")
     private String minuteHeaderTemplate;
 
+    // Optional full HTML minute template. Supported placeholders include
+    // {{committeeName}}, {{date}}, {{attendance}}, {{agendas}}, and {{decisions}}.
+    @Column(name = "committee_minute_template_html", columnDefinition = "TEXT")
+    private String minuteTemplateHtml;
+
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "committee_coordinator_id", referencedColumnName = "member_id", nullable = false)
     private Member coordinator;

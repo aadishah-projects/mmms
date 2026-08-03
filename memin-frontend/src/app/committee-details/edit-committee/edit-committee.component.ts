@@ -45,6 +45,7 @@ export class EditCommitteeComponent implements OnInit {
     minuteLanguage: null,
     minuteOpeningTemplate: '',
     minuteHeaderTemplate: '',
+    minuteTemplateHtml: '',
     selectedMembersWithRoles: [],
     unselectedMembers: [],
   };
@@ -81,6 +82,8 @@ export class EditCommitteeComponent implements OnInit {
               mainBody.minuteOpeningTemplate ?? '';
             this.committeeFormData.minuteHeaderTemplate =
               mainBody.minuteHeaderTemplate ?? '';
+            this.committeeFormData.minuteTemplateHtml =
+              mainBody.minuteTemplateHtml ?? '';
             this.committeeFormData.selectedMembersWithRoles =
               mainBody.membersWithRoles;
             this.loadAllMembers();

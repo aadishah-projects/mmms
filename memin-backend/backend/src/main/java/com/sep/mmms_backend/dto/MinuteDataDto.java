@@ -29,6 +29,9 @@ public class MinuteDataDto {
     String openingParagraph;
     // Resolved per-committee header/letterhead (placeholders substituted). Null when unset.
     String header;
+    // Resolved committee template or meeting-specific HTML override. Null means
+    // the frontend should use its built-in language template.
+    String minuteContentHtml;
     List<DecisionDto> decisions;
     List<AgendaDto> agendas;
     List<CommitteeMembershipDto> participants;

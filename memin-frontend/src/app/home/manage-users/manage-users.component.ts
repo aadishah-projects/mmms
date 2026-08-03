@@ -13,6 +13,11 @@ interface UserDto {
   role: string;
 }
 
+interface CommitteeOption {
+  id: number;
+  name: string;
+}
+
 @Component({
   selector: 'app-manage-users',
   standalone: true,
@@ -25,8 +30,10 @@ export class ManageUsersComponent implements OnInit {
   isLoaded = false;
   loadError = false;
   availableRoles = ['DEPARTMENT_HEAD', 'DEPARTMENT_MEMBER', 'COMMITTEE_MEMBER', 'SECRETARY', 'GUEST'];
+  committees: CommitteeOption[] = [];
   inviteEmail = '';
   inviteRole = 'DEPARTMENT_MEMBER';
+  inviteCommitteeId: number | null = null;
   isInviting = false;
   feedbackMessage: string | null = null;
   feedbackType: 'success' | 'error' = 'success';
@@ -35,6 +42,7 @@ export class ManageUsersComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadCommittees();
   }
 
   loadUsers(): void {
@@ -79,6 +87,21 @@ export class ManageUsersComponent implements OnInit {
       });
   }
 
+  loadCommittees(): void {
+    this.httpClient
+      .get<Response<CommitteeOption[]>>(BACKEND_URL + '/api/my-active-committees', {
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (response) => {
+          this.committees = response.mainBody;
+        },
+        error: (error) => {
+          console.error('Failed to load committees for invitation', error);
+        },
+      });
+  }
+
   sendInvite(): void {
     const email = this.inviteEmail.trim().toLowerCase();
     if (!email || !email.endsWith('@pcampus.edu.np') || this.isInviting) {
@@ -88,15 +111,24 @@ export class ManageUsersComponent implements OnInit {
     }
 
     this.isInviting = true;
+    const payload: { email: string; role: string; committeeId?: number } = {
+      email,
+      role: this.inviteRole,
+    };
+    if (this.inviteCommitteeId !== null) {
+      payload.committeeId = this.inviteCommitteeId;
+    }
+
     this.httpClient
       .post<Response<any>>(
         `${BACKEND_URL}/api/invite`,
-        { email, role: this.inviteRole },
+        payload,
         { withCredentials: true }
       )
       .subscribe({
         next: () => {
           this.inviteEmail = '';
+          this.inviteCommitteeId = null;
           this.feedbackMessage = `Invitation sent to ${email}. They can create their username and password from the email link.`;
           this.feedbackType = 'success';
           this.isInviting = false;

@@ -29,7 +29,8 @@ public interface MemberRepository extends JpaRepository<Member, Integer>, JpaSpe
 
 
 
-    public List<Member> findAllMembersByCreatedBy(String username);
+    @Query("SELECT m FROM Member m WHERE m.createdBy = :username OR EXISTS (SELECT u.uid FROM AppUser u WHERE u.username = :username AND u.role = com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD)")
+    public List<Member> findAllMembersByCreatedBy(@Param("username") String username);
 
     Optional<Member> findFirstByEmailIgnoreCase(String email);
 
@@ -39,19 +40,19 @@ public interface MemberRepository extends JpaRepository<Member, Integer>, JpaSpe
     /**
      * returns all members with the provided memberIds if they are accessible by the 'username' by checking the 'createdBy' field
      */
-    @Query("SELECT m FROM Member m WHERE m.id IN :memberIds AND m.createdBy = :username")
+    @Query("SELECT m FROM Member m WHERE m.id IN :memberIds AND (m.createdBy = :username OR EXISTS (SELECT u.uid FROM AppUser u WHERE u.username = :username AND u.role = com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD))")
     List<Member> findAccessibleMembersByIds(
             @Param("memberIds") List<Integer> memberIds,
             @Param("username") String username
     );
 
 
-    @Query("SELECT m FROM Member m WHERE m.createdBy = :username")
+    @Query("SELECT m FROM Member m WHERE m.createdBy = :username OR EXISTS (SELECT u.uid FROM AppUser u WHERE u.username = :username AND u.role = com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD)")
     List<Member> findAllAccessibleMembers(
             @Param("username") String username
     );
 
-    @Query("SELECT m FROM Member m WHERE m.id = :memberId AND m.createdBy = :username")
+    @Query("SELECT m FROM Member m WHERE m.id = :memberId AND (m.createdBy = :username OR EXISTS (SELECT u.uid FROM AppUser u WHERE u.username = :username AND u.role = com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD))")
     public Optional<Member> getMemberIfAccessible(int memberId, String username);
 
     @Query("""
@@ -68,11 +69,15 @@ public interface MemberRepository extends JpaRepository<Member, Integer>, JpaSpe
     AND m.id NOT IN (
         SELECT c.coordinator.id FROM Committee c WHERE c.id = :committeeId
     )
-    AND m.createdBy = :username
+    AND (m.createdBy = :username OR EXISTS (
+        SELECT u.uid FROM AppUser u
+        WHERE u.username = :username
+        AND u.role = com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD
+    ))
     """)
     public List<Member> getPossibleInviteesForMeeting(Integer meetingId, Integer committeeId, String username);
 
-    @Query("Select m from Member m where m.id = :memberId AND m.createdBy = :username")
+    @Query("Select m from Member m where m.id = :memberId AND (m.createdBy = :username OR EXISTS (SELECT u.uid FROM AppUser u WHERE u.username = :username AND u.role = com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD))")
     public Optional<Member> findAccessibleMember(Integer memberId, String username);
 
 

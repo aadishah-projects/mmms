@@ -22,13 +22,15 @@ public class MeetingService {
     private final EntityValidator entityValidator;
     private final AppUserRepository appUserRepository;
     private final EmailService emailService;
+    private final CommitteeService committeeService;
 
-    public MeetingService(MeetingRepository meetingRepository, MemberRepository memberRepository, EntityValidator entityValidator, AppUserRepository appUserRepository, EmailService emailService) {
+    public MeetingService(MeetingRepository meetingRepository, MemberRepository memberRepository, EntityValidator entityValidator, AppUserRepository appUserRepository, EmailService emailService, CommitteeService committeeService) {
         this.meetingRepository = meetingRepository;
         this.entityValidator = entityValidator;
         this.memberRepository = memberRepository;
         this.appUserRepository = appUserRepository;
         this.emailService = emailService;
+        this.committeeService = committeeService;
     }
 
     @Transactional
@@ -99,6 +101,11 @@ public class MeetingService {
         existingMeeting.setHeldDate(minuteUpdationDto.getMeetingHeldDate());
         existingMeeting.setHeldTime(minuteUpdationDto.getMeetingHeldTime());
         existingMeeting.setHeldPlace(minuteUpdationDto.getMeetingHeldPlace());
+        if (minuteUpdationDto.getHtmlContent() != null) {
+            existingMeeting.setMinuteContentHtml(minuteUpdationDto.getHtmlContent().isBlank()
+                    ? null
+                    : minuteUpdationDto.getHtmlContent());
+        }
 
 
         //save the committee
@@ -153,6 +160,14 @@ public class MeetingService {
             }
         }
         meetingRepository.save(existingMeeting);
+    }
+
+    @Transactional
+    public void updateMinuteContent(Integer meetingId, String htmlContent, String username) {
+        Meeting meeting = findMeetingById(meetingId);
+        committeeService.getCommitteeIfAccessible(meeting.getCommittee().getId(), username);
+        meeting.setMinuteContentHtml(htmlContent);
+        meetingRepository.save(meeting);
     }
 
 

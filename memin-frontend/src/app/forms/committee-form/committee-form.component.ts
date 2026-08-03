@@ -137,6 +137,7 @@ export class CommitteeFormComponent implements OnInit {
   minuteLanguage!: FormControl<'NEPALI' | 'ENGLISH' | null>;
   minuteOpeningTemplate!: FormControl<string>;
   minuteHeaderTemplate!: FormControl<string>;
+  minuteTemplateHtml!: FormControl<string>;
 
   committeeFormGroup!: FormGroup<{
     name: FormControl<string>;
@@ -147,6 +148,7 @@ export class CommitteeFormComponent implements OnInit {
     minuteLanguage: FormControl<'NEPALI' | 'ENGLISH' | null>;
     minuteOpeningTemplate: FormControl<string>;
     minuteHeaderTemplate: FormControl<string>;
+    minuteTemplateHtml: FormControl<string>;
   }>;
 
   //formControls for left panel:
@@ -190,6 +192,11 @@ export class CommitteeFormComponent implements OnInit {
       { nonNullable: true },
     );
 
+    this.minuteTemplateHtml = new FormControl(
+      this.committeeFormData().minuteTemplateHtml ?? '',
+      { nonNullable: true },
+    );
+
     //set unselected members and display them as well
     this.unselectedMembers = this.committeeFormData().unselectedMembers;
     this.displayedMembers = this.unselectedMembers;
@@ -229,6 +236,7 @@ export class CommitteeFormComponent implements OnInit {
       minuteLanguage: this.minuteLanguage,
       minuteOpeningTemplate: this.minuteOpeningTemplate,
       minuteHeaderTemplate: this.minuteHeaderTemplate,
+      minuteTemplateHtml: this.minuteTemplateHtml,
     });
 
     //finally restore selected members from local storage
@@ -433,6 +441,7 @@ export class CommitteeFormComponent implements OnInit {
     committeeCreationDto.minuteLanguage = this.minuteLanguage.value!;
     committeeCreationDto.minuteOpeningTemplate = this.minuteOpeningTemplate.value;
     committeeCreationDto.minuteHeaderTemplate = this.minuteHeaderTemplate.value;
+    committeeCreationDto.minuteTemplateHtml = this.minuteTemplateHtml.value;
 
     this.selectedMembersWithRoles.forEach((memberWithRole) => {
       const memberIdAndRole = new MemberIdAndRole();

@@ -1,6 +1,7 @@
 package com.sep.mmms_backend.controller;
 
 import com.sep.mmms_backend.dto.MinuteDataDto;
+import com.sep.mmms_backend.dto.AiMinuteRequestDto;
 import com.sep.mmms_backend.entity.Committee;
 import com.sep.mmms_backend.entity.Meeting;
 import com.sep.mmms_backend.response.Response;
@@ -26,9 +27,11 @@ import java.time.format.DateTimeFormatter;
 public class MeetingMinuteController {
     private final MeetingMinutePreparationService meetingMinutePreparationService;
     private final MeetingService meetingService;
-    public MeetingMinuteController(MeetingMinutePreparationService meetingMinutePreparationService, MeetingService meetingService) {
+    private final com.sep.mmms_backend.service.AiMinuteService aiMinuteService;
+    public MeetingMinuteController(MeetingMinutePreparationService meetingMinutePreparationService, MeetingService meetingService, com.sep.mmms_backend.service.AiMinuteService aiMinuteService) {
         this.meetingMinutePreparationService = meetingMinutePreparationService;
         this.meetingService = meetingService;
+        this.aiMinuteService = aiMinuteService;
     }
 
     // Read the meeting and build the minute data in one transaction so the meeting's
@@ -44,6 +47,20 @@ public class MeetingMinuteController {
         MinuteDataDto minuteData = this.meetingMinutePreparationService.prepareDataForMinute(committee, meeting, authentication.getName());
 
         return ResponseEntity.ok(new Response("Meeting Minute Data: ", minuteData));
+    }
+
+    @PostMapping("api/meetings/{meetingId}/ai-minute")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public ResponseEntity<Response> generateAiMinute(
+            @org.springframework.web.bind.annotation.PathVariable int meetingId,
+            @jakarta.validation.Valid @RequestBody AiMinuteRequestDto request,
+            Authentication authentication) {
+        Meeting meeting = meetingService.findMeetingById(meetingId);
+        MinuteDataDto minuteData = meetingMinutePreparationService.prepareDataForMinute(
+                meeting.getCommittee(), meeting, authentication.getName());
+        String htmlContent = aiMinuteService.generateMinute(minuteData, request.getRoughPrompt());
+        meetingService.updateMinuteContent(meetingId, htmlContent, authentication.getName());
+        return ResponseEntity.ok(new Response("AI minute draft generated", java.util.Map.of("htmlContent", htmlContent)));
     }
 
     @PostMapping("api/word-file-for-minute")

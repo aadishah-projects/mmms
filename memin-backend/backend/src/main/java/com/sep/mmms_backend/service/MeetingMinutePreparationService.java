@@ -19,6 +19,7 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTLvl;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STNumberFormat;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -42,6 +43,7 @@ public class MeetingMinutePreparationService {
     }
 
 
+    @Transactional(readOnly = true)
     @CheckCommitteeAccess(shouldValidateMeeting = true)
     public MinuteDataDto prepareDataForMinute(Committee committee, Meeting meeting, String username) {
         MinuteDataDto minuteData = new MinuteDataDto();
@@ -75,7 +77,80 @@ public class MeetingMinutePreparationService {
         minuteData.setOpeningParagraph(substitutePlaceholders(committee.getMinuteOpeningTemplate(), minuteData));
         minuteData.setHeader(substitutePlaceholders(committee.getMinuteHeaderTemplate(), minuteData));
 
+        if (meeting.getMinuteContentHtml() != null && !meeting.getMinuteContentHtml().isBlank()) {
+            minuteData.setMinuteContentHtml(meeting.getMinuteContentHtml());
+        } else if (committee.getMinuteTemplateHtml() != null && !committee.getMinuteTemplateHtml().isBlank()) {
+            minuteData.setMinuteContentHtml(renderFullMinuteTemplate(committee.getMinuteTemplateHtml(), minuteData));
+        }
+
         return minuteData;
+    }
+
+    /**
+     * Resolves the placeholders available to a committee's full HTML template.
+     * Values originating from the meeting are escaped; the generated section
+     * fragments are intentionally HTML because they are inserted into the
+     * administrator-authored template.
+     */
+    private String renderFullMinuteTemplate(String template, MinuteDataDto data) {
+        String rendered = template;
+        rendered = replaceToken(rendered, "committeeName", escapeHtml(data.getCommitteeName()));
+        rendered = replaceToken(rendered, "committeeDescription", escapeHtml(data.getCommitteeDescription()));
+        rendered = replaceToken(rendered, "date", escapeHtml(data.getMeetingHeldDate() == null ? "" : data.getMeetingHeldDate().toString()));
+        rendered = replaceToken(rendered, "day", escapeHtml(data.getMeetingHeldDay()));
+        rendered = replaceToken(rendered, "partOfDay", escapeHtml(data.getPartOfDay()));
+        rendered = replaceToken(rendered, "time", escapeHtml(data.getMeetingHeldTime()));
+        rendered = replaceToken(rendered, "place", escapeHtml(data.getMeetingHeldPlace()));
+        rendered = replaceToken(rendered, "coordinator", escapeHtml(data.getCoordinatorFullName()));
+        rendered = replaceToken(rendered, "header", textFragment(data.getHeader()));
+        rendered = replaceToken(rendered, "openingParagraph", textFragment(data.getOpeningParagraph()));
+        rendered = replaceToken(rendered, "attendance", renderAttendance(data));
+        rendered = replaceToken(rendered, "agendas", renderList(data.getAgendas(), true));
+        rendered = replaceToken(rendered, "decisions", renderList(data.getDecisions(), false));
+        return rendered;
+    }
+
+    private String replaceToken(String template, String name, String value) {
+        String safeValue = value == null ? "" : value;
+        return template.replace("{{" + name + "}}", safeValue)
+                .replace("{" + name + "}", safeValue);
+    }
+
+    private String renderAttendance(MinuteDataDto data) {
+        StringBuilder html = new StringBuilder("<table class=\"memberships\"><thead><tr><th>S.N.</th><th>Name</th><th>Position</th><th>Signature</th></tr></thead><tbody>");
+        int index = 1;
+        for (CommitteeMembershipDto participant : data.getParticipants()) {
+            html.append("<tr><td>").append(index++).append("</td><td>")
+                    .append(escapeHtml(participant.getFullName())).append("</td><td>")
+                    .append(escapeHtml(participant.getRole())).append("</td><td></td></tr>");
+        }
+        return html.append("</tbody></table>").toString();
+    }
+
+    private String renderList(List<?> items, boolean agendas) {
+        StringBuilder html = new StringBuilder("<ol>");
+        int index = 1;
+        for (Object item : items) {
+            String value = item instanceof AgendaDto agenda ? agenda.getAgenda() : ((DecisionDto) item).getDecision();
+            html.append("<li>").append(escapeHtml(value)).append("</li>");
+            index++;
+        }
+        return html.append("</ol>").toString();
+    }
+
+    private String textFragment(String value) {
+        return value == null ? "" : "<p>" + escapeHtml(value).replace("\n", "<br>") + "</p>";
+    }
+
+    private String escapeHtml(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
     /**

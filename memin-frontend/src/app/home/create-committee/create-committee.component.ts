@@ -44,6 +44,7 @@ export class CreateCommitteeComponent implements OnInit {
     minuteLanguage: null,
     minuteOpeningTemplate: '',
     minuteHeaderTemplate: '',
+    minuteTemplateHtml: '',
     selectedMembersWithRoles: [],
     unselectedMembers: [],
   };

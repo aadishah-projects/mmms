@@ -33,6 +33,9 @@ public class CommitteeCreationDto {
     // Optional per-committee header/letterhead template for the minute (supports placeholders).
     private String minuteHeaderTemplate;
 
+    // Optional full HTML template reused by meetings in this committee.
+    private String minuteTemplateHtml;
+
     //member id and role
     //this annotation causes the json's 'key' to be used as the 'key' of the map
     List<MemberIdWithRoleDto> members = new ArrayList<>();
