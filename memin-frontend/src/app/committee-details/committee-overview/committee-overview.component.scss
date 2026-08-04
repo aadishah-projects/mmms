@@ -230,23 +230,64 @@ app-meeting-summaries {
 
 @media(max-width: 768px) {
     app-member-summaries {
-	display: none;
+        position: static;
+        display: flex;
+        width: 100%;
+        height: auto;
+        max-height: none;
+        padding: 0 0 16px;
+        border-left: none;
+        border-bottom: 1px solid colors.$color-border-primary;
     } 
 
     .details-and-calendar {
-	margin: 0;
-	padding: 0;
+        width: 100%;
+	    margin: 0;
+	    padding: 0;
+        gap: 16px;
     }
 
     .committee-details {
+        flex-direction: column;
+        gap: 16px;
     }
 
+    .committee-info,
     .committee-statistics {
-	display: none;
+        width: 100%;
+	    min-width: 0;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .committee-info {
+        .committee-name {
+            font-size: 1.5rem;
+        }
+
+        .committee-description {
+            margin-bottom: 24px;
+        }
+
+        .detail-item {
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 4px 0;
+
+            .label {
+                min-width: 105px;
+                margin-right: 10px;
+            }
+
+            .value {
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+        }
     }
 
     app-calendar {
-	display: none;
+        display: block;
     }
 }
 

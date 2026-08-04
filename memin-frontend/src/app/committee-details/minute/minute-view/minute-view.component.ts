@@ -93,19 +93,42 @@ export class MinuteViewComponent {
   onWordFileDownload($event: Event) {
     $event.preventDefault();
     this.showMinuteOptions = false;
-    if (this.minuteData().minuteContentHtml) {
-      this.htmlContent = this.customProcessedMinute()?.nativeElement.innerHTML;
-    } else if (this.minuteData().minuteLanguage == 'ENGLISH') {
-      this.htmlContent =
-        this.minuteEnglish1()?.processedMinute()?.nativeElement?.innerHTML;
-    } else if (this.minuteData().minuteLanguage == 'NEPALI') {
-      this.htmlContent =
-        this.minuteNepali1()?.processedMinute()?.nativeElement?.innerHTML;
+
+    const minuteData = this.minuteData();
+    let renderedMinute: HTMLElement | null | undefined;
+
+    if (minuteData.minuteContentHtml) {
+      renderedMinute = this.customProcessedMinute()
+        ?.nativeElement.querySelector<HTMLElement>('#a4-box');
+    } else if (minuteData.minuteLanguage === 'ENGLISH') {
+      renderedMinute = this.minuteEnglish1()
+        ?.processedMinute()
+        ?.nativeElement.querySelector<HTMLElement>('#a4-box');
+    } else if (minuteData.minuteLanguage === 'NEPALI') {
+      renderedMinute = this.minuteNepali1()
+        ?.processedMinute()
+        ?.nativeElement.querySelector<HTMLElement>('#a4-box');
+    }
+
+    // Send the actual minute surface, including #a4-box. The backend uses
+    // that element as the document root when converting HTML to DOCX.
+    this.htmlContent = renderedMinute?.outerHTML;
+
+    // A saved custom draft can briefly render before its view child is
+    // available. Keep the download usable by falling back to the saved HTML.
+    if (!this.htmlContent && minuteData.minuteContentHtml?.trim()) {
+      this.htmlContent = `<div id="a4-box">${minuteData.minuteContentHtml}</div>`;
+    }
+
+    if (!this.htmlContent?.trim()) {
+      console.error('Cannot download minute: rendered minute content is empty');
+      return;
     }
 
     this.httpClient
       .post(BACKEND_URL + '/api/word-file-for-minute', this.htmlContent, {
         withCredentials: true,
+        headers: { 'Content-Type': 'text/html; charset=UTF-8' },
         responseType: 'blob', // This tells Angular to parse the body as binary
       })
       .subscribe({

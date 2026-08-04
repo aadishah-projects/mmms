@@ -331,4 +331,44 @@ form label, .data-label {
   }
 }
 
+@media (max-width: 768px) {
+  :host {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    position: static;
+    box-sizing: border-box;
+  }
+
+  .minute-edit-container {
+    height: auto;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .panel-header,
+  .ai-draft-panel,
+  .actual-form {
+    min-width: 0;
+  }
+
+  .form-element-pair {
+    flex-direction: column;
+
+    .form-group {
+      width: 100%;
+    }
+  }
+
+  .full-minute-editor {
+    min-height: 300px;
+    margin: 12px;
+    padding: 16px;
+  }
+}
+
 

@@ -74,7 +74,9 @@ public class AiMinuteService {
                 "from the meeting facts and rough instructions. Return only an HTML fragment, without Markdown " +
                 "code fences and without an outer #a4-box element. Include a clear opening paragraph, an " +
                 "attendance table with a signature column, an agenda section when agendas exist, and a numbered " +
-                "decisions section. Do not invent names, dates, votes, or decisions; use only the supplied facts " +
+                "decisions section. Use semantic HTML headings (h1/h2), strong or b for important labels, and " +
+                "u for headings that should be underlined. Give tables explicit thead/tbody rows and include every " +
+                "supplied participant in the attendance table. Do not invent names, dates, votes, or decisions; use only the supplied facts " +
                 "and clearly phrase any rough instruction as a proposed draft. If the rough instructions request " +
                 "translation, translate every human-readable label and sentence in the supplied meeting data or " +
                 "existing draft into the requested language, while preserving names, numbers, dates, and HTML " +

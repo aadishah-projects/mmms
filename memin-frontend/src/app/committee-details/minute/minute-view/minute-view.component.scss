@@ -2,6 +2,8 @@
 @use "colors" as colors;
 
 :host {
+  display: block;
+  min-width: 0;
   height: 90vh;
   overflow: auto;
 }
@@ -10,6 +12,110 @@
   width: 210mm;
   height: 297mm;
   overflow-y: auto;
+}
+
+// The language-specific minute components import minute_styles.scss, but a
+// saved AI/full-editor draft is rendered directly in this component. Give it
+// the same A4 page surface so the viewer does not fall back to the dark app
+// background after the draft is saved and loaded again.
+.custom-minute #a4-box {
+  font-family: Roboto, "Annapurna", sans-serif;
+  line-height: 1.8rem;
+  background: white;
+  color: black;
+  width: constants.$minute-width;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 30mm 20mm;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+// Content inserted through [innerHTML] does not receive Angular's scoped
+// attributes, so explicitly style its table structure in the viewer.
+:host ::ng-deep .custom-minute #a4-box {
+  p,
+  li,
+  td,
+  th {
+    line-height: 1.6;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .heading {
+    text-decoration: underline;
+  }
+
+  b,
+  strong {
+    font-weight: 700;
+  }
+
+  u {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    margin: 8px 0;
+  }
+
+  th,
+  td {
+    padding: 8px 12px;
+    border: 1px solid #777;
+    text-align: left;
+    vertical-align: top;
+    white-space: nowrap;
+  }
+
+  th:last-child,
+  td:last-child {
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .memberships,
+  .agendas,
+  .decisions,
+  .introduction {
+    margin: 8px;
+  }
+
+  ol {
+    list-style-position: outside;
+    padding-left: 1.2rem;
+    margin: 0;
+  }
+
+  li {
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
 }
 
 .menu-btn-container {
@@ -162,23 +268,53 @@
 
 
 @media (max-width: 768px) {
+  :host {
+    height: auto;
+    overflow: visible;
+  }
+
   .minute {
-    width: 90vw !important;
-    height: calc(90vw * 1.414) !important; /* maintain A4 aspect ratio */
-    min-height: 95vh; /* avoid overflowing screen */
-    overflow-y: auto; /* scroll if content is too long */
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible;
+  }
+
+  .custom-minute #a4-box {
+    width: 100% !important;
+    min-height: 0 !important;
+    padding: 16px;
+    margin: 0;
+    font-size: constants.$font-normal;
+    line-height: 1.6;
+  }
+
+  :host ::ng-deep .custom-minute #a4-box {
+    table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    th,
+    td {
+      padding: 6px 8px;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
   }
 
   .menu-btn-container {
-      padding-bottom: 0px;
+      padding-bottom: 0;
       position: fixed;
-      top: 80px;
-      right: 30px;
-      font-size: 5px;
+      top: 68px;
+      right: 16px;
+      z-index: 2;
   }
   .minute-options {
       position: fixed;
-      top: 110px;
-      right: 30px;
+      top: 108px;
+      right: 16px;
+      max-width: calc(100vw - 32px);
   }
 }

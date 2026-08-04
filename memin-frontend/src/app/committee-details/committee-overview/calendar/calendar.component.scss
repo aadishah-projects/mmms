@@ -133,6 +133,41 @@ select {
   overflow-y: auto;
 }
 
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 16px;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 0;
+  }
+
+  .heading {
+    font-size: constants.$font-xl;
+  }
+
+  .calendar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .month {
+    padding: 8px 4px;
+  }
+
+  .days {
+    gap: 2px;
+  }
+
+  .popup-content {
+    width: calc(100vw - 32px);
+    min-width: 0;
+    max-width: none;
+  }
+}
+
 .popup-header {
   display: flex;
   justify-content: space-between;

@@ -22,6 +22,7 @@ import { PopupService } from '../../../popup/popup.service';
 export class MinuteEditComponent implements OnInit {
   minuteDataService = inject(MinuteDataService);
   minuteData = this.minuteDataService.getMinuteData();
+  fullEditorMode = this.minuteDataService.getFullEditorMode();
   count = -1; //unique negative number which is assigned as the decision or agenda id which is used for deletion
   httpParams = new HttpParams();
   aiPrompt = '';
@@ -62,6 +63,11 @@ export class MinuteEditComponent implements OnInit {
 
   startFullEditor(): void {
     const data = this.minuteData();
+    // Changing modes must not replace an existing AI/custom draft.
+    if (data.minuteContentHtml?.trim()) {
+      this.minuteDataService.setFullEditorMode(true);
+      return;
+    }
     const attendance = data.participants
       .map((participant, index) => `<tr><td>${index + 1}</td><td>${this.escapeHtml(participant.fullName)}</td><td>${this.escapeHtml(participant.role)}</td><td></td></tr>`)
       .join('');
@@ -74,10 +80,17 @@ export class MinuteEditComponent implements OnInit {
       <table border="1"><thead><tr><th>S.N.</th><th>Name</th><th>Position</th><th>Signature</th></tr></thead><tbody>${attendance}</tbody></table>
       <h2>Agendas</h2><ol>${agendas}</ol>
       <h2>Decisions</h2><ol>${decisions}</ol>`);
+    this.minuteDataService.setFullEditorMode(true);
   }
 
   useStructuredEditor(): void {
-    this.minuteDataService.setMinuteContentHtml(null);
+    const htmlContent = this.minuteData().minuteContentHtml;
+    if (htmlContent) {
+      this.copyStructuredFieldsFromHtml(htmlContent);
+    }
+    // Keep the custom HTML as the minute content. The separate mode flag
+    // allows the structured fields to be shown without revealing stale data.
+    this.minuteDataService.setFullEditorMode(false);
   }
 
   generateAiMinute(): void {
@@ -93,6 +106,7 @@ export class MinuteEditComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.minuteDataService.setMinuteContentHtml(response.mainBody.htmlContent);
+          this.minuteDataService.setFullEditorMode(true);
           this.aiInProgress = false;
           this.popupService.showPopup('AI minute draft generated. Review it before saving.', 'Success', 3000);
         },
@@ -110,6 +124,148 @@ export class MinuteEditComponent implements OnInit {
 
   private escapeHtml(value: string): string {
     return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character] ?? character));
+  }
+
+  private copyStructuredFieldsFromHtml(htmlContent: string): void {
+    const container = document.createElement('div');
+    container.innerHTML = htmlContent;
+
+    const agendaValues = this.extractSectionItems(container, 'agenda');
+    const decisionValues = this.extractSectionItems(container, 'decision');
+    if (agendaValues === null && decisionValues === null) {
+      return;
+    }
+
+    const data = this.minuteData();
+    const agendas = agendaValues === null
+      ? data.agendas
+      : agendaValues.map((agenda, index) => ({
+          agendaId: data.agendas[index]?.agendaId ?? this.count--,
+          agenda,
+        }));
+    const decisions = decisionValues === null
+      ? data.decisions
+      : decisionValues.map((decision, index) => ({
+          decisionId: data.decisions[index]?.decisionId ?? this.count--,
+          decision,
+        }));
+
+    this.minuteDataService.setStructuredFields(agendas, decisions);
+  }
+
+  private extractSectionItems(
+    container: HTMLElement,
+    section: 'agenda' | 'decision',
+  ): string[] | null {
+    const list = this.findSectionList(container, section);
+    if (!list) {
+      return null;
+    }
+
+    return Array.from(list.children)
+      .filter((child): child is HTMLElement => child.tagName.toLowerCase() === 'li')
+      .map((item) => {
+        const itemCopy = item.cloneNode(true) as HTMLElement;
+        itemCopy.querySelectorAll('ol, ul').forEach((nestedList) => nestedList.remove());
+        return (itemCopy.textContent ?? '')
+          .replace(/^\s*(?:\d+|[\u0966-\u096F]+)\s*[.)।:-]?\s*/u, '')
+          .trim();
+      })
+      .filter((item) => item.length > 0);
+  }
+
+  private findSectionList(
+    container: HTMLElement,
+    section: 'agenda' | 'decision',
+  ): HTMLElement | null {
+    const classNames = section === 'agenda'
+      ? ['agenda', 'agendas']
+      : ['decision', 'decisions'];
+
+    const classSection = Array.from(container.querySelectorAll<HTMLElement>('[class]'))
+      .find((element) => Array.from(element.classList).some((className) =>
+        classNames.includes(className.toLowerCase()),
+      ));
+    if (classSection) {
+      if (classSection.matches('ol, ul')) {
+        return classSection;
+      }
+      const list = classSection.querySelector<HTMLElement>('ol, ul');
+      if (list) {
+        return list;
+      }
+    }
+
+    const heading = Array.from(
+      container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'),
+    ).find((element) => this.isSectionHeading(element.textContent ?? '', section));
+    if (!heading) {
+      return null;
+    }
+
+    let sibling = heading.nextElementSibling as HTMLElement | null;
+    while (sibling) {
+      if (/^H[1-6]$/.test(sibling.tagName)) {
+        break;
+      }
+      if (sibling.matches('ol, ul')) {
+        return sibling;
+      }
+      const list = sibling.querySelector<HTMLElement>('ol, ul');
+      if (list) {
+        return list;
+      }
+      sibling = sibling.nextElementSibling as HTMLElement | null;
+    }
+
+    return null;
+  }
+
+  private isSectionHeading(
+    text: string,
+    section: 'agenda' | 'decision',
+  ): boolean {
+    const normalized = text.trim().toLocaleLowerCase();
+    if (section === 'agenda') {
+      return /agenda|proposal|\u092a\u094d\u0930\u0938\u094d\u0924\u093e\u0935/u.test(normalized);
+    }
+    return /decision|\u0928\u093f\u0930\u094d\u0923\u092f/u.test(normalized);
+  }
+
+  private syncHtmlWithStructuredFields(): void {
+    const data = this.minuteData();
+    if (!data.minuteContentHtml) {
+      return;
+    }
+
+    const container = document.createElement('div');
+    container.innerHTML = data.minuteContentHtml;
+    let changed = false;
+    const sections: Array<{ type: 'agenda' | 'decision'; values: string[] }> = [
+      { type: 'agenda', values: data.agendas.map((agenda) => agenda.agenda) },
+      { type: 'decision', values: data.decisions.map((decision) => decision.decision) },
+    ];
+
+    for (const section of sections) {
+      const list = this.findSectionList(container, section.type);
+      if (!list) {
+        continue;
+      }
+
+      while (list.firstChild) {
+        list.removeChild(list.firstChild);
+      }
+      for (const value of section.values) {
+        const item = document.createElement('li');
+        item.textContent = value;
+        list.appendChild(item);
+      }
+      changed = true;
+    }
+
+    if (changed) {
+      this.minuteDataService.setMinuteContentHtml(container.innerHTML);
+    }
   }
 
   
@@ -195,6 +351,12 @@ export class MinuteEditComponent implements OnInit {
     } else {
       this.showAllErrors = false;
     }
+
+    // Structured edits must update the same HTML draft that the minute view
+    // and the full editor use. This keeps both editing modes synchronized.
+    if (!this.fullEditorMode()) {
+      this.syncHtmlWithStructuredFields();
+    }
     
 
     const minuteUpdateDto = new MinuteUpdateDto();
@@ -206,8 +368,8 @@ export class MinuteEditComponent implements OnInit {
     minuteUpdateDto.meetingHeldPlace = this.minuteData().meetingHeldPlace;
     minuteUpdateDto.decisions = this.minuteData().decisions;
     minuteUpdateDto.agendas = this.minuteData().agendas;
-    // Send an empty value when switching back to structured fields so the
-    // previously saved custom draft is cleared on the server.
+    // Keep the meeting-specific draft when saving structured fields. It is
+    // the same edited minute displayed by the full editor and minute view.
     minuteUpdateDto.htmlContent = this.minuteData().minuteContentHtml ?? '';
 
     this.saveInProgress = true;

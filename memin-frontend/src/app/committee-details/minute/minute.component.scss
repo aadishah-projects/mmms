@@ -11,7 +11,19 @@
     height: 100%; 
 }
 @media (max-width: 768px) {
+    :host {
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    app-minute-view,
     app-minute-edit {
-	display:none;
+        width: 100%;
+        min-width: 0;
+    }
+
+    app-minute-edit {
+	display: flex;
     }
 }

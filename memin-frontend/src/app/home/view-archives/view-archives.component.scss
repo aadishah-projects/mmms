@@ -20,11 +20,17 @@
 
 .summaryCards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, max-content)); //max-content prevents the cards to grow beyond its natural siz
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
   justify-content: start;
   gap: 20px;
   scrollbar-gutter: stable;
   margin-right: 20px;
+}
+
+@media (max-width: 768px) {
+  .summaryCards {
+    margin-right: 0;
+  }
 }
 
 

@@ -60,6 +60,7 @@ public class MeetingMinuteController {
         MinuteDataDto minuteData = meetingMinutePreparationService.prepareDataForMinute(
                 meeting.getCommittee(), meeting, authentication.getName());
         String htmlContent = aiMinuteService.generateMinute(minuteData, request.getRoughPrompt());
+        htmlContent = meetingMinutePreparationService.ensureAttendanceTable(htmlContent, minuteData);
         meetingService.updateMinuteContent(meetingId, htmlContent, authentication.getName());
         return ResponseEntity.ok(new Response("AI minute draft generated", java.util.Map.of("htmlContent", htmlContent)));
     }

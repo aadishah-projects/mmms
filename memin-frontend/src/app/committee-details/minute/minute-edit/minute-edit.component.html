@@ -9,7 +9,7 @@
       }
     </div>
     <p class="panel-subtitle">Create or update the meeting minute</p>
-    @if (!minuteData().minuteContentHtml) {
+    @if (!fullEditorMode()) {
       <button type="button" class="btn btn-secondary" (click)="startFullEditor()">Open full editor</button>
     } @else {
       <button type="button" class="btn btn-secondary" (click)="useStructuredEditor()">Use structured fields</button>
@@ -29,7 +29,7 @@
     </button>
   </div>
 
-  @if (minuteData().minuteContentHtml) {
+  @if (fullEditorMode()) {
     <div
       class="full-minute-editor"
       contenteditable="true"

@@ -133,14 +133,19 @@
     flex-direction: row;
     width: 100%;
     justify-content: space-around;
+    gap: 0;
+    margin-top: 0;
   }
 
   .nav-item {
     flex: 1;
+    min-width: 0;
     padding: 8px 4px;
+    justify-content: center;
+
     .icon {
-      box-sizing: border-box;
-      width: 100%;
+      width: 24px;
+      height: 24px;
     }
 
     // .create-committee {

@@ -113,7 +113,19 @@
 
 
 @media (max-width: 768px) {
+  .header-container {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding-right: 0;
+    margin-bottom: 16px;
+  }
+
+  .heading {
+    font-size: constants.$font-xl;
+  }
+
   .summaryCards {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
     margin-right: 0;
     padding-bottom: 20px;
   }

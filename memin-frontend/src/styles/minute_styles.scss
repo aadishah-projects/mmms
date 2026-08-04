@@ -103,11 +103,26 @@ ol {
 @media (max-width: 768px) {
   #a4-box {
     margin: 0;
-    padding: 25px;
-    font-size: 7.5px;
-    width: 90vw !important;
-    min-height: calc(90vw * 1.414) !important; /* maintain A4 aspect ratio */
-    overflow-y: auto; /* scroll if content is too long */
+    padding: 16px;
+    font-size: constants.$font-normal;
+    line-height: 1.6;
+    width: 100% !important;
+    min-height: 0 !important;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  th,
+  td {
+    padding: 6px 8px;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 

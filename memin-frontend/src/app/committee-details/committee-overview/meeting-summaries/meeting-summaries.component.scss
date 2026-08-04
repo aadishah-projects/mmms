@@ -100,9 +100,10 @@
 @media (max-width: 768px) {
   .meeting-summaries.has-summaries {
     display: grid;
-    grid-template-columns: repeat(
-      auto-fit,
-      minmax(150px, 1fr)
-    );
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .available-screen {
+    padding: 16px;
   }
 }

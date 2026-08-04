@@ -14,6 +14,7 @@ import org.apache.poi.xwpf.usermodel.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTLvl;
@@ -85,6 +86,73 @@ public class MeetingMinutePreparationService {
         }
 
         return minuteData;
+    }
+
+    /**
+     * AI providers occasionally omit the attendance table even though it is
+     * requested in the prompt. Normalize the generated fragment before it is
+     * persisted so every rendered minute contains the meeting members.
+     */
+    public String ensureAttendanceTable(String htmlContent, MinuteDataDto data) {
+        Document document = Jsoup.parseBodyFragment(htmlContent == null ? "" : htmlContent);
+        Element body = document.body();
+        Element attendanceTable = findAttendanceTable(body, data);
+
+        if (attendanceTable == null) {
+            String heading = MinuteLanguage.NEPALI.equals(data.getMinuteLanguage())
+                    ? "\u0909\u092a\u0938\u094d\u0925\u093f\u0924\u093f"
+                    : "Attendance";
+            body.appendElement("h2").text(heading);
+            attendanceTable = body.appendElement("table");
+            Element headerRow = attendanceTable.appendElement("thead").appendElement("tr");
+            if (MinuteLanguage.NEPALI.equals(data.getMinuteLanguage())) {
+                headerRow.appendElement("th").text("\u0915\u094d\u0930.\u0938\u0902.");
+                headerRow.appendElement("th").text("\u0928\u093e\u092e");
+                headerRow.appendElement("th").text("\u092a\u0926");
+                headerRow.appendElement("th").text("\u0939\u0938\u094d\u0924\u093e\u0915\u094d\u0937\u0930");
+            } else {
+                headerRow.appendElement("th").text("S.N.");
+                headerRow.appendElement("th").text("Name");
+                headerRow.appendElement("th").text("Position");
+                headerRow.appendElement("th").text("Signature");
+            }
+        }
+
+        Element bodyRows = attendanceTable.selectFirst("tbody");
+        if (bodyRows == null) {
+            bodyRows = attendanceTable.appendElement("tbody");
+        }
+
+        for (CommitteeMembershipDto participant : data.getParticipants()) {
+            String fullName = participant.getFullName() == null ? "" : participant.getFullName();
+            if (fullName.isBlank() || attendanceTable.text().contains(fullName)) {
+                continue;
+            }
+
+            Element row = bodyRows.appendElement("tr");
+            row.appendElement("td").text(String.valueOf(bodyRows.children().size()));
+            row.appendElement("td").text(fullName);
+            row.appendElement("td").text(participant.getRole() == null ? "" : participant.getRole());
+            row.appendElement("td");
+        }
+
+        return body.html();
+    }
+
+    private Element findAttendanceTable(Element body, MinuteDataDto data) {
+        for (Element table : body.select("table")) {
+            String text = table.text().toLowerCase();
+            boolean hasAttendanceHeaders = text.contains("signature")
+                    && (text.contains("name") || text.contains("position"));
+            boolean hasParticipant = data.getParticipants().stream()
+                    .map(CommitteeMembershipDto::getFullName)
+                    .filter(name -> name != null && !name.isBlank())
+                    .anyMatch(table.text()::contains);
+            if (hasAttendanceHeaders || hasParticipant) {
+                return table;
+            }
+        }
+        return null;
     }
 
     /**
@@ -478,6 +546,15 @@ public class MeetingMinutePreparationService {
                     }
                 }
             }
+
+            // Committee templates and AI drafts are not required to use the
+            // built-in section classes above. If the structured converter did
+            // not recognize any section, preserve generic headings,
+            // paragraphs, lists, and tables instead of returning a blank DOCX.
+            if (document.getParagraphs().isEmpty() && document.getTables().isEmpty()) {
+                appendGenericHtml(document, a4_box);
+            }
+
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             document.write(out);
             byte[] bytes = out.toByteArray();
@@ -485,6 +562,63 @@ public class MeetingMinutePreparationService {
         } catch (Exception e) {
             throw e;
         }
+    }
+
+    private void appendGenericHtml(XWPFDocument document, Element root) {
+        for (Element child : root.children()) {
+            appendGenericElement(document, child);
+        }
+    }
+
+    private void appendGenericElement(XWPFDocument document, Element element) {
+        String tagName = element.tagName();
+
+        if (tagName.equals("table")) {
+            XWPFTable table = document.createTable();
+            table.setWidth(XWPFTable.DEFAULT_PERCENTAGE_WIDTH);
+            copyTable(table, element);
+            return;
+        }
+
+        if (tagName.matches("h[1-6]")) {
+            XWPFParagraph paragraph = document.createParagraph();
+            styleHeading(paragraph.createRun(), element);
+            return;
+        }
+
+        if (tagName.equals("ol") || tagName.equals("ul")) {
+            int index = 1;
+            for (Element item : element.children()) {
+                if (!item.tagName().equals("li") || item.text().isBlank()) {
+                    continue;
+                }
+
+                XWPFParagraph paragraph = document.createParagraph();
+                String prefix = tagName.equals("ol") ? index++ + ". " : "• ";
+                paragraph.createRun().setText(prefix + item.text().trim());
+            }
+            return;
+        }
+
+        boolean hasBlockChild = false;
+        for (Element child : element.children()) {
+            if (isBlockElement(child)) {
+                hasBlockChild = true;
+                appendGenericElement(document, child);
+            }
+        }
+
+        if (!hasBlockChild && !element.text().isBlank()) {
+            document.createParagraph().createRun().setText(element.text().trim());
+        }
+    }
+
+    private boolean isBlockElement(Element element) {
+        return switch (element.tagName()) {
+            case "address", "article", "blockquote", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
+                    "header", "li", "ol", "p", "section", "table", "ul" -> true;
+            default -> false;
+        };
     }
 
 
