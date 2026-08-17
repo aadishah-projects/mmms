@@ -65,6 +65,38 @@ class MeetingMinutePreparationServiceTest {
     }
 
     @Test
+    void resolvesAtPlaceholdersInCommitteeHeader() {
+        Member coordinator = new Member();
+        coordinator.setId(1);
+        coordinator.setTitle("Prof.");
+        coordinator.setFirstName("Hari");
+        coordinator.setLastName("Bahadur");
+
+        Committee committee = new Committee();
+        committee.setName("Academic Committee");
+        committee.setDescription("academic policies and curriculum development");
+        committee.setMinuteLanguage(MinuteLanguage.ENGLISH);
+        committee.setCoordinator(coordinator);
+        committee.setMinuteHeaderTemplate(
+                "The @committee was held on @day, @date, at @time at @location. " +
+                "Its purpose was to oversee @purpose. The meeting was coordinated by @coordinator.");
+
+        Meeting meeting = new Meeting();
+        meeting.setCommittee(committee);
+        meeting.setHeldDate(LocalDate.of(2026, 8, 2));
+        meeting.setHeldTime(LocalTime.of(10, 30));
+        meeting.setHeldPlace("Board Room");
+
+        var result = service.prepareDataForMinute(committee, meeting, "writer");
+
+        assertEquals(
+                "The Academic Committee was held on Sunday, 2026-08-02, at 10:30 at Board Room. " +
+                "Its purpose was to oversee academic policies and curriculum development. " +
+                "The meeting was coordinated by Prof. Hari Bahadur.",
+                result.getHeader());
+    }
+
+    @Test
     void prefersMeetingSpecificMinuteOverCommitteeTemplate() {
         Committee committee = new Committee();
         committee.setName("Research Committee");

@@ -20,6 +20,7 @@ import { EditMeetingComponent } from './committee-details/committee-overview/mee
 import { DocumentationComponent } from './documentation/documentation.component';
 import { ManageUsersComponent } from './home/manage-users/manage-users.component';
 import { RegisterComponent } from './register/register.component';
+import { MinuteTemplateComponent } from './committee-details/minute-template/minute-template.component';
 
 export const routes: Routes = [
   {
@@ -117,6 +118,11 @@ export const routes: Routes = [
         canActivate: [committeeRouteGuard, hasWriteAccessGuard],
         path: 'edit',
         component: EditCommitteeComponent,
+      },
+      {
+        canActivate: [committeeRouteGuard, hasWriteAccessGuard],
+        path: 'template',
+        component: MinuteTemplateComponent,
       },
       {
         canActivate: [committeeRouteGuard],

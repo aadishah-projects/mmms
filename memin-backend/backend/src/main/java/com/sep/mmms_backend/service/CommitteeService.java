@@ -251,6 +251,37 @@ public class CommitteeService {
     }
 
     @Transactional(readOnly = true)
+    public MinuteTemplateDto getMinuteTemplate(int committeeId, String username) {
+        return new MinuteTemplateDto(getCommitteeIfAccessible(committeeId, username));
+    }
+
+    @Transactional
+    public void updateMinuteTemplate(
+            int committeeId,
+            MinuteTemplateUpdateDto minuteTemplateUpdateDto,
+            String username) {
+        Committee committee = getCommitteeIfAccessible(committeeId, username);
+        com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
+
+        boolean isDepartmentHead = user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD;
+        boolean isCommitteeCreator = username.equals(committee.getCreatedBy());
+        boolean isAssignedSecretary = user.getRole() == com.sep.mmms_backend.enums.AppRole.SECRETARY
+                && user.getLinkedMemberId() != null
+                && committee.getSecretary() != null
+                && user.getLinkedMemberId().equals(committee.getSecretary().getId());
+
+        if (!isDepartmentHead && !isCommitteeCreator && !isAssignedSecretary) {
+            throw new IllegalOperationException("Only the department head, committee creator, or assigned secretary can edit the minute template");
+        }
+
+        String templateHtml = minuteTemplateUpdateDto == null
+                ? null
+                : minuteTemplateUpdateDto.getMinuteTemplateHtml();
+        committee.setMinuteTemplateHtml(templateHtml == null || templateHtml.isBlank() ? null : templateHtml);
+        committeeRepository.save(committee);
+    }
+
+    @Transactional(readOnly = true)
     public List<Committee> getAllActiveCommittees(String username) {
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
         if (user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD) {

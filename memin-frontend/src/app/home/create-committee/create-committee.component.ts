@@ -42,9 +42,6 @@ export class CreateCommitteeComponent implements OnInit {
     status: 'ACTIVE',
     maxNoOfMeetings: 0,
     minuteLanguage: null,
-    minuteOpeningTemplate: '',
-    minuteHeaderTemplate: '',
-    minuteTemplateHtml: '',
     selectedMembersWithRoles: [],
     unselectedMembers: [],
   };

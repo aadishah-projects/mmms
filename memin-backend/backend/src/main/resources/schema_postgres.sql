@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS committees (
     committee_modified_date DATE NOT NULL,
     committee_status VARCHAR(255) NOT NULL,
     committee_minute_language VARCHAR(255) NOT NULL,
+    committee_minute_opening_template TEXT,
+    committee_minute_header_template TEXT,
     committee_minute_template_html TEXT,
     committee_max_no_of_meetings INT,
     FOREIGN KEY (committee_coordinator_id) REFERENCES members(member_id)

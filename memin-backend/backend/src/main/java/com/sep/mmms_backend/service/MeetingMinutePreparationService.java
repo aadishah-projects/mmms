@@ -163,26 +163,37 @@ public class MeetingMinutePreparationService {
      */
     private String renderFullMinuteTemplate(String template, MinuteDataDto data) {
         String rendered = template;
-        rendered = replaceToken(rendered, "committeeName", escapeHtml(data.getCommitteeName()));
-        rendered = replaceToken(rendered, "committeeDescription", escapeHtml(data.getCommitteeDescription()));
-        rendered = replaceToken(rendered, "date", escapeHtml(data.getMeetingHeldDate() == null ? "" : data.getMeetingHeldDate().toString()));
-        rendered = replaceToken(rendered, "day", escapeHtml(data.getMeetingHeldDay()));
-        rendered = replaceToken(rendered, "partOfDay", escapeHtml(data.getPartOfDay()));
-        rendered = replaceToken(rendered, "time", escapeHtml(data.getMeetingHeldTime()));
-        rendered = replaceToken(rendered, "place", escapeHtml(data.getMeetingHeldPlace()));
-        rendered = replaceToken(rendered, "coordinator", escapeHtml(data.getCoordinatorFullName()));
-        rendered = replaceToken(rendered, "header", textFragment(data.getHeader()));
-        rendered = replaceToken(rendered, "openingParagraph", textFragment(data.getOpeningParagraph()));
-        rendered = replaceToken(rendered, "attendance", renderAttendance(data));
-        rendered = replaceToken(rendered, "agendas", renderList(data.getAgendas(), true));
-        rendered = replaceToken(rendered, "decisions", renderList(data.getDecisions(), false));
+        rendered = replaceToken(rendered, escapeHtml(data.getCommitteeName()), "committeeName", "committee", "committe");
+        rendered = replaceToken(rendered, escapeHtml(data.getCommitteeDescription()), "committeeDescription", "purpose");
+        rendered = replaceToken(rendered, escapeHtml(data.getMeetingTitle()), "meetingTitle", "title");
+        rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldDate() == null ? "" : data.getMeetingHeldDate().toString()), "date", "data");
+        rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldDay()), "day");
+        rendered = replaceToken(rendered, escapeHtml(data.getPartOfDay()), "partOfDay");
+        rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldTime()), "time");
+        rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldPlace()), "place", "location");
+        rendered = replaceToken(rendered, escapeHtml(data.getCoordinatorFullName()), "coordinator");
+        rendered = replaceToken(rendered, textFragment(data.getHeader()), "header");
+        rendered = replaceToken(rendered, textFragment(data.getOpeningParagraph()), "openingParagraph");
+        rendered = replaceToken(rendered, renderAttendance(data), "attendance", "participants");
+        rendered = replaceToken(rendered, renderList(data.getAgendas(), true), "agendas");
+        rendered = replaceToken(rendered, renderList(data.getDecisions(), false), "decisions");
         return rendered;
     }
 
-    private String replaceToken(String template, String name, String value) {
+    /**
+     * Replace both the original brace syntax and the shorter @ syntax used by
+     * the committee template editor. The aliases make the editor read like
+     * normal prose: @committee, @date, @location, @purpose and @coordinator.
+     */
+    private String replaceToken(String template, String value, String... names) {
         String safeValue = value == null ? "" : value;
-        return template.replace("{{" + name + "}}", safeValue)
-                .replace("{" + name + "}", safeValue);
+        String rendered = template;
+        for (String name : names) {
+            rendered = rendered.replace("{{" + name + "}}", safeValue)
+                    .replace("{" + name + "}", safeValue)
+                    .replace("@" + name, safeValue);
+        }
+        return rendered;
     }
 
     private String renderAttendance(MinuteDataDto data) {
@@ -231,15 +242,16 @@ public class MeetingMinutePreparationService {
         if (template == null || template.isBlank()) {
             return null;
         }
-        return template
-                .replace("{committeeName}", nullSafe(data.getCommitteeName()))
-                .replace("{committeeDescription}", nullSafe(data.getCommitteeDescription()))
-                .replace("{date}", data.getMeetingHeldDate() != null ? data.getMeetingHeldDate().toString() : "")
-                .replace("{day}", nullSafe(data.getMeetingHeldDay()))
-                .replace("{partOfDay}", nullSafe(data.getPartOfDay()))
-                .replace("{time}", nullSafe(data.getMeetingHeldTime()))
-                .replace("{place}", nullSafe(data.getMeetingHeldPlace()))
-                .replace("{coordinator}", nullSafe(data.getCoordinatorFullName()));
+        String rendered = template;
+        rendered = replaceToken(rendered, nullSafe(data.getCommitteeName()), "committeeName", "committee", "committe");
+        rendered = replaceToken(rendered, nullSafe(data.getCommitteeDescription()), "committeeDescription", "purpose");
+        rendered = replaceToken(rendered, nullSafe(data.getMeetingTitle()), "meetingTitle", "title");
+        rendered = replaceToken(rendered, data.getMeetingHeldDate() != null ? data.getMeetingHeldDate().toString() : "", "date", "data");
+        rendered = replaceToken(rendered, nullSafe(data.getMeetingHeldDay()), "day");
+        rendered = replaceToken(rendered, nullSafe(data.getPartOfDay()), "partOfDay");
+        rendered = replaceToken(rendered, nullSafe(data.getMeetingHeldTime()), "time");
+        rendered = replaceToken(rendered, nullSafe(data.getMeetingHeldPlace()), "place", "location");
+        return replaceToken(rendered, nullSafe(data.getCoordinatorFullName()), "coordinator");
     }
 
     private String nullSafe(String value) {

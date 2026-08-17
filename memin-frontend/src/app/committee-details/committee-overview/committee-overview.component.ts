@@ -171,4 +171,10 @@ export class CommitteeOverviewComponent {
       queryParams: { committeeId: this.committeeId },
     });
   }
+
+  editMinuteTemplate() {
+    this.router.navigate(['/committee-details/template'], {
+      queryParams: { committeeId: this.committeeId },
+    });
+  }
 }

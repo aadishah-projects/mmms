@@ -99,9 +99,14 @@
     </div>
 
     @if (canCreateMeeting) {
-      <button class="new-meeting-btn" (click)="createMeetingForThisCommittee()">
-        + New Meeting
-      </button>
+      <div class="committee-actions">
+        <button class="new-meeting-btn" (click)="createMeetingForThisCommittee()">
+          + New Meeting
+        </button>
+        <button class="template-btn" (click)="editMinuteTemplate()">
+          Edit Minute Template
+        </button>
+      </div>
     }
 
     <app-meeting-summaries [meetingSummaries]="meetingSummaries">

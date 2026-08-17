@@ -1,0 +1,183 @@
+<div class="template-workspace">
+  <header class="template-header">
+    <div>
+      <p class="eyebrow">Committee minute template</p>
+      <h1>{{ committeeName || 'Minute template' }}</h1>
+      <p class="template-subtitle">
+        Design the reusable minute on a paper-like canvas. It will be filled with each meeting's values when the minute is opened.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="secondary-action" (click)="cancel()">Back</button>
+      <button type="button" class="primary-action" [disabled]="!hasDataLoaded || isSaving" (click)="saveTemplate()">
+        {{ isSaving ? 'Saving…' : 'Save template' }}
+      </button>
+    </div>
+  </header>
+
+  @if (errorMessage) {
+    <div class="template-error">{{ errorMessage }}</div>
+  } @else if (!hasDataLoaded) {
+    <div class="template-loading"><span class="loader"></span></div>
+  } @else {
+    <section class="preset-section">
+      <div class="preset-heading">
+        <div>
+          <p class="eyebrow">Template starters</p>
+          <h2>Pick a layout, then make it yours</h2>
+        </div>
+        <p class="preset-note">
+          Choosing a starter replaces the paper content. You can edit every word, section, and table before saving.
+        </p>
+      </div>
+      <div class="preset-grid">
+        @for (preset of templatePresets; track preset.id) {
+          <button
+            type="button"
+            class="preset-card"
+            [class.selected]="selectedPresetId === preset.id"
+            (click)="applyPreset(preset)"
+          >
+            <span class="preset-card-title">{{ preset.name }}</span>
+            <span class="preset-card-description">{{ preset.description }}</span>
+            <span class="preset-card-action">
+              {{ selectedPresetId === preset.id ? 'Selected — edit below' : 'Use this layout' }}
+            </span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <div class="editor-layout">
+      <main class="editor-card">
+        <div class="editor-toolbar" aria-label="Template formatting toolbar">
+          <div class="toolbar-group">
+            <button type="button" title="Bold" (mousedown)="preventToolbarFocus($event)" (click)="format('bold')"><strong>B</strong></button>
+            <button type="button" title="Italic" (mousedown)="preventToolbarFocus($event)" (click)="format('italic')"><em>I</em></button>
+            <button type="button" title="Underline" (mousedown)="preventToolbarFocus($event)" (click)="format('underline')"><u>U</u></button>
+            <button type="button" title="Strike through" (mousedown)="preventToolbarFocus($event)" (click)="format('strikeThrough')"><s>S</s></button>
+          </div>
+
+          <div class="toolbar-group">
+            <select title="Text style" (change)="format('formatBlock', $any($event.target).value)" (focus)="rememberSelection()">
+              <option value="p">Paragraph</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="h3">Heading 3</option>
+              <option value="blockquote">Quote</option>
+            </select>
+          </div>
+
+          <div class="toolbar-group">
+            <button type="button" title="Align left" (mousedown)="preventToolbarFocus($event)" (click)="format('justifyLeft')">≡</button>
+            <button type="button" title="Center" (mousedown)="preventToolbarFocus($event)" (click)="format('justifyCenter')">≡</button>
+            <button type="button" title="Align right" (mousedown)="preventToolbarFocus($event)" (click)="format('justifyRight')">≡</button>
+            <button type="button" title="Justify" (mousedown)="preventToolbarFocus($event)" (click)="format('justifyFull')">☰</button>
+          </div>
+
+          <div class="toolbar-group">
+            <button type="button" title="Bulleted list" (mousedown)="preventToolbarFocus($event)" (click)="format('insertUnorderedList')">• List</button>
+            <button type="button" title="Numbered list" (mousedown)="preventToolbarFocus($event)" (click)="format('insertOrderedList')">1. List</button>
+            <button type="button" title="Insert link" (mousedown)="preventToolbarFocus($event)" (click)="insertLink()">Link</button>
+            <button type="button" title="Horizontal rule" (mousedown)="preventToolbarFocus($event)" (click)="insertHorizontalRule()">Line</button>
+          </div>
+
+          <div class="toolbar-group table-tools">
+            <button type="button" title="Insert table" (mousedown)="preventToolbarFocus($event)" (click)="toggleTableOptions()">Table</button>
+            <button type="button" title="Add row to selected table" (mousedown)="preventToolbarFocus($event)" (click)="addTableRow()">+ Row</button>
+            <button type="button" title="Add column to selected table" (mousedown)="preventToolbarFocus($event)" (click)="addTableColumn()">+ Column</button>
+            <button type="button" title="Delete selected table" class="danger-tool" (mousedown)="preventToolbarFocus($event)" (click)="deleteFocusedTable()">Delete table</button>
+          </div>
+
+          @if (showTableOptions) {
+            <div class="table-popover">
+              <strong>Insert table</strong>
+              <label>Rows <input type="number" min="1" max="20" [(ngModel)]="tableRows"></label>
+              <label>Columns <input type="number" min="1" max="12" [(ngModel)]="tableColumns"></label>
+              <label class="checkbox-label"><input type="checkbox" [(ngModel)]="tableHasHeader"> Header row</label>
+              <button type="button" class="primary-action small-action" (click)="insertTable()">Insert</button>
+            </div>
+          }
+        </div>
+
+        <div class="token-bar">
+          <span class="token-bar-label">Insert meeting data</span>
+          @for (token of templateTokens; track token.token) {
+            <button
+              type="button"
+              class="token-chip"
+              [class.block-token]="token.block"
+              [title]="token.description"
+              (mousedown)="preventToolbarFocus($event)"
+              (click)="insertToken(token)"
+            >{{ token.token }}</button>
+          }
+        </div>
+
+        @if (showTokenSuggestions) {
+          <div class="token-suggestions" role="listbox">
+            <span class="suggestion-heading">Choose meeting data</span>
+            @for (token of tokenSuggestions; track token.token; let i = $index) {
+              <button
+                type="button"
+                class="token-suggestion"
+                [class.active]="i === tokenSuggestionIndex"
+                (mousedown)="preventToolbarFocus($event)"
+                (click)="selectToken(token)"
+              >
+                <code>{{ token.token }}</code>
+                <span>{{ token.description }}</span>
+              </button>
+            }
+          </div>
+        }
+
+        <div
+          #editor
+          class="paper"
+          contenteditable="true"
+          spellcheck="true"
+          role="textbox"
+          aria-label="Minute template editor"
+          (input)="onEditorInput()"
+          (keyup)="onEditorKeyup($event)"
+          (keydown)="onEditorKeydown($event)"
+          (mouseup)="rememberSelection()"
+          (blur)="rememberSelection()"
+        ></div>
+      </main>
+
+      <aside class="template-help">
+        <div class="help-card">
+          <p class="eyebrow">How it works</p>
+          <h2>Write the minute your way</h2>
+          <p>
+            Type normally, format text, and insert tables. When a meeting uses this template, the values beginning with
+            <code>&#64;</code> are replaced automatically.
+          </p>
+          <p class="example">
+            The <code>&#64;committee</code> was held on <code>&#64;day</code>, <code>&#64;date</code>, at
+            <code>&#64;time</code> at <code>&#64;location</code>. Its purpose was <code>&#64;purpose</code>.
+          </p>
+        </div>
+
+        <div class="help-card token-reference">
+          <h2>Available data</h2>
+          @for (token of templateTokens; track token.token) {
+            <div class="reference-row">
+              <code>{{ token.token }}</code>
+              <span>{{ token.label }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="help-card">
+          <h2>Committee</h2>
+          <p class="committee-description">{{ committeeDescription }}</p>
+          <span class="language-badge">{{ minuteLanguage }}</span>
+        </div>
+      </aside>
+    </div>
+  }
+</div>

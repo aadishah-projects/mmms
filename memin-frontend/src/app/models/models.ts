@@ -22,9 +22,6 @@ export class CommitteeCreationDto {
   members: MemberIdAndRole[] = [];
   coordinatorId: number = 0;
   minuteLanguage: string = '';
-  minuteOpeningTemplate: string = '';
-  minuteHeaderTemplate: string = '';
-  minuteTemplateHtml: string = '';
 }
 
 export class MemberIdAndRole {
@@ -99,6 +96,20 @@ export class MinuteDataDto {
   decisions: DecisionDto[] = [];
   agendas: AgendaDto[] = [];
   participants: CommitteeMembershipDto[] = [];
+}
+
+export interface MinuteTemplateDto {
+  committeeId: number;
+  committeeName: string;
+  committeeDescription: string;
+  minuteLanguage: string;
+  minuteTemplateHtml: string | null;
+  minuteOpeningTemplate: string | null;
+  minuteHeaderTemplate: string | null;
+}
+
+export interface MinuteTemplateUpdateDto {
+  minuteTemplateHtml: string | null;
 }
 
 export class DecisionDto {
@@ -241,9 +252,6 @@ export interface CommitteeFormData {
   status: 'ACTIVE' | 'INACTIVE';
   maxNoOfMeetings: number;
   minuteLanguage: 'NEPALI' | 'ENGLISH' | null;
-  minuteOpeningTemplate: string;
-  minuteHeaderTemplate: string;
-  minuteTemplateHtml: string;
   selectedMembersWithRoles:{member: MemberSearchResult;
     role: string;
   }[];

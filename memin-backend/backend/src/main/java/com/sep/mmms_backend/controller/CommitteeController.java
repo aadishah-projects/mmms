@@ -52,6 +52,25 @@ public class CommitteeController {
         return ResponseEntity.ok().body(new Response(ResponseMessages.COMMITTEE_UPDATION_SUCCESS));
     }
 
+    @Transactional(readOnly = true)
+    @GetMapping("/committee/{committeeId}/minute-template")
+    public ResponseEntity<Response> getMinuteTemplate(
+            @PathVariable int committeeId,
+            Authentication authentication) {
+        return ResponseEntity.ok(new Response(
+                committeeService.getMinuteTemplate(committeeId, authentication.getName())));
+    }
+
+    @PatchMapping("/committee/{committeeId}/minute-template")
+    public ResponseEntity<Response> updateMinuteTemplate(
+            @PathVariable int committeeId,
+            @RequestBody MinuteTemplateUpdateDto minuteTemplateUpdateDto,
+            Authentication authentication) {
+        committeeService.updateMinuteTemplate(
+                committeeId, minuteTemplateUpdateDto, authentication.getName());
+        return ResponseEntity.ok(new Response("Minute template updated successfully"));
+    }
+
 
     @GetMapping("/my-active-committee-names-and-ids")
     //returns the name and id of 'ACTIVE' all committes for create meeting page

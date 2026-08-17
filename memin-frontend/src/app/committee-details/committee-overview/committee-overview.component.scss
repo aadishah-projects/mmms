@@ -212,6 +212,12 @@ app-meeting-summaries {
 
 //----------------------- New meeting button -----------------------
 
+.committee-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .new-meeting-btn {
   align-self: flex-start;
   padding: 8px 18px;
@@ -289,6 +295,23 @@ app-meeting-summaries {
     app-calendar {
         display: block;
     }
+}
+
+.template-btn {
+  align-self: flex-start;
+  padding: 8px 18px;
+  border: 1px solid colors.$color-border-primary;
+  background: colors.$color-background-input;
+  color: colors.$color-text-primary;
+  font-size: constants.$font-small;
+  font-weight: constants.$font-weight-semibold;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: colors.$color-border-focus;
+    background: colors.$color-background-input-hover;
+  }
 }
 
 

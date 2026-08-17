@@ -43,9 +43,6 @@ export class EditCommitteeComponent implements OnInit {
     status: 'ACTIVE',
     maxNoOfMeetings: 0,
     minuteLanguage: null,
-    minuteOpeningTemplate: '',
-    minuteHeaderTemplate: '',
-    minuteTemplateHtml: '',
     selectedMembersWithRoles: [],
     unselectedMembers: [],
   };
@@ -78,12 +75,6 @@ export class EditCommitteeComponent implements OnInit {
             this.committeeFormData.maxNoOfMeetings =
               mainBody.maxNoOfMeetings as number;
             this.committeeFormData.minuteLanguage = mainBody.minuteLanguage;
-            this.committeeFormData.minuteOpeningTemplate =
-              mainBody.minuteOpeningTemplate ?? '';
-            this.committeeFormData.minuteHeaderTemplate =
-              mainBody.minuteHeaderTemplate ?? '';
-            this.committeeFormData.minuteTemplateHtml =
-              mainBody.minuteTemplateHtml ?? '';
             this.committeeFormData.selectedMembersWithRoles =
               mainBody.membersWithRoles;
             this.loadAllMembers();
