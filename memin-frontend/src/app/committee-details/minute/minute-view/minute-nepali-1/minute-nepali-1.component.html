@@ -1,12 +1,13 @@
 <div #processedMinute>
-  <div id="a4-box" [attr.contenteditable]="isEditable()">
+  <div id="a4-box" [class.editing]="isEditable()">
     @if (minuteData().header) {
       <div
         class="minute-header"
+        [attr.contenteditable]="isEditable()"
         style="white-space: pre-line; text-align: center; font-weight: 600; margin-bottom: 14px;"
       >{{ minuteData().header }}</div>
     }
-    <div class="introduction justify-text">
+    <div class="introduction justify-text" [attr.contenteditable]="isEditable()">
       @if (minuteData().openingParagraph) {
         <p class="introduction-body">{{ minuteData().openingParagraph }}</p>
       } @else {
@@ -29,8 +30,8 @@
     </div>
 
     <div class="memberships">
-      <h5 class="heading"><b>उपस्थितिः</b></h5>
-      <table border="2" cellspacing="0" cellpadding="5">
+      <h5 class="heading" [attr.contenteditable]="isEditable()"><b>उपस्थितिः</b></h5>
+      <table border="2" cellspacing="0" cellpadding="5" contenteditable="false">
         <thead>
           <tr>
             <th>क्र.सं.</th>
@@ -57,8 +58,8 @@
 
     @if (minuteData().agendas && minuteData().agendas.length > 0) {
     <div class="agendas">
-      <h5 class="heading"><b>प्रस्तावहरु:</b></h5>
-      <ol class="agenda-lists" style="list-style-type: none; padding-left: 0">
+      <h5 class="heading" [attr.contenteditable]="isEditable()"><b>प्रस्तावहरु:</b></h5>
+      <ol class="agenda-lists" [attr.contenteditable]="isEditable()" style="list-style-type: none; padding-left: 0">
         @for (agenda of minuteData().agendas; track agenda; let i = $index) {
         <!-- inner html used to preserve the white spaces, binding trims the white spaces -->
         <li
@@ -74,8 +75,8 @@
     }
 
     <div class="decisions">
-      <h5 class="heading"><b>निर्णयहरूः</b></h5>
-      <ol class="decision-lists" style="list-style-type: none; padding-left: 0">
+      <h5 class="heading" [attr.contenteditable]="isEditable()"><b>निर्णयहरूः</b></h5>
+      <ol class="decision-lists" [attr.contenteditable]="isEditable()" style="list-style-type: none; padding-left: 0">
         @for ( decision of minuteData().decisions; track decision; let i =
         $index ) {
         <li

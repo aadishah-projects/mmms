@@ -1,6 +1,6 @@
 @import "minute_styles";
 
-#a4-box[contenteditable="true"] {
+#a4-box.editing {
   outline: 2px dashed #4a90e2;
   outline-offset: 4px;
   cursor: text;
