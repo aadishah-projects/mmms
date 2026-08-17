@@ -47,6 +47,89 @@
   </div>
 </dialog>
 
+@if (isEditMode) {
+<div class="minute-edit-toolbar">
+  <div class="toolbar-row">
+    <button
+      type="button"
+      class="btn btn-primary"
+      (mousedown)="$event.preventDefault()"
+      (click)="toggleInsertTablePanel()"
+    >
+      + Table
+    </button>
+    @if (!attendanceSectionDetached) {
+    <button
+      type="button"
+      class="btn btn-primary"
+      (mousedown)="$event.preventDefault()"
+      (click)="removeAttendanceSection()"
+    >
+      Remove attendance section
+    </button>
+    } @else {
+    <button
+      type="button"
+      class="btn btn-primary"
+      (mousedown)="$event.preventDefault()"
+      (click)="restoreAttendanceSection()"
+    >
+      Restore attendance section
+    </button>
+    }
+    @if (caretInsideUserTable) {
+    <button
+      type="button"
+      class="btn btn-primary"
+      (mousedown)="$event.preventDefault()"
+      (click)="removeTableAtCaret()"
+    >
+      Remove table at cursor
+    </button>
+    }
+  </div>
+
+  @if (showInsertTablePanel) {
+  <div class="insert-table-panel">
+    <span class="panel-hint"
+      >First click where you want the table, then:</span
+    >
+    <label>
+      Rows
+      <input
+        type="number"
+        min="1"
+        max="12"
+        name="insertTableRows"
+        [(ngModel)]="insertRows"
+      />
+    </label>
+    <label>
+      Columns
+      <input
+        type="number"
+        min="1"
+        max="8"
+        name="insertTableCols"
+        [(ngModel)]="insertCols"
+      />
+    </label>
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="insertTableAtStoredCaret()"
+    >
+      Insert
+    </button>
+  </div>
+  }
+
+  @if (toolbarMessage) {
+  <p class="toolbar-note">{{ toolbarMessage }}</p>
+  }
+</div>
+}
+
 @if (minuteData() != undefined && minuteData().minuteLanguage === "NEPALI") {
 <app-minute-nepali-1
   [minuteData]="minuteData()"

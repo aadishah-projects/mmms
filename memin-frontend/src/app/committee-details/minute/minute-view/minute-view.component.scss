@@ -182,3 +182,54 @@
       right: 30px;
   }
 }
+
+//////////////////////////////////////////////////////
+// edit-mode toolbar for intentional table editing
+
+.minute-edit-toolbar {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  background: colors.$color-background-main;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 8px;
+  color: colors.$color-text-primary;
+  font-size: constants.$font-normal;
+
+  .toolbar-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .insert-table-panel {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+
+    .panel-hint {
+      color: colors.$color-text-muted;
+    }
+
+    label {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+
+      input {
+        width: 56px;
+      }
+    }
+  }
+
+  .toolbar-note {
+    color: colors.$color-text-muted;
+    margin: 0;
+  }
+}

@@ -25,6 +25,19 @@ ol {
   list-style-position: outside; /* number stays outside */
 }
 
+/* tables inserted by the user through the minute edit toolbar
+   (global because the nodes are created without Angular's scoping attribute) */
+#a4-box .user-table {
+  width: 100%;
+  margin: 6px 0;
+
+  td {
+    min-width: 40px;
+    min-height: 1.4em;
+    vertical-align: top;
+  }
+}
+
 li {
   text-indent: -1.5em; /* pulls first line back */
   padding-left: 1.5em; /* pushes the text block forward */

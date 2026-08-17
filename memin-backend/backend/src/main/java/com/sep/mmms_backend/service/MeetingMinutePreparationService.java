@@ -266,7 +266,7 @@ public class MeetingMinutePreparationService {
                             paragraph = document.createParagraph();
                             paragraph.setSpacingAfter(100);
                             run = paragraph.createRun();
-                            run.setText(element.text());
+                            run.setText(child.text());
 
                             if (stylings.contains("justify-text")) {
                                 styleJustifyText(paragraph);
@@ -287,13 +287,7 @@ public class MeetingMinutePreparationService {
                         }
 
                         if (child.nodeName().equals("table")) {
-                            XWPFTable newTable = document.createTable();
-                            final int PADDING_LEFT = 100;
-                            final int PADDING_TOP = 100;
-                            newTable.setCellMargins(PADDING_TOP, PADDING_LEFT, 0, 0);
-                            newTable.setWidth(XWPFTable.DEFAULT_PERCENTAGE_WIDTH);
-
-                            copyTable(newTable, child);
+                            copySectionTable(document, child);
                         }
                     }
                 } else if (element.className().contains("agendas")) {
@@ -400,6 +394,11 @@ public class MeetingMinutePreparationService {
                             }
                         }
                     }
+                } else if (element.className().contains("user-table-block")) {
+                    //tables the user added through the minute editor toolbar
+                    for (Element userTable : element.select("table")) {
+                        copySectionTable(document, userTable);
+                    }
                 }
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -420,6 +419,18 @@ public class MeetingMinutePreparationService {
         run.setText(element.text());
         run.setBold(true);
         run.setUnderline(UnderlinePatterns.SINGLE);
+    }
+
+
+    //copies an html table found inside a minute section (introduction / agendas / decisions) into the word document
+    private void copySectionTable(XWPFDocument document, Element sourceTable) {
+        XWPFTable newTable = document.createTable();
+        final int PADDING_LEFT = 100;
+        final int PADDING_TOP = 100;
+        newTable.setCellMargins(PADDING_TOP, PADDING_LEFT, 0, 0);
+        newTable.setWidth(XWPFTable.DEFAULT_PERCENTAGE_WIDTH);
+
+        copyTable(newTable, sourceTable);
     }
 
 
