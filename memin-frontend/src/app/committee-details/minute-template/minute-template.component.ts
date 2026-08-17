@@ -174,7 +174,6 @@ export class MinuteTemplateComponent implements OnInit {
           )?.id ?? null;
           this.savedEditorHtml = this.editorHtml;
           this.hasDataLoaded = true;
-          setTimeout(() => this.setEditorHtml());
         },
         error: () => {
           this.errorMessage = 'The minute template could not be loaded.';
@@ -208,8 +207,9 @@ export class MinuteTemplateComponent implements OnInit {
   }
 
   setEditorHtml(): void {
-    if (this.editor) {
-      this.editor.nativeElement.innerHTML = this.editorHtml;
+    const editor = this.editor?.nativeElement;
+    if (editor && editor.innerHTML !== this.editorHtml) {
+      editor.innerHTML = this.editorHtml;
     }
   }
 

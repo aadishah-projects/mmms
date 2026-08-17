@@ -7,7 +7,6 @@
 >
   <!-- This button is only visibile in mobile view -->
 
-  <!-- TODO: only activate this button when all form details are filled -->
   <button
     class="btn btn-primary next-button"
     (click)="isMeetingDetailsPart = !isMeetingDetailsPart"
@@ -25,13 +24,6 @@
       <h2>Select Members</h2>
       <p class="panel-subtitle">Search invitees for the meeting</p>
 
-      <button class="btn btn-primary save-button" (click)="onSubmit($event)">
-        @if (isFormSaving) {
-          Saving
-        } @else {
-          Save
-        }
-      </button>
     </div>
 
     <div
@@ -119,204 +111,298 @@
 
   <!-- -------------------------------------------------------------------------  -->
 
-  <!-- RIGHT PANEL - Meeting Details -->
+  <!-- RIGHT PANEL - Meeting Details and Paper Canvas -->
   <div
     class="meeting-details-panel"
     [class.activePartInMobileView]="isMeetingDetailsPart"
   >
     <div class="panel-header">
       <h2>Meeting Details</h2>
-      <p class="panel-subtitle">Meeting meeting information</p>
+      <p class="panel-subtitle">Prepare the meeting record and capture its decisions</p>
     </div>
 
     <form
       [formGroup]="meetingFormGroup"
-      #meetingCreationForm
       class="actual-form"
     >
-      <!-- Committee Selection Dropdown with Search -->
-      <div class="form-group">
-        <label for="committee-search">Select Committee<span class="required-astrick">*</span></label>
-        <div class="custom-dropdown">
-          <input
-            id="committee-search"
-            type="text"
-            class="form-input"
-            [formControl]="committeeSearch"
-            placeholder="Click here to see all committees"
-            (focus)="showDropdown = true"
-            (focus)="onCommitteeSearchBarFocus()"
-            (blur)="showDropdown = false"
-            autocomplete="off"
-          />
-          @if (showAllFormErrors && selectedCommitteeId == undefined) {
-            <p class="field-error" style="margin-top: 10px">
-              (Select a valid committee)
-            </p>
-          }
-          @if (showDropdown && displayedCommitteeIdsAndNames.length > 0) {
-            <div class="dropdown-options">
-              @for (
-                committeeIdAndName of displayedCommitteeIdsAndNames;
-                track committeeIdAndName.committeeId
-              ) {
-                <div
-                  class="dropdown-option"
-                  (mousedown)="onCommitteeSelection(committeeIdAndName)"
-                >
-                  {{ committeeIdAndName.committeeName }}
-                </div>
-              }
-            </div>
-          }
-          @if (showDropdown && displayedCommitteeIdsAndNames.length === 0) {
-            <div class="dropdown-options">
-              <div
-                class="dropdown-option disabled"
-                (mousedown)="redirectToCreateCommittee()"
-              >
-                No committees found. Create one from
-                <a routerLink="../create-committee">here</a>.
+      <section class="meeting-control-bar" aria-label="Meeting details">
+        <!-- Committee Selection Dropdown with Search -->
+        <div class="form-group committee-control">
+          <label for="committee-search">Select Committee<span class="required-astrick">*</span></label>
+          <div class="custom-dropdown">
+            <input
+              id="committee-search"
+              type="text"
+              class="form-input"
+              [formControl]="committeeSearch"
+              placeholder="Click here to see all committees"
+              (focus)="showDropdown = true; onCommitteeSearchBarFocus()"
+              (blur)="showDropdown = false"
+              autocomplete="off"
+            />
+            @if (showAllFormErrors && selectedCommitteeId == undefined) {
+              <p class="field-error">(Select a valid committee)</p>
+            }
+            @if (showDropdown && displayedCommitteeIdsAndNames.length > 0) {
+              <div class="dropdown-options">
+                @for (
+                  committeeIdAndName of displayedCommitteeIdsAndNames;
+                  track committeeIdAndName.committeeId
+                ) {
+                  <div
+                    class="dropdown-option"
+                    (mousedown)="onCommitteeSelection(committeeIdAndName)"
+                  >
+                    {{ committeeIdAndName.committeeName }}
+                  </div>
+                }
               </div>
+            }
+            @if (showDropdown && displayedCommitteeIdsAndNames.length === 0) {
+              <div class="dropdown-options">
+                <div
+                  class="dropdown-option disabled"
+                  (mousedown)="redirectToCreateCommittee()"
+                >
+                  No committees found. Create one from
+                  <a routerLink="../create-committee">here</a>.
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-element-pair control-pair">
+          <div class="form-group">
+            <label for="meeting-title">Meeting Title<span class="required-astrick">*</span></label>
+            <input
+              id="meeting-title"
+              type="text"
+              placeholder="Enter meeting title"
+              formControlName="title"
+              class="form-input"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            @if ((title.touched && title.dirty) || showAllFormErrors) {
+              @if (title.errors?.["required"]) {
+                <p class="field-error">(Meeting title is required)</p>
+              }
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="meeting-held-place">Meeting Venue<span class="required-astrick">*</span></label>
+            <input
+              id="meeting-held-place"
+              type="text"
+              placeholder="Enter meeting venue"
+              class="form-input"
+              name="meetingHeldPlace"
+              autocomplete="off"
+              formControlName="heldPlace"
+            />
+
+            @if ((heldPlace.touched && heldPlace.dirty) || showAllFormErrors) {
+              @if (heldPlace.errors?.["required"]) {
+                <p class="field-error">(Meeting venue is required)</p>
+              }
+            }
+          </div>
+        </div>
+
+        <div class="form-element-pair control-pair">
+          <div class="form-group">
+            <label for="meeting-date">Meeting Date<span class="required-astrick">*</span></label>
+            <input
+              id="meeting-date"
+              type="date"
+              class="form-input"
+              name="meetingHeldDate"
+              formControlName="heldDate"
+            />
+            @if ((heldDate.touched && heldDate.dirty) || showAllFormErrors) {
+              @if (heldDate.errors?.["required"]) {
+                <p class="field-error">(Meeting date is required)</p>
+              }
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="meeting-held-time">Meeting Time<span class="required-astrick">*</span></label>
+            <input
+              id="meeting-held-time"
+              type="time"
+              placeholder="Meeting time"
+              class="form-input"
+              formControlName="heldTime"
+              name="meetingHeldTime"
+            />
+
+            @if ((heldTime.touched && heldTime.dirty) || showAllFormErrors) {
+              @if (heldTime.errors?.["required"]) {
+                <p class="field-error">(Meeting time is required)</p>
+              }
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="paper-document-sheet" aria-label="Meeting minutes document">
+        <header class="paper-header">
+          <p class="paper-kicker">Official committee record</p>
+          <h1>{{ committeeDisplayName }}</h1>
+          <p class="paper-subtitle">Meeting Minutes &amp; Resolution</p>
+          <div class="paper-rule"></div>
+        </header>
+
+        <section class="paper-section opening-section">
+          <div class="paper-section-heading">
+            <h2>Opening Information</h2>
+            <span class="section-index">01</span>
+          </div>
+          <p class="meeting-title-preview">{{ title.value || 'Meeting title' }}</p>
+          <dl class="meeting-metadata">
+            <div>
+              <dt>Date</dt>
+              <dd>{{ formatMeetingDate(heldDate.value) }}</dd>
             </div>
-          }
-        </div>
-      </div>
-      <div class="form-element-pair">
-        <div class="form-group">
-          <label for="meeting-title">Meeting Title<span class="required-astrick">*</span></label>
-          <input
-            id="meeting-title"
-            type="text"
-            placeholder="Enter meeting title"
-            formControlName="title"
-            class="form-input"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          @if ((title.touched && title.dirty) || showAllFormErrors) {
-            @if (title.errors?.["required"]) {
-              <p class="field-error">(Meeting title is required)</p>
-            }
-          }
-        </div>
-
-        <div class="form-group">
-          <label for="meeting-held-place">Meeting Place<span class="required-astrick">*</span></label>
-          <input
-            id="meeting-held-place"
-            type="text"
-            placeholder="Enter meeting place"
-            class="form-input"
-            name="meetingHeldPlace"
-            autocomplete="off"
-            formControlName="heldPlace"
-          />
-
-          @if ((heldPlace.touched && heldPlace.dirty) || showAllFormErrors) {
-            @if (heldPlace.errors?.["required"]) {
-              <p class="field-error">(Meeting held place is required)</p>
-            }
-          }
-        </div>
-      </div>
-
-      <div class="form-element-pair">
-        <div class="form-group">
-          <label for="meeting-date">Meeting Date<span class="required-astrick">*</span></label>
-          <input
-            id="meeting-date"
-            type="date"
-            class="form-input"
-            name="meetingHeldDate"
-            formControlName="heldDate"
-          />
-          @if ((heldDate.touched && heldPlace.dirty) || showAllFormErrors) {
-            @if (heldDate.errors?.["required"]) {
-              <p class="field-error">(Meeting held date is required)</p>
-            }
-          }
-        </div>
-
-        <div class="form-group">
-          <label for="meeting-held-time">Meeting Time<span class="required-astrick">*</span></label>
-          <input
-            id="meeting-held-time"
-            type="time"
-            placeholder="Meeting time"
-            class="form-input"
-            formControlName="heldTime"
-            name="meetingHeldTime"
-          />
-
-          @if ((heldTime.touched && heldPlace.dirty) || showAllFormErrors) {
-            @if (heldTime.errors?.["required"]) {
-              <p class="field-error">(Meeting held time is required)</p>
-            }
-          }
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="form-element-pair">
-          <label>Agendas</label>
-          <button
-            class="btn btn-primary plus-button"
-            (click)="createEmptyAgenda()"
-          >
-            +
-          </button>
-        </div>
-        <div class="agendas-list">
-          @for (agenda of agendas; track agenda.agendaId; let $i = $index) {
-            <div class="agenda-item">
-              <textarea
-                #agendaInputFields
-                [(ngModel)]="agenda.agenda"
-                [ngModelOptions]="{ standalone: true }"
-                placeholder="Double click to delete"
-                class="form-input"
-                autocomplete="off"
-                (dblclick)="deleteAgenda(agenda.agendaId)"
-              ></textarea>
+            <div>
+              <dt>Time</dt>
+              <dd>{{ formatMeetingTime(heldTime.value) }}</dd>
             </div>
-          }
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="form-element-pair">
-          <label>Decisions<span class="required-astrick">*</span></label>
-          <button
-            class="btn btn-primary plus-button"
-            (click)="createEmptyDecision()"
-          >
-            +
-          </button>
-        </div>
-        @if (showAllFormErrors && hasNoNonEmptyDecisions()) {
-          <p class="field-error">(Add at least one non-empty decision)</p>
-        }
-        <div class="decisions-list">
-          @for (
-            decision of decisions;
-            track decision.decisionId;
-            let $i = $index
-          ) {
-            <div class="decision-item">
-              <textarea
-                #decisionInputFields
-                [(ngModel)]="decision.decision"
-                [ngModelOptions]="{ standalone: true }"
-                placeholder="Double click to delete"
-                class="form-input"
-                autocomplete="off"
-                (dblclick)="deleteDecision(decision.decisionId)"
-              ></textarea>
+            <div>
+              <dt>Venue</dt>
+              <dd>{{ heldPlace.value || 'Venue to be confirmed' }}</dd>
             </div>
+            <div>
+              <dt>Coordinator</dt>
+              <dd>{{ coordinatorDisplayName }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="paper-section participants-section">
+          <div class="paper-section-heading">
+            <h2>Attendance &amp; Participants</h2>
+            <span class="section-index">02</span>
+          </div>
+          <div class="participants-table-wrapper">
+            <table class="participants-table">
+              <thead>
+                <tr>
+                  <th scope="col">Attendee</th>
+                  <th scope="col">Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (invitee of selectedInvitees; track invitee.memberId) {
+                  <tr>
+                    <td>{{ getInviteeName(invitee) }}</td>
+                    <td>Invitee</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="2" class="empty-table-state">Select members from the left panel to add them here.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="paper-section agenda-section">
+          <div class="paper-section-heading section-heading-with-action">
+            <div>
+              <span class="section-index">03</span>
+              <h2>Agendas</h2>
+            </div>
+            <button type="button" class="paper-add-button" (click)="createEmptyAgenda()">+ Add Agenda</button>
+          </div>
+          <div class="document-items-list">
+            @for (agenda of agendas; track agenda.agendaId; let i = $index) {
+              <div class="document-item-row">
+                <span class="item-number">{{ i + 1 }}.</span>
+                <textarea
+                  #agendaInputFields
+                  [(ngModel)]="agenda.agenda"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Enter an agenda item"
+                  aria-label="Agenda item"
+                  rows="1"
+                ></textarea>
+                <button
+                  type="button"
+                  class="item-remove-button"
+                  (click)="deleteAgenda(agenda.agendaId)"
+                  [attr.aria-label]="'Remove agenda ' + (i + 1)"
+                >
+                  &times;
+                </button>
+              </div>
+            } @empty {
+              <p class="document-empty-state">No agenda items yet. Add the topics to be discussed.</p>
+            }
+          </div>
+        </section>
+
+        <section class="paper-section decision-section">
+          <div class="paper-section-heading section-heading-with-action">
+            <div>
+              <span class="section-index">04</span>
+              <h2>Decisions &amp; Resolutions<span class="required-astrick">*</span></h2>
+            </div>
+            <button type="button" class="paper-add-button" (click)="createEmptyDecision()">+ Add Decision</button>
+          </div>
+          @if (showAllFormErrors && hasNoNonEmptyDecisions()) {
+            <p class="field-error document-error">Add at least one non-empty decision.</p>
           }
-        </div>
-      </div>
+          <div class="document-items-list">
+            @for (decision of decisions; track decision.decisionId; let i = $index) {
+              <div class="document-item-row decision-row" [class.invalid-item]="isDecisionInvalid(decision)">
+                <span class="item-number">{{ i + 1 }}.</span>
+                <div class="item-editor">
+                  <textarea
+                    #decisionInputFields
+                    [(ngModel)]="decision.decision"
+                    [ngModelOptions]="{ standalone: true }"
+                    placeholder="Record the decision or resolution"
+                    aria-label="Decision or resolution"
+                    rows="1"
+                  ></textarea>
+                  @if (isDecisionInvalid(decision)) {
+                    <p class="field-error">This decision cannot be empty.</p>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="item-remove-button"
+                  (click)="deleteDecision(decision.decisionId)"
+                  [attr.aria-label]="'Remove decision ' + (i + 1)"
+                >
+                  &times;
+                </button>
+              </div>
+            } @empty {
+              <p class="document-empty-state">No decisions yet. Add at least one decision before saving.</p>
+            }
+          </div>
+        </section>
+
+        <footer class="paper-footer">
+          <p>Prepared for the official records of {{ committeeDisplayName }}.</p>
+          <div class="signature-grid">
+            <div class="signature-line">
+              <span></span>
+              <strong>Coordinator</strong>
+            </div>
+            <div class="signature-line">
+              <span></span>
+              <strong>Secretary</strong>
+            </div>
+          </div>
+        </footer>
+      </section>
 
       @if (!isEditPage()) {
         <div class="ai-draft-panel">
@@ -329,16 +415,38 @@
             placeholder="Optional: add discussion notes, actions, tone, or a translation instruction. Meeting details and attendees are included automatically."
             class="form-input"
           ></textarea>
+        </div>
+      }
+
+      <div class="document-actions">
+        @if (!isEditPage()) {
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn btn-secondary document-cancel-button"
+            (click)="new_meeting_dialogue.close()"
+          >
+            Cancel
+          </button>
+        }
+        <button
+          type="button"
+          class="btn btn-primary document-save-button"
+          (click)="onSubmit($event)"
+          [disabled]="isFormSaving"
+        >
+          {{ isFormSaving ? 'Saving…' : (isEditPage() ? 'Save changes' : 'Save meeting') }}
+        </button>
+        @if (!isEditPage()) {
+          <button
+            type="button"
+            class="btn btn-primary ai-submit-button"
             (click)="onSubmitWithAi($event)"
             [disabled]="isFormSaving"
           >
             Save meeting and draft minute with AI
           </button>
-        </div>
-      }
+        }
+      </div>
     </form>
   </div>
 </dialog>

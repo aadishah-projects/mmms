@@ -6,9 +6,7 @@ import {
   input,
   OnInit,
   output,
-  QueryList,
   viewChild,
-  ViewChild,
   viewChildren,
 } from '@angular/core';
 import {
@@ -20,7 +18,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import Fuse from 'fuse.js';
-import { Subscription, debounceTime, take } from 'rxjs';
+import { Subscription, debounceTime } from 'rxjs';
 import { BACKEND_URL } from '../../../global_constants';
 import {
   MemberSearchResult,
@@ -28,12 +26,8 @@ import {
   MeetingFormData,
   AgendaDto,
   DecisionDto,
+  CommitteeOverviewDto,
 } from '../../models/models';
-import { CommonModule } from '@angular/common';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatOptionModule } from '@angular/material/core';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { SafeCloseDialogCustom } from '../../utils/safe-close-dialog-custom.directive';
 import { Response } from '../../response/response';
 
@@ -42,13 +36,8 @@ import { Response } from '../../response/response';
   standalone: true,
   imports: [
     FormsModule,
-    CommonModule,
     ReactiveFormsModule,
     SafeCloseDialogCustom,
-    MatInputModule,
-    MatFormFieldModule,
-    MatAutocompleteModule,
-    MatOptionModule,
     RouterLink,
   ],
   templateUrl: './meeting-form.component.html',
@@ -168,6 +157,7 @@ export class MeetingForm implements OnInit {
         this.activatedRoute.snapshot.queryParamMap.get('committeeId'),
       );
       this.committeeSearch.disable();
+      this.loadCommitteeOverview(this.selectedCommitteeId);
     } else {
       //load data for right panel's select committee dropdown if it isn't an edit page
       this.loadActiveCommitteeNamesAndIdsForDropdown();
@@ -208,9 +198,8 @@ export class MeetingForm implements OnInit {
       .get<
         Response<{ committeeId: number; committeeName: string }[]>
       >(BACKEND_URL + '/api/my-active-committee-names-and-ids', { withCredentials: true })
-      .subscribe({
-        next: (response) => {
-          console.log(response.mainBody);
+        .subscribe({
+          next: (response) => {
           response.mainBody.forEach((committeeIdAndName) =>
             this.committeeIdsAndNames.push({
               committeeId: committeeIdAndName.committeeId,
@@ -219,7 +208,6 @@ export class MeetingForm implements OnInit {
           );
           this.checkIfCommitteeIdAvailableInRoute();
           this.displayedCommitteeIdsAndNames = this.committeeIdsAndNames;
-          console.log(this.displayedCommitteeIdsAndNames);
         },
       });
   }
@@ -237,6 +225,7 @@ export class MeetingForm implements OnInit {
         this.committeeSearch.setValue(selectedCommitteeIdAndName.committeeName);
         this.selectedCommitteeId = Number(committeeId);
         this.loadPossibleInvitees(selectedCommitteeIdAndName.committeeId);
+        this.loadCommitteeOverview(selectedCommitteeIdAndName.committeeId);
       }
     }
   }
@@ -279,7 +268,6 @@ export class MeetingForm implements OnInit {
         .pipe(debounceTime(500)) // wait 0.5 seconds after user stops typing
 
         .subscribe((value) => {
-          console.log('searching');
           if (value === '') {
             this.displayedPossibleInvitees = this.possibleInvitees;
           } else {
@@ -381,7 +369,9 @@ export class MeetingForm implements OnInit {
     this.selectedInvitees = [];
 
     this.hasInviteeDataLoaded = false;
+    this.coordinatorName = '';
     this.loadPossibleInvitees(committeeIdAndName.committeeId);
+    this.loadCommitteeOverview(committeeIdAndName.committeeId);
   }
 
   loadPossibleInvitees(committeeId: number) {
@@ -395,14 +385,17 @@ export class MeetingForm implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          this.possibleInvitees = response.mainBody;
+          const selectedInviteeIds = new Set(
+            this.selectedInvitees.map((invitee) => invitee.memberId),
+          );
+          this.possibleInvitees = response.mainBody.filter(
+            (invitee) => !selectedInviteeIds.has(invitee.memberId),
+          );
           this.displayedPossibleInvitees = this.possibleInvitees;
-          console.log(this.displayedPossibleInvitees);
           this.hasInviteeDataLoaded = true;
         },
-        error: (response) => {
-          console.log(response);
-          //TODO: handle error with popup message
+        error: () => {
+          this.hasInviteeDataLoaded = true;
         },
       });
   }
@@ -413,7 +406,7 @@ export class MeetingForm implements OnInit {
 
   hasNoNonEmptyDecisions(): boolean {
     return (
-      this.decisions.filter((d) => d.decision && d.decision.length > 0).length <
+      this.decisions.filter((d) => d.decision && d.decision.trim().length > 0).length <
       1
     );
   }
@@ -439,13 +432,11 @@ export class MeetingForm implements OnInit {
 
     requestBody.heldTime = this.heldTime.value;
     requestBody.agendas = this.agendas.filter(
-      (agenda) => agenda.agenda.length > 0,
+      (agenda) => agenda.agenda && agenda.agenda.trim().length > 0,
     );
     requestBody.decisions = this.decisions.filter(
-      (decision) => decision.decision.length > 0,
+      (decision) => decision.decision && decision.decision.trim().length > 0,
     );
-    console.log(requestBody);
-
     requestBody.inviteeIds = this.selectedInvitees.map(
       (invitee) => invitee.memberId,
     );
@@ -456,7 +447,6 @@ export class MeetingForm implements OnInit {
     }
     this.formSaveEvent.emit(requestBody);
 
-    //TODO: should be done in the create meeting or edit meeting as request might fail as well
     localStorage.removeItem(this.FORM_NAME);
   }
 
@@ -520,7 +510,6 @@ export class MeetingForm implements OnInit {
   }
 
   deleteAgenda(agendaId: number) {
-    console.log('delete agenda executed');
     this.agendas = this.agendas.filter(
       (agenda) => agenda.agendaId !== agendaId,
     );
@@ -532,32 +521,103 @@ export class MeetingForm implements OnInit {
     );
   }
 
-  saveFormData = () => {
-    console.log('saving form');
-    if (this.isEditPage()) return;
+  coordinatorName = '';
 
-    const formValue = this.meetingFormGroup.getRawValue();
+  loadCommitteeOverview(committeeId: number): void {
+    if (!committeeId) {
+      this.coordinatorName = '';
+      return;
+    }
+
+    this.httpClient
+      .get<Response<CommitteeOverviewDto>>(BACKEND_URL + '/api/committee-overview', {
+        params: new HttpParams().set('committeeId', committeeId),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (response) => {
+          this.coordinatorName = response.mainBody.coordinatorName || '';
+        },
+        error: () => {
+          this.coordinatorName = '';
+        },
+      });
+  }
+
+  get committeeDisplayName(): string {
+    return this.committeeSearch?.value?.trim() || this.meetingFormData().committeeName || 'Committee name';
+  }
+
+  get coordinatorDisplayName(): string {
+    return this.coordinatorName || 'Not assigned';
+  }
+
+  formatMeetingDate(dateValue: string | null | undefined): string {
+    if (!dateValue) {
+      return 'Date to be confirmed';
+    }
+
+    const date = new Date(`${dateValue}T00:00:00`);
+    return Number.isNaN(date.getTime())
+      ? dateValue
+      : new Intl.DateTimeFormat(undefined, {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        }).format(date);
+  }
+
+  formatMeetingTime(timeValue: string | null | undefined): string {
+    if (!timeValue) {
+      return 'Time to be confirmed';
+    }
+
+    const [hours, minutes] = timeValue.split(':').map(Number);
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+      return timeValue;
+    }
+
+    const date = new Date(1970, 0, 1, hours, minutes);
+    return new Intl.DateTimeFormat(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date);
+  }
+
+  getInviteeName(invitee: MemberSearchResult): string {
+    return `${invitee.firstName} ${invitee.lastName}`.trim();
+  }
+
+  isDecisionInvalid(decision: DecisionDto): boolean {
+    return this.showAllFormErrors && !decision.decision?.trim();
+  }
+
+  saveFormData = () => {
+    if (this.isEditPage()) return;
 
     //also saving the agendas and decisions
     const dataToSave = {
       ...this.meetingFormGroup.getRawValue(),
+      committeeName: this.committeeSearch.value,
+      selectedCommitteeId: this.selectedCommitteeId,
+      selectedInvitees: this.selectedInvitees,
       agendas: this.agendas.map((agendaDto) => agendaDto.agenda),
       decisions: this.decisions.map((decisionDto) => decisionDto.decision),
     };
 
     // Check if at least one field has some value
     const hasData = Object.values(dataToSave).some(
-      (value) => value !== null && value !== undefined && value !== '',
+      (value) => Array.isArray(value)
+        ? value.length > 0
+        : value !== null && value !== undefined && value !== '' && value !== 0,
     );
 
-    console.log(hasData);
     if (!hasData) {
       return;
     }
 
     localStorage.setItem(this.FORM_NAME, JSON.stringify(dataToSave));
-    console.log('saving form');
-    console.log(formValue);
   };
 
   restoreFormData = () => {
@@ -566,11 +626,23 @@ export class MeetingForm implements OnInit {
     //restore form normally ie restores the FormGroup
     const savedData = localStorage.getItem(this.FORM_NAME);
     if (savedData) {
-      console.log('Found the saved Data');
-      console.log(savedData);
       try {
         const parsedData = JSON.parse(savedData);
         this.meetingFormGroup.patchValue(parsedData); // prefill the form
+
+        if (parsedData['committeeName']) {
+          this.committeeSearch.setValue(parsedData['committeeName']);
+        }
+
+        if (parsedData['selectedCommitteeId']) {
+          this.selectedCommitteeId = Number(parsedData['selectedCommitteeId']);
+          this.loadPossibleInvitees(this.selectedCommitteeId);
+          this.loadCommitteeOverview(this.selectedCommitteeId);
+        }
+
+        if (Array.isArray(parsedData['selectedInvitees'])) {
+          this.selectedInvitees = parsedData['selectedInvitees'];
+        }
 
         //the above patchValue does not restore the FormArrays, so manually restoring agendas and decisions
 
@@ -590,7 +662,6 @@ export class MeetingForm implements OnInit {
             //agendaId is required for agenda deletion on double click
             decisionDto.decisionId = this.count--;
             decisionDto.decision = decision;
-            console.log(decision);
             this.decisions.push(decisionDto);
           });
         }
@@ -601,7 +672,6 @@ export class MeetingForm implements OnInit {
   };
 
   onSelectedInviteeRemoval(inviteeToUnselect: MemberSearchResult) {
-    console.log(inviteeToUnselect);
     //remove from selected invitees
     this.selectedInvitees = this.selectedInvitees.filter(
       (invitee) => invitee.memberId != inviteeToUnselect.memberId,
@@ -613,7 +683,6 @@ export class MeetingForm implements OnInit {
   }
 
   ngOnDestroy() {
-    console.log('DEBUG: create-committee component destroyed');
     this.committeeSearchSubscription.unsubscribe();
     this.invitteeSearchInputFieldSubscription.unsubscribe();
   }

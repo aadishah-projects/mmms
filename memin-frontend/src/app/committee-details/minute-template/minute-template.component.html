@@ -140,6 +140,7 @@
           spellcheck="true"
           role="textbox"
           aria-label="Minute template editor"
+          [innerHTML]="editorHtml"
           (input)="onEditorInput()"
           (keyup)="onEditorKeyup($event)"
           (keydown)="onEditorKeydown($event)"
