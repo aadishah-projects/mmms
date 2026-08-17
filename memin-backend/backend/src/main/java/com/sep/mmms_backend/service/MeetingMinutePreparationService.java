@@ -142,8 +142,11 @@ public class MeetingMinutePreparationService {
     private Element findAttendanceTable(Element body, MinuteDataDto data) {
         for (Element table : body.select("table")) {
             String text = table.text().toLowerCase();
-            boolean hasAttendanceHeaders = text.contains("signature")
+            boolean hasEnglishAttendanceHeaders = text.contains("signature")
                     && (text.contains("name") || text.contains("position"));
+            boolean hasNepaliAttendanceHeaders = text.contains("\u0939\u0938\u094d\u0924\u093e\u0915\u094d\u0937\u0930")
+                    && (text.contains("\u0928\u093e\u092e") || text.contains("\u092a\u0926"));
+            boolean hasAttendanceHeaders = hasEnglishAttendanceHeaders || hasNepaliAttendanceHeaders;
             boolean hasParticipant = data.getParticipants().stream()
                     .map(CommitteeMembershipDto::getFullName)
                     .filter(name -> name != null && !name.isBlank())
@@ -197,7 +200,15 @@ public class MeetingMinutePreparationService {
     }
 
     private String renderAttendance(MinuteDataDto data) {
-        StringBuilder html = new StringBuilder("<table class=\"memberships\"><thead><tr><th>S.N.</th><th>Name</th><th>Position</th><th>Signature</th></tr></thead><tbody>");
+        boolean nepali = MinuteLanguage.NEPALI.equals(data.getMinuteLanguage());
+        String serialHeader = nepali ? "\u0915\u094d\u0930.\u0938\u0902." : "S.N.";
+        String nameHeader = nepali ? "\u0928\u093e\u092e" : "Name";
+        String roleHeader = nepali ? "\u092a\u0926/\u092d\u0942\u092e\u093f\u0915\u093e" : "Position";
+        String signatureHeader = nepali ? "\u0939\u0938\u094d\u0924\u093e\u0915\u094d\u0937\u0930" : "Signature";
+        StringBuilder html = new StringBuilder(
+                "<table class=\"memberships\"><thead><tr><th>"
+                        + serialHeader + "</th><th>" + nameHeader + "</th><th>"
+                        + roleHeader + "</th><th>" + signatureHeader + "</th></tr></thead><tbody>");
         int index = 1;
         for (CommitteeMembershipDto participant : data.getParticipants()) {
             html.append("<tr><td>").append(index++).append("</td><td>")

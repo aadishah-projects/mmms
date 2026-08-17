@@ -248,6 +248,37 @@
         </div>
       </section>
 
+      @if (selectedCommitteeId) {
+        <section class="committee-template-card" aria-labelledby="committee-template-heading">
+          <div class="committee-template-card-header">
+            <div>
+              <p class="template-preview-kicker">Committee minute template</p>
+              <h2 id="committee-template-heading">Saved template preview</h2>
+              <p class="template-preview-note">
+                This is the template configured for {{ committeeDisplayName }}. The meeting values below are previewed inside its saved layout.
+              </p>
+            </div>
+            @if (minuteTemplateLanguage) {
+              <span class="template-language-badge">{{ minuteTemplateLanguage }}</span>
+            }
+          </div>
+
+          @if (isMinuteTemplateLoading) {
+            <div class="template-preview-status">Loading the committee template…</div>
+          } @else if (minuteTemplateLoadError) {
+            <div class="template-preview-status template-preview-error">
+              The committee template could not be loaded. The meeting can still be completed using the editable record below.
+            </div>
+          } @else if (hasCommitteeMinuteTemplate) {
+            <div class="committee-template-preview" [innerHTML]="committeeMinuteTemplatePreviewHtml"></div>
+          } @else {
+            <div class="template-preview-status">
+              No custom minute template has been set for this committee yet.
+            </div>
+          }
+        </section>
+      }
+
       <section class="paper-document-sheet" aria-label="Meeting minutes document">
         <header class="paper-header">
           <p class="paper-kicker">Official committee record</p>

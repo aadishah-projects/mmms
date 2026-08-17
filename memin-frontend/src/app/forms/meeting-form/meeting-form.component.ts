@@ -27,6 +27,7 @@ import {
   AgendaDto,
   DecisionDto,
   CommitteeOverviewDto,
+  MinuteTemplateDto,
 } from '../../models/models';
 import { SafeCloseDialogCustom } from '../../utils/safe-close-dialog-custom.directive';
 import { Response } from '../../response/response';
@@ -522,12 +523,22 @@ export class MeetingForm implements OnInit {
   }
 
   coordinatorName = '';
+  minuteTemplateHtml: string | null = null;
+  minuteTemplateLanguage = '';
+  isMinuteTemplateLoading = false;
+  minuteTemplateLoadError = false;
 
   loadCommitteeOverview(committeeId: number): void {
     if (!committeeId) {
       this.coordinatorName = '';
+      this.minuteTemplateHtml = null;
+      this.minuteTemplateLanguage = '';
+      this.isMinuteTemplateLoading = false;
+      this.minuteTemplateLoadError = false;
       return;
     }
+
+    this.loadCommitteeMinuteTemplate(committeeId);
 
     this.httpClient
       .get<Response<CommitteeOverviewDto>>(BACKEND_URL + '/api/committee-overview', {
@@ -542,6 +553,108 @@ export class MeetingForm implements OnInit {
           this.coordinatorName = '';
         },
       });
+  }
+
+  loadCommitteeMinuteTemplate(committeeId: number): void {
+    this.isMinuteTemplateLoading = true;
+    this.minuteTemplateLoadError = false;
+    this.minuteTemplateHtml = null;
+
+    this.httpClient
+      .get<Response<MinuteTemplateDto>>(
+        `${BACKEND_URL}/api/committee/${committeeId}/minute-template`,
+        { withCredentials: true },
+      )
+      .subscribe({
+        next: (response) => {
+          const template = response.mainBody;
+          this.minuteTemplateHtml = template.minuteTemplateHtml?.trim() || null;
+          this.minuteTemplateLanguage = template.minuteLanguage || '';
+          this.isMinuteTemplateLoading = false;
+        },
+        error: () => {
+          this.minuteTemplateHtml = null;
+          this.minuteTemplateLanguage = '';
+          this.isMinuteTemplateLoading = false;
+          this.minuteTemplateLoadError = true;
+        },
+      });
+  }
+
+  get hasCommitteeMinuteTemplate(): boolean {
+    return !!this.minuteTemplateHtml?.trim();
+  }
+
+  get committeeMinuteTemplatePreviewHtml(): string {
+    const template = this.minuteTemplateHtml;
+    if (!template) {
+      return '';
+    }
+
+    const meetingDate = this.heldDate?.value || 'Date to be confirmed';
+    const dateObject = meetingDate ? new Date(`${meetingDate}T00:00:00`) : null;
+    const meetingDay = dateObject && !Number.isNaN(dateObject.getTime())
+      ? new Intl.DateTimeFormat(undefined, { weekday: 'long' }).format(dateObject)
+      : 'Day to be confirmed';
+    const values: { names: string[]; value: string }[] = [
+      { names: ['committeeName', 'committee', 'committe'], value: this.committeeDisplayName },
+      { names: ['meetingTitle', 'title'], value: this.title?.value || 'Meeting title' },
+      { names: ['committeeDescription', 'purpose'], value: 'Committee purpose' },
+      { names: ['date', 'data'], value: meetingDate },
+      { names: ['day'], value: meetingDay },
+      { names: ['partOfDay'], value: '' },
+      { names: ['time'], value: this.heldTime?.value || 'Time to be confirmed' },
+      { names: ['place', 'location'], value: this.heldPlace?.value || 'Venue to be confirmed' },
+      { names: ['coordinator'], value: this.coordinatorDisplayName },
+      { names: ['header', 'openingParagraph'], value: '' },
+      { names: ['attendance', 'participants'], value: this.renderTemplateAttendancePreview() },
+      { names: ['agendas'], value: this.renderTemplateListPreview(this.agendas.map((agenda) => agenda.agenda), 'Agenda items will appear here.') },
+      { names: ['decisions'], value: this.renderTemplateListPreview(this.decisions.map((decision) => decision.decision), 'Decisions will appear here.') },
+    ];
+
+    return values.reduce((html, replacement) => {
+      const safeValue = replacement.names.some((name) => ['attendance', 'participants', 'agendas', 'decisions'].includes(name))
+        ? replacement.value
+        : this.escapeTemplatePreviewValue(replacement.value);
+
+      return replacement.names.reduce(
+        (updatedHtml, name) => updatedHtml
+          .replaceAll(`{{${name}}}`, safeValue)
+          .replaceAll(`{${name}}`, safeValue)
+          .replaceAll(`@${name}`, safeValue),
+        html,
+      );
+    }, template);
+  }
+
+  private renderTemplateAttendancePreview(): string {
+    const isNepali = this.minuteTemplateLanguage === 'NEPALI';
+    const rows = this.selectedInvitees.map((invitee, index) => `
+      <tr><td>${index + (this.coordinatorName ? 2 : 1)}</td><td>${this.escapeTemplatePreviewValue(this.getInviteeName(invitee))}</td>
+      <td>${isNepali ? 'आमन्त्रित' : 'Invitee'}</td><td></td></tr>`).join('');
+    const coordinatorRow = this.coordinatorName
+      ? `<tr><td>1</td><td>${this.escapeTemplatePreviewValue(this.coordinatorName)}</td><td>${isNepali ? 'समन्वयक' : 'Coordinator'}</td><td></td></tr>`
+      : '';
+
+    return `<table class="memberships"><thead><tr><th>${isNepali ? 'क्र.सं.' : 'S.N.'}</th><th>${isNepali ? 'नाम' : 'Name'}</th><th>${isNepali ? 'पद/भूमिका' : 'Position'}</th><th>${isNepali ? 'हस्ताक्षर' : 'Signature'}</th></tr></thead><tbody>${coordinatorRow}${rows}</tbody></table>`;
+  }
+
+  private renderTemplateListPreview(items: string[], emptyLabel: string): string {
+    const nonEmptyItems = items.filter((item) => item?.trim());
+    if (nonEmptyItems.length === 0) {
+      return `<p class="template-preview-empty">${emptyLabel}</p>`;
+    }
+
+    return `<ol>${nonEmptyItems.map((item) => `<li>${this.escapeTemplatePreviewValue(item)}</li>`).join('')}</ol>`;
+  }
+
+  private escapeTemplatePreviewValue(value: string | null | undefined): string {
+    return (value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
   }
 
   get committeeDisplayName(): string {

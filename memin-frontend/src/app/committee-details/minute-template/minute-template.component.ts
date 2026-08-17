@@ -113,6 +113,91 @@ export class MinuteTemplateComponent implements OnInit {
     },
   ];
 
+  readonly nepaliTemplatePresets: TemplatePreset[] = [
+    {
+      id: 'nepali-formal-college',
+      name: 'औपचारिक कलेज समिति कार्यवृत्त',
+      description: 'कलेजका शैक्षिक तथा प्रशासनिक समितिका बैठकका लागि औपचारिक कार्यवृत्त र निर्णय अभिलेख।',
+      html: `<h1 style="text-align: center">@committee</h1>
+        <p style="text-align: center"><strong>बैठकको कार्यवृत्त तथा निर्णय अभिलेख</strong></p>
+        <p style="text-align: center">@title</p>
+        <table class="minute-template-table">
+          <tbody>
+            <tr><th>बैठकको मिति</th><td>@day, @date</td></tr>
+            <tr><th>समय</th><td>@time</td></tr>
+            <tr><th>स्थान</th><td>@location</td></tr>
+            <tr><th>समन्वयक</th><td>@coordinator</td></tr>
+          </tbody>
+        </table>
+        <h2>१. उपस्थित सदस्य तथा आमन्त्रितहरू</h2>
+        @attendance
+        <h2>२. कार्यसूची तथा छलफलका विषयहरू</h2>
+        @agendas
+        <h2>३. निर्णयहरू</h2>
+        @decisions
+        <h2>४. प्रमाणिकरण</h2>
+        <p>माथि उल्लिखित कार्यवृत्त बैठकमा भएको छलफल तथा निर्णयअनुसार सही अभिलेख गरिएको हो।</p>
+        <table class="minute-template-table">
+          <tbody>
+            <tr><td>समन्वयकको हस्ताक्षर: ____________________</td><td>मिति: ____________________</td></tr>
+            <tr><td>सदस्य-सचिवको हस्ताक्षर: ____________________</td><td>मिति: ____________________</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      id: 'nepali-academic-department',
+      name: 'शैक्षिक तथा विभागीय बैठक',
+      description: 'विभाग, विषय समिति, परीक्षा समिति वा शैक्षिक परिषद्का नियमित बैठकका लागि क्रमबद्ध ढाँचा।',
+      html: `<div style="text-align: center">
+          <h1>@committee</h1>
+          <p><strong>शैक्षिक समिति बैठकको कार्यवृत्त</strong></p>
+        </div>
+        <p><strong>बैठकको विषय:</strong> @title</p>
+        <p><strong>बैठक विवरण:</strong> @day, @date, @time, @location</p>
+        <p><strong>समन्वयक:</strong> @coordinator</p>
+        <h2>१. उपस्थित सदस्य तथा आमन्त्रितहरू</h2>
+        @attendance
+        <h2>२. अघिल्लो बैठकको कार्यवृत्त</h2>
+        <p>अघिल्लो बैठकको कार्यवृत्त अध्ययन गरी आवश्यक संशोधनसहित स्वीकृत गरियो।</p>
+        <h2>३. कार्यसूची तथा छलफल</h2>
+        @agendas
+        <h2>४. निर्णय तथा कार्यान्वयन</h2>
+        @decisions
+        <h2>५. विविध तथा आगामी बैठक</h2>
+        <p>विविध विषयहरू: ________________________________________________</p>
+        <p>आगामी बैठकको मिति, समय र स्थान: _________________________________</p>
+        <p>बैठक समाप्त भएको समय: _________________________________</p>
+        <p>कार्यवृत्त तयार गर्ने: ____________________&nbsp;&nbsp;&nbsp;&nbsp;प्रमाणित गर्ने: ____________________</p>`,
+    },
+    {
+      id: 'nepali-decision-register',
+      name: 'संक्षिप्त निर्णय पुस्तिका',
+      description: 'नियमित कलेज समिति बैठकमा प्रस्ताव, छलफल, निर्णय र हस्ताक्षर छोटकरीमा अभिलेख गर्न मिल्ने ढाँचा।',
+      html: `<h1>@committee - @title</h1>
+        <p><strong>बैठकको मिति:</strong> @day, @date</p>
+        <p><strong>समय:</strong> @time&nbsp;&nbsp;&nbsp;&nbsp;<strong>स्थान:</strong> @location</p>
+        <p><strong>समन्वयक:</strong> @coordinator</p>
+        <h2>१. उपस्थिति</h2>
+        @attendance
+        <h2>२. प्रस्ताव तथा छलफलका विषयहरू</h2>
+        @agendas
+        <h2>३. निर्णयहरू</h2>
+        @decisions
+        <p>आजको बैठकमा छलफल गर्नुपर्ने अन्य विषय बाँकी नरहेकाले बैठक समाप्त गरियो।</p>
+        <p>अध्यक्षता/समन्वयक: ____________________&nbsp;&nbsp;&nbsp;&nbsp;सदस्य-सचिव: ____________________</p>`,
+    },
+  ];
+
+  get allTemplatePresets(): TemplatePreset[] {
+    return [...this.templatePresets, ...this.nepaliTemplatePresets];
+  }
+
+  get availableTemplatePresets(): TemplatePreset[] {
+    return this.normalizeTemplateLanguage(this.minuteLanguage) === 'NEPALI'
+      ? this.nepaliTemplatePresets
+      : this.templatePresets;
+  }
+
   committeeId = 0;
   committeeName = '';
   committeeDescription = '';
@@ -169,7 +254,7 @@ export class MinuteTemplateComponent implements OnInit {
           this.committeeDescription = data.committeeDescription;
           this.minuteLanguage = data.minuteLanguage;
           this.editorHtml = this.getInitialTemplate(data);
-          this.selectedPresetId = this.templatePresets.find(
+          this.selectedPresetId = this.allTemplatePresets.find(
             (preset) => preset.html.trim() === this.editorHtml.trim(),
           )?.id ?? null;
           this.savedEditorHtml = this.editorHtml;
@@ -187,23 +272,44 @@ export class MinuteTemplateComponent implements OnInit {
     }
 
     if (!data.minuteHeaderTemplate?.trim() && !data.minuteOpeningTemplate?.trim()) {
-      return this.templatePresets[0].html;
+      return this.getDefaultTemplate(data.minuteLanguage);
     }
 
+    const isNepaliTemplate = this.normalizeTemplateLanguage(data.minuteLanguage) === 'NEPALI';
     const oldHeader = data.minuteHeaderTemplate?.trim()
       ? `<div class="minute-header"><strong>${this.escapeHtml(data.minuteHeaderTemplate).replace(/\n/g, '<br>')}</strong></div>`
       : `<h1 style="text-align: center">@committee</h1>`;
     const oldOpening = data.minuteOpeningTemplate?.trim()
       ? `<p>${this.escapeHtml(data.minuteOpeningTemplate).replace(/\n/g, '<br>')}</p>`
-      : `<p>The @committee meeting was held on @day, @date, at @time at @location. Its purpose was to oversee @purpose. The meeting was coordinated by @coordinator.</p>`;
+      : isNepaliTemplate
+        ? `<p>@committee को बैठक @day, @date मा @time बजे @location मा बस्यो। बैठकको उद्देश्य @purpose सम्बन्धी विषयमा छलफल गर्नु थियो। बैठकको समन्वय @coordinator ले गर्नुभयो।</p>`
+        : `<p>The @committee meeting was held on @day, @date, at @time at @location. Its purpose was to oversee @purpose. The meeting was coordinated by @coordinator.</p>`;
 
-    return `${oldHeader}${oldOpening}
-      <h2>Attendance</h2>
-      @attendance
-      <h2>Agendas</h2>
-      @agendas
-      <h2>Decisions</h2>
-      @decisions`;
+    const sections = isNepaliTemplate
+      ? `<h2>उपस्थित सदस्य तथा आमन्त्रितहरू</h2>
+        @attendance
+        <h2>कार्यसूची तथा छलफलका विषयहरू</h2>
+        @agendas
+        <h2>निर्णयहरू</h2>
+        @decisions`
+      : `<h2>Attendance</h2>
+        @attendance
+        <h2>Agendas</h2>
+        @agendas
+        <h2>Decisions</h2>
+        @decisions`;
+
+    return `${oldHeader}${oldOpening}${sections}`;
+  }
+
+  private getDefaultTemplate(language: string | null | undefined): string {
+    return this.normalizeTemplateLanguage(language) === 'NEPALI'
+      ? this.nepaliTemplatePresets[0].html
+      : this.templatePresets[0].html;
+  }
+
+  private normalizeTemplateLanguage(language: string | null | undefined): 'ENGLISH' | 'NEPALI' {
+    return language?.toUpperCase() === 'NEPALI' ? 'NEPALI' : 'ENGLISH';
   }
 
   setEditorHtml(): void {
