@@ -1,6 +1,7 @@
 import {
   Component,
   ElementRef,
+  AfterViewInit,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -36,7 +37,7 @@ interface TemplatePreset {
   templateUrl: './minute-template.component.html',
   styleUrl: './minute-template.component.scss',
 })
-export class MinuteTemplateComponent implements OnInit {
+export class MinuteTemplateComponent implements OnInit, AfterViewInit {
   @ViewChild('editor') editor?: ElementRef<HTMLDivElement>;
 
   readonly templateTokens: TemplateToken[] = [
@@ -240,6 +241,12 @@ export class MinuteTemplateComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    // The editor is created after the async template request completes. This
+    // also keeps the initial HTML write separate from normal user editing.
+    this.setEditorHtml();
+  }
+
   loadTemplate(): void {
     const params = new HttpParams().set('committeeId', this.committeeId);
     this.httpClient
@@ -259,6 +266,7 @@ export class MinuteTemplateComponent implements OnInit {
           )?.id ?? null;
           this.savedEditorHtml = this.editorHtml;
           this.hasDataLoaded = true;
+          setTimeout(() => this.setEditorHtml());
         },
         error: () => {
           this.errorMessage = 'The minute template could not be loaded.';
@@ -333,7 +341,7 @@ export class MinuteTemplateComponent implements OnInit {
     this.selectedPresetId = preset.id;
     this.editorHtml = preset.html;
     this.setEditorHtml();
-    this.editor?.nativeElement.focus();
+    this.focusEditorAtEnd();
   }
 
   onEditorInput(): void {
@@ -536,6 +544,26 @@ export class MinuteTemplateComponent implements OnInit {
     if (this.editor) {
       this.editorHtml = this.editor.nativeElement.innerHTML;
     }
+  }
+
+  private focusEditorAtEnd(): void {
+    const editor = this.editor?.nativeElement;
+    if (!editor) {
+      return;
+    }
+
+    editor.focus();
+    const selection = window.getSelection();
+    if (!selection) {
+      return;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    this.savedSelection = range.cloneRange();
   }
 
   private insertText(value: string): void {

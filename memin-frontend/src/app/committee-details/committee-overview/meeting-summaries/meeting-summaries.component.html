@@ -12,6 +12,13 @@
       <div class="menu-option" (click)="onMinuteOptionClick($event)">
         Minute
       </div>
+      <div
+        class="menu-option danger-menu-option"
+        [class.disabled]="isDeletingMeeting"
+        (click)="onDeleteOptionClick($event)"
+      >
+        {{ isDeletingMeeting ? "Deleting…" : "Delete" }}
+      </div>
     </div>
   }
   <div

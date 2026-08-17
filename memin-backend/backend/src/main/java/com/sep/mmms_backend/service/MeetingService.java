@@ -292,6 +292,19 @@ public class MeetingService {
     }
 
     @Transactional
+    public void deleteMeeting(Integer meetingId, String username) {
+        Meeting meeting = getMeetingIfAccessible(meetingId, username);
+
+        // Clear join-table associations and orphaned child records before
+        // deleting the meeting so foreign-key constraints remain valid.
+        meeting.getAttendees().clear();
+        meeting.getInvitees().clear();
+        meeting.getDecisions().clear();
+        meeting.getAgendas().clear();
+        meetingRepository.delete(meeting);
+    }
+
+    @Transactional
     public int sendMeetingInvites(Integer meetingId, String username) {
         Meeting meeting = getMeetingIfAccessible(meetingId, username);
         return notifyMeetingInvitees(meeting, meeting.getInvitees(), username);

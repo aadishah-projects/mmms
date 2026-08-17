@@ -109,7 +109,10 @@
       </div>
     }
 
-    <app-meeting-summaries [meetingSummaries]="meetingSummaries">
+    <app-meeting-summaries
+      [meetingSummaries]="meetingSummaries"
+      (meetingDeleted)="onMeetingDeleted($event)"
+    >
     </app-meeting-summaries>
 
     <app-calendar

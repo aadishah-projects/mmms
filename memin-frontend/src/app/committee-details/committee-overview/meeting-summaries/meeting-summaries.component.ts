@@ -1,7 +1,11 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { MeetingSummaryComponent } from './meeting-summary/meeting-summary.component';
 import { Router, RouterOutlet, RouterLink } from '@angular/router';
 import { MeetingSummaryDto } from '../../../models/models';
+import { BACKEND_URL } from '../../../../global_constants';
+import { Response } from '../../../response/response';
+import { PopupService } from '../../../popup/popup.service';
 
 @Component({
   selector: 'app-meeting-summaries',
@@ -12,14 +16,20 @@ import { MeetingSummaryDto } from '../../../models/models';
 })
 export class MeetingSummariesComponent {
   meetingSummaries = input.required<MeetingSummaryDto[]>();
+  meetingDeleted = output<number>();
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private httpClient: HttpClient,
+    private popupService: PopupService,
+  ) {}
 
   showMenuOptions = false;
 
   dropdownTop = -1;
   dropdownRight = -1;
   meetingId = -1; //set when the option display is clicked
+  isDeletingMeeting = false;
 
   onMenuOptionClick(eventObj: { event: Event; meetingId: number }) {
     this.meetingId = eventObj.meetingId;
@@ -60,6 +70,44 @@ export class MeetingSummariesComponent {
       },
       queryParamsHandling: 'merge',
     });
+  }
+
+  onDeleteOptionClick(event: Event) {
+    event.stopPropagation();
+
+    const meeting = this.meetingSummaries().find(
+      (meetingSummary) => meetingSummary.id === this.meetingId,
+    );
+    if (!meeting || this.isDeletingMeeting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete “${meeting.title}”? This will permanently remove the meeting, its minute, agendas, and decisions.`,
+    );
+    if (!confirmed) {
+      this.closeMenuOptionsIfOpen();
+      return;
+    }
+
+    this.isDeletingMeeting = true;
+    this.httpClient
+      .delete<Response<unknown>>(`${BACKEND_URL}/api/meeting/${meeting.id}`, {
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          this.isDeletingMeeting = false;
+          this.closeMenuOptionsIfOpen();
+          this.meetingDeleted.emit(meeting.id);
+          this.popupService.showPopup('Meeting deleted successfully.', 'Success', 2500);
+        },
+        error: (error) => {
+          this.isDeletingMeeting = false;
+          const message = error?.error?.message || 'Meeting could not be deleted.';
+          this.popupService.showPopup(message, 'Error', 3500);
+        },
+      });
   }
 
   closeMenuOptionsIfOpen() {

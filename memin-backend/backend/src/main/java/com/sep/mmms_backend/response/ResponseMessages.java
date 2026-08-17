@@ -19,6 +19,7 @@ public enum ResponseMessages {
     MEETING_INVITEE_REMOVAL_SUCCESS("New invitee removed from the meeting successfully"),
     MEETING_DETAIL_RETRIEVED_SUCCESSFULLY("Meeting retrieved successfully"),
     MEETING_UPDATION_SUCCESS("Meeting updated successfully"),
+    MEETING_DELETED_SUCCESSFULLY("Meeting deleted successfully"),
     MEETINGS_OF_COMMITTEE("Meetings of committee retrieved successfully"),
 
 

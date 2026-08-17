@@ -177,4 +177,11 @@ export class CommitteeOverviewComponent {
       queryParams: { committeeId: this.committeeId },
     });
   }
+
+  onMeetingDeleted(meetingId: number) {
+    this.meetingSummaries = this.meetingSummaries.filter(
+      (meeting) => meeting.id !== meetingId,
+    );
+    this.loadCommitteeOverview(this.committeeId);
+  }
 }

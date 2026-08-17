@@ -95,6 +95,20 @@
   .menu-option:hover {
     color: white;
   }
+
+  .danger-menu-option {
+    color: #d66b6b;
+  }
+
+  .danger-menu-option:hover {
+    color: #ff9a9a;
+  }
+
+  .menu-option.disabled {
+    cursor: wait;
+    opacity: 0.6;
+    pointer-events: none;
+  }
 }
 
 @media (max-width: 768px) {

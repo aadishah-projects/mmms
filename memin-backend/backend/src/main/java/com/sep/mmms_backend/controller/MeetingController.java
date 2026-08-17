@@ -66,6 +66,12 @@ public class MeetingController {
        return ResponseEntity.ok(new Response(ResponseMessages.MEETING_UPDATION_SUCCESS));
     }
 
+    @DeleteMapping("/meeting/{meetingId}")
+    public ResponseEntity<Response> deleteMeeting(@PathVariable Integer meetingId, Authentication authentication) {
+        meetingService.deleteMeeting(meetingId, authentication.getName());
+        return ResponseEntity.ok(new Response(ResponseMessages.MEETING_DELETED_SUCCESSFULLY));
+    }
+
     @PostMapping("/meeting/{meetingId}/send-invites")
     public ResponseEntity<Response> sendMeetingInvites(@PathVariable Integer meetingId, Authentication authentication) {
         int sentCount = meetingService.sendMeetingInvites(meetingId, authentication.getName());
