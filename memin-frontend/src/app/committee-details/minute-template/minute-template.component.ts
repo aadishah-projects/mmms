@@ -1,6 +1,7 @@
 import {
   Component,
   ElementRef,
+  AfterViewChecked,
   AfterViewInit,
   OnInit,
   ViewChild,
@@ -37,7 +38,7 @@ interface TemplatePreset {
   templateUrl: './minute-template.component.html',
   styleUrl: './minute-template.component.scss',
 })
-export class MinuteTemplateComponent implements OnInit, AfterViewInit {
+export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterViewChecked {
   @ViewChild('editor') editor?: ElementRef<HTMLDivElement>;
   @ViewChild('sourceEditor') sourceEditor?: ElementRef<HTMLTextAreaElement>;
 
@@ -262,6 +263,19 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
     // The editor is created after the async template request completes. This
     // also keeps the initial HTML write separate from normal user editing.
     this.setEditorHtml();
+  }
+
+  /**
+   * The editor is inside an @if block and the saved template arrives
+   * asynchronously. Angular can therefore create the editor after
+   * ngAfterViewInit has already run. Synchronize it once the view exists.
+   * setEditorHtml only writes when the DOM differs from editorHtml, so this
+   * does not overwrite user edits.
+   */
+  ngAfterViewChecked(): void {
+    if (this.hasDataLoaded) {
+      this.setEditorHtml();
+    }
   }
 
   loadTemplate(): void {
