@@ -40,6 +40,14 @@ npm install      # first time only (installs platform-native build tools)
 npm start        # serves http://localhost:4200
 ```
 
+### Runtime AI configuration
+
+Department heads can configure the AI provider from **Settings** after the
+application is deployed. `LLM_BASE_URL`, `LLM_API_KEY`, and `LLM_MODEL` are
+optional environment fallbacks. To save an API key through the settings page,
+set a persistent `APP_ENCRYPTION_KEY` on the backend and keep the application
+database persistent across deployments.
+
 ---
 
 ## Features added in this iteration

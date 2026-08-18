@@ -36,6 +36,7 @@ public class SecurityConfiguration {
             config.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/meeting").authenticated();
             config.requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/minute").authenticated();
             config.requestMatchers("/api/users/**").hasRole("DEPARTMENT_HEAD");
+            config.requestMatchers("/api/settings/ai/**").hasRole("DEPARTMENT_HEAD");
             config.requestMatchers("/api/**").authenticated();
         });
 

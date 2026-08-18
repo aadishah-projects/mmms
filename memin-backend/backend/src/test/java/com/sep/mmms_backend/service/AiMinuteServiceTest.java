@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sep.mmms_backend.dto.AgendaDto;
 import com.sep.mmms_backend.dto.DecisionDto;
 import com.sep.mmms_backend.dto.MinuteDataDto;
+import com.sep.mmms_backend.enums.AiProviderType;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.MockRestServiceServer;
 
 import java.util.List;
@@ -19,6 +19,8 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class AiMinuteServiceTest {
 
@@ -27,10 +29,18 @@ class AiMinuteServiceTest {
         var restClientBuilder = org.springframework.web.client.RestClient.builder()
                 .baseUrl("https://llm.test");
         MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
-        AiMinuteService service = new AiMinuteService(restClientBuilder, new ObjectMapper());
-        ReflectionTestUtils.setField(service, "baseUrl", "https://llm.test");
-        ReflectionTestUtils.setField(service, "apiKey", "test-key");
-        ReflectionTestUtils.setField(service, "model", "test-model");
+        AiConfigurationService configurationService = mock(AiConfigurationService.class);
+        when(configurationService.getActiveConfiguration()).thenReturn(
+                new AiConfigurationService.ActiveAiConfiguration(
+                        true,
+                        AiProviderType.ANTHROPIC_COMPATIBLE,
+                        "https://llm.test",
+                        "test-key",
+                        "test-model",
+                        2500,
+                        null,
+                        "TEST"));
+        AiMinuteService service = new AiMinuteService(restClientBuilder, new ObjectMapper(), configurationService);
 
         String providerText = "```json\n{\"agendas\":[\"Review the annual plan\"],\"decisions\":[\"Approve the annual plan\"]}\n```";
         String providerResponse = new ObjectMapper().writeValueAsString(

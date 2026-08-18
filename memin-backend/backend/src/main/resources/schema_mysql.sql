@@ -140,3 +140,16 @@ CREATE TABLE IF NOT EXISTS invite_tokens (
     used BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (committee_id) REFERENCES committees(committee_id)
 );
+
+CREATE TABLE IF NOT EXISTS ai_configurations (
+    configuration_id INT PRIMARY KEY,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    provider VARCHAR(64) NOT NULL DEFAULT 'ANTHROPIC_COMPATIBLE',
+    base_url VARCHAR(1000),
+    encrypted_api_key VARCHAR(4096),
+    model VARCHAR(255),
+    max_tokens INT,
+    additional_instructions TEXT,
+    updated_by VARCHAR(255),
+    updated_date DATE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

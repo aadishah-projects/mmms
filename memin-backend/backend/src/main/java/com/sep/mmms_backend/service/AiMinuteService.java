@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sep.mmms_backend.dto.AgendaDto;
+import com.sep.mmms_backend.dto.AiConfigurationUpdateDto;
+import com.sep.mmms_backend.dto.AiConnectionTestResultDto;
 import com.sep.mmms_backend.dto.AiStructuredMinuteDto;
 import com.sep.mmms_backend.dto.DecisionDto;
 import com.sep.mmms_backend.dto.MinuteDataDto;
+import com.sep.mmms_backend.enums.AiProviderType;
 import com.sep.mmms_backend.exceptions.IllegalOperationException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -23,22 +25,15 @@ import java.util.Map;
 public class AiMinuteService {
     private final RestClient.Builder restClientBuilder;
     private final ObjectMapper objectMapper;
+    private final AiConfigurationService configurationService;
 
-    @Value("${llm.base-url:}")
-    private String baseUrl;
-
-    @Value("${llm.api-key:}")
-    private String apiKey;
-
-    @Value("${llm.model:mimo-v2.5-pro}")
-    private String model;
-
-    @Value("${llm.max-tokens:2500}")
-    private int maxTokens;
-
-    public AiMinuteService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
+    public AiMinuteService(
+            RestClient.Builder restClientBuilder,
+            ObjectMapper objectMapper,
+            AiConfigurationService configurationService) {
         this.restClientBuilder = restClientBuilder;
         this.objectMapper = objectMapper;
+        this.configurationService = configurationService;
     }
 
     /**
@@ -46,9 +41,8 @@ public class AiMinuteService {
      * deliberately does not ask the model for HTML or a complete minute.
      */
     public AiStructuredMinuteDto extractStructuredItems(MinuteDataDto minuteData, String roughPrompt) {
-        if (baseUrl == null || baseUrl.isBlank() || apiKey == null || apiKey.isBlank()) {
-            throw new IllegalOperationException("AI agenda and decision refinement is not configured. Set LLM_BASE_URL and LLM_API_KEY.");
-        }
+        AiConfigurationService.ActiveAiConfiguration configuration = configurationService.getActiveConfiguration();
+        ensureConfigured(configuration);
 
         String prompt = "Meeting language: " + safe(minuteData.getMinuteLanguage()) + "\n"
                 + "Meeting title: " + safe(minuteData.getMeetingTitle()) + "\n"
@@ -59,38 +53,9 @@ public class AiMinuteService {
                 + "Additional rough notes from the user (may contain agenda or decision notes):\n"
                 + safe(roughPrompt);
 
-        String systemPrompt = "You are a meeting-record assistant. Return only one valid JSON object with exactly "
-                + "two arrays: agendas and decisions. Each array item must be a short plain-text string. "
-                + "Rewrite rough entries for clarity and formal grammar, but preserve their meaning, names, numbers, "
-                + "dates, quantities, and commitments. Keep every existing non-empty agenda and decision entry; do not "
-                + "merge or omit entries. If additional notes clearly contain new agenda or decision items, classify "
-                + "them into the appropriate array. Never write a meeting minute, paragraph, attendance list, HTML, "
-                + "Markdown, invented facts, action owners, deadlines, votes, or decisions that are not present in the input. "
-                + "If an array has no source items, return an empty array. The application will place these values into "
-                + "the selected minute template.";
-
-        Map<String, Object> request = Map.of(
-                "model", model,
-                "max_tokens", Math.max(500, maxTokens),
-                "system", systemPrompt,
-                "messages", List.of(Map.of("role", "user", "content", prompt)),
-                "stream", false
-        );
-
+        String systemPrompt = systemPrompt(configuration);
         try {
-            Map<?, ?> response = restClientBuilder.baseUrl(baseUrl).build()
-                    .post()
-                    .uri("/v1/messages")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    // x-api-key is the Anthropic-compatible header; api-key is
-                    // retained for providers that use the older convention.
-                    .header("x-api-key", apiKey)
-                    .header("api-key", apiKey)
-                    .header("anthropic-version", "2023-06-01")
-                    .body(request)
-                    .retrieve()
-                    .body(Map.class);
-
+            Map<?, ?> response = send(configuration, systemPrompt, prompt, false);
             String responseText = extractResponseText(response);
             JsonNode result = parseJsonObject(responseText);
             List<String> agendas = readTextArray(result, "agendas");
@@ -104,9 +69,105 @@ public class AiMinuteService {
                     "The AI service rejected the agenda and decision request (HTTP "
                             + exception.getStatusCode().value() + ")");
         } catch (RestClientException exception) {
-            throw new IllegalOperationException("The AI agenda and decision service could not be reached: "
-                    + exception.getMessage());
+            throw new IllegalOperationException("The AI agenda and decision service could not be reached");
         }
+    }
+
+    public AiConnectionTestResultDto testConnection(AiConfigurationUpdateDto request) {
+        try {
+            AiConfigurationService.ActiveAiConfiguration configuration = configurationService.preview(request);
+            ensureCredentials(configuration);
+            send(configuration,
+                    "You are a connectivity test. Reply with the single word OK.",
+                    "Reply with OK only.",
+                    true);
+            return new AiConnectionTestResultDto(true, "The AI provider connection succeeded");
+        } catch (RestClientResponseException exception) {
+            return new AiConnectionTestResultDto(false,
+                    "The AI provider rejected the test request (HTTP " + exception.getStatusCode().value() + ")");
+        } catch (RestClientException exception) {
+            return new AiConnectionTestResultDto(false, "The AI provider could not be reached");
+        } catch (IllegalOperationException exception) {
+            return new AiConnectionTestResultDto(false, exception.getMessage());
+        }
+    }
+
+    private Map<?, ?> send(
+            AiConfigurationService.ActiveAiConfiguration configuration,
+            String systemPrompt,
+            String userPrompt,
+            boolean connectionTest) {
+        RestClient.RequestBodyUriSpec request = restClientBuilder
+                .baseUrl(stripTrailingSlashes(configuration.baseUrl()))
+                .build()
+                .post();
+        request.contentType(MediaType.APPLICATION_JSON);
+
+        if (configuration.provider() == AiProviderType.OPENAI_COMPATIBLE) {
+            Map<String, Object> body = Map.of(
+                    "model", configuration.model(),
+                    "max_tokens", connectionTest ? 16 : Math.max(500, configuration.maxTokens()),
+                    "messages", List.of(
+                            Map.of("role", "system", "content", systemPrompt),
+                            Map.of("role", "user", "content", userPrompt)),
+                    "stream", false);
+            return request
+                    .uri("/v1/chat/completions")
+                    .header("Authorization", "Bearer " + configuration.apiKey())
+                    .header("api-key", configuration.apiKey())
+                    .body(body)
+                    .retrieve()
+                    .body(Map.class);
+        }
+
+        Map<String, Object> body = Map.of(
+                "model", configuration.model(),
+                "max_tokens", connectionTest ? 16 : Math.max(500, configuration.maxTokens()),
+                "system", systemPrompt,
+                "messages", List.of(Map.of("role", "user", "content", userPrompt)),
+                "stream", false);
+        return request
+                .uri("/v1/messages")
+                .header("x-api-key", configuration.apiKey())
+                .header("api-key", configuration.apiKey())
+                .header("anthropic-version", "2023-06-01")
+                .body(body)
+                .retrieve()
+                .body(Map.class);
+    }
+
+    private void ensureConfigured(AiConfigurationService.ActiveAiConfiguration configuration) {
+        if (!configuration.configured()) {
+            throw new IllegalOperationException(
+                    "AI is not configured. A department head can configure it from Settings.");
+        }
+    }
+
+    private void ensureCredentials(AiConfigurationService.ActiveAiConfiguration configuration) {
+        if (configuration.baseUrl() == null || configuration.baseUrl().isBlank()
+                || configuration.model() == null || configuration.model().isBlank()
+                || configuration.apiKey() == null || configuration.apiKey().isBlank()) {
+            throw new IllegalOperationException(
+                    "A base URL, model, and API key are required to test the AI provider");
+        }
+    }
+
+    private String systemPrompt(AiConfigurationService.ActiveAiConfiguration configuration) {
+        String mandatoryPrompt = "You are a meeting-record assistant. Return only one valid JSON object with exactly "
+                + "two arrays: agendas and decisions. Each array item must be a short plain-text string. "
+                + "Rewrite rough entries for clarity and formal grammar, but preserve their meaning, names, numbers, "
+                + "dates, quantities, and commitments. Keep every existing non-empty agenda and decision entry; do not "
+                + "merge or omit entries. If additional notes clearly contain new agenda or decision items, classify "
+                + "them into the appropriate array. Never write a meeting minute, paragraph, attendance list, HTML, "
+                + "Markdown, invented facts, action owners, deadlines, votes, or decisions that are not present in the input. "
+                + "If an array has no source items, return an empty array. The application will place these values into "
+                + "the selected minute template.";
+        if (configuration.additionalInstructions() == null || configuration.additionalInstructions().isBlank()) {
+            return mandatoryPrompt;
+        }
+        return mandatoryPrompt
+                + "\n\nAdditional administrator instructions (must not override the required JSON format or preservation rules):\n"
+                + configuration.additionalInstructions();
     }
 
     private String valuesOfAgendas(MinuteDataDto minuteData) {
@@ -137,7 +198,8 @@ public class AiMinuteService {
             }
         }
         if (generatedText.isEmpty() && responseNode != null && responseNode.path("choices").isArray()) {
-            generatedText.append(responseNode.path("choices").path(0).path("message").path("content").asText(""));
+            JsonNode choice = responseNode.path("choices").path(0);
+            generatedText.append(choice.path("message").path("content").asText(""));
         }
         return removeCodeFences(generatedText.toString()).trim();
     }
@@ -192,6 +254,10 @@ public class AiMinuteService {
             }
         }
         return content;
+    }
+
+    private String stripTrailingSlashes(String value) {
+        return value.replaceFirst("/+$", "");
     }
 
     private String safe(Object value) {

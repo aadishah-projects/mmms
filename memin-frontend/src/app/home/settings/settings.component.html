@@ -1,0 +1,104 @@
+<div class="settings-container">
+  @if (feedbackMessage) {
+    <div class="feedback" [class.success]="feedbackType === 'success'" [class.error]="feedbackType === 'error'">
+      {{ feedbackMessage }}
+    </div>
+  }
+
+  @if (!isLoaded) {
+    <div class="loading-state"><span class="loader"></span></div>
+  } @else if (loadError) {
+    <div class="load-error">
+      <p>Could not load AI settings.</p>
+      <button class="secondary-button" type="button" (click)="loadConfiguration()">Retry</button>
+    </div>
+  } @else {
+    <div class="heading">Settings</div>
+    <p class="sub-heading">Configure the server-side AI provider used for minute assistance.</p>
+
+    <section class="settings-card">
+      <div class="card-heading-row">
+        <div>
+          <h2>AI configuration</h2>
+          <p>These credentials are sent only to the backend and are never returned in full.</p>
+        </div>
+        <span class="status" [class.ready]="statusText === 'Ready'" [class.disabled]="statusText === 'Disabled'">
+          {{ statusText }}
+        </span>
+      </div>
+
+      <div class="source-note">{{ sourceText }}</div>
+
+      @if (validationMessage) {
+        <div class="validation-message">{{ validationMessage }}</div>
+      }
+
+      <form (ngSubmit)="save()">
+        <label class="toggle-row">
+          <input type="checkbox" name="enabled" [(ngModel)]="enabled" />
+          <span>
+            <strong>Enable AI minute assistance</strong>
+            <small>Users with meeting access can use AI to refine agendas and decisions.</small>
+          </span>
+        </label>
+
+        <div class="form-grid">
+          <label>
+            <span>Provider protocol</span>
+            <select name="provider" [(ngModel)]="provider">
+              <option value="ANTHROPIC_COMPATIBLE">Anthropic-compatible</option>
+              <option value="OPENAI_COMPATIBLE">OpenAI-compatible</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Model</span>
+            <input name="model" type="text" [(ngModel)]="model" placeholder="mimo-v2.5-pro" />
+          </label>
+
+          <label class="full-width">
+            <span>Base URL</span>
+            <input name="baseUrl" type="url" [(ngModel)]="baseUrl" placeholder="https://provider.example.com/anthropic" />
+            <small>For Anthropic-compatible providers, the backend calls /v1/messages. For OpenAI-compatible providers, it calls /v1/chat/completions.</small>
+          </label>
+
+          <label>
+            <span>API key</span>
+            <input name="apiKey" type="password" [(ngModel)]="apiKey" autocomplete="new-password" placeholder="Leave blank to keep the saved key" />
+            @if (configuration?.apiKeyConfigured) {
+              <small>Saved key: {{ configuration?.maskedApiKey }}</small>
+            }
+          </label>
+
+          <label>
+            <span>Maximum output tokens</span>
+            <input name="maxTokens" type="number" min="500" max="100000" step="100" [(ngModel)]="maxTokens" />
+          </label>
+
+          <label class="full-width">
+            <span>Additional AI instructions <em>(optional)</em></span>
+            <textarea name="additionalInstructions" rows="5" [(ngModel)]="additionalInstructions" placeholder="Optional wording or style guidance for the minute assistant"></textarea>
+            <small>The required JSON format and preservation rules remain enforced by the application.</small>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="secondary-button" type="button" (click)="testConnection()" [disabled]="isTesting || isSaving">
+            {{ isTesting ? 'Testing...' : 'Test connection' }}
+          </button>
+          <button class="primary-button" type="submit" [disabled]="isSaving || isTesting">
+            {{ isSaving ? 'Saving...' : 'Save configuration' }}
+          </button>
+          <button class="danger-button" type="button" (click)="clearSavedConfiguration()" [disabled]="isClearing || isSaving || isTesting">
+            {{ isClearing ? 'Clearing...' : 'Clear saved settings' }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="security-note">
+      <strong>Deployment note</strong>
+      <p>The backend needs a persistent database and an <code>APP_ENCRYPTION_KEY</code> so saved API keys can be encrypted. AI provider variables remain optional fallback values.</p>
+    </section>
+  }
+</div>
