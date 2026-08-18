@@ -39,6 +39,7 @@ interface TemplatePreset {
 })
 export class MinuteTemplateComponent implements OnInit, AfterViewInit {
   @ViewChild('editor') editor?: ElementRef<HTMLDivElement>;
+  @ViewChild('sourceEditor') sourceEditor?: ElementRef<HTMLTextAreaElement>;
 
   readonly templateTokens: TemplateToken[] = [
     { token: '@committee', label: 'Committee', description: 'Committee name' },
@@ -199,6 +200,21 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
       : this.templatePresets;
   }
 
+  get hasUnsavedChanges(): boolean {
+    return this.editorHtml.trim() !== this.savedEditorHtml.trim();
+  }
+
+  get templateWarnings(): string[] {
+    const requiredBlocks = [
+      { name: 'attendance', label: 'attendance table' },
+      { name: 'agendas', label: 'agenda list' },
+      { name: 'decisions', label: 'decision list' },
+    ];
+    return requiredBlocks
+      .filter(({ name }) => !this.hasTemplateToken(name))
+      .map(({ label }) => `Add the ${label} token so meeting data appears in the saved minute.`);
+  }
+
   committeeId = 0;
   committeeName = '';
   committeeDescription = '';
@@ -209,6 +225,7 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
   errorMessage = '';
   selectedPresetId: string | null = null;
   private savedEditorHtml = '';
+  editorMode: 'visual' | 'source' = 'visual';
 
   showTokenSuggestions = false;
   tokenSuggestions: TemplateToken[] = [...this.templateTokens];
@@ -325,6 +342,28 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
     if (editor && editor.innerHTML !== this.editorHtml) {
       editor.innerHTML = this.editorHtml;
     }
+    const sourceEditor = this.sourceEditor?.nativeElement;
+    if (sourceEditor && sourceEditor.value !== this.editorHtml) {
+      sourceEditor.value = this.editorHtml;
+    }
+  }
+
+  setEditorMode(mode: 'visual' | 'source'): void {
+    if (mode === this.editorMode) {
+      return;
+    }
+    if (this.editorMode === 'visual') {
+      this.syncEditorHtml();
+    }
+    this.editorMode = mode;
+    setTimeout(() => {
+      this.setEditorHtml();
+      if (mode === 'source') {
+        this.sourceEditor?.nativeElement.focus();
+      } else {
+        this.editor?.nativeElement.focus();
+      }
+    });
   }
 
   applyPreset(preset: TemplatePreset): void {
@@ -341,12 +380,22 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
     this.selectedPresetId = preset.id;
     this.editorHtml = preset.html;
     this.setEditorHtml();
-    this.focusEditorAtEnd();
+    if (this.editorMode === 'visual') {
+      this.focusEditorAtEnd();
+    } else {
+      this.sourceEditor?.nativeElement.focus();
+    }
   }
 
   onEditorInput(): void {
     this.syncEditorHtml();
+    this.selectedPresetId = null;
     this.updateTokenSuggestions();
+  }
+
+  onSourceInput(value: string): void {
+    this.editorHtml = value;
+    this.selectedPresetId = null;
   }
 
   onEditorKeyup(event: KeyboardEvent): void {
@@ -400,9 +449,16 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
   }
 
   format(command: string, value?: string): void {
+    const editor = this.editor?.nativeElement;
+    if (!editor) {
+      return;
+    }
+    // Focusing first and restoring second prevents the browser from
+    // collapsing the saved selection when the toolbar receives focus.
+    editor.focus();
     this.restoreSelection();
-    this.editor?.nativeElement.focus();
     document.execCommand(command, false, value);
+    this.rememberSelection();
     this.syncEditorHtml();
   }
 
@@ -473,6 +529,10 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
   }
 
   insertToken(token: TemplateToken): void {
+    if (this.editorMode === 'source') {
+      this.insertTokenIntoSource(token.token);
+      return;
+    }
     this.rememberSelection();
     this.insertText(token.token);
   }
@@ -541,9 +601,40 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
   }
 
   private syncEditorHtml(): void {
-    if (this.editor) {
+    if (this.editorMode === 'visual' && this.editor) {
       this.editorHtml = this.editor.nativeElement.innerHTML;
     }
+  }
+
+  restoreSavedTemplate(): void {
+    if (!this.hasUnsavedChanges || window.confirm('Discard your unsaved template changes?')) {
+      this.editorHtml = this.savedEditorHtml;
+      this.selectedPresetId = this.allTemplatePresets.find(
+        (preset) => preset.html.trim() === this.editorHtml.trim(),
+      )?.id ?? null;
+      this.setEditorHtml();
+    }
+  }
+
+  private hasTemplateToken(name: string): boolean {
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?:@${escapedName}|\\{${escapedName}\\}|\\{\\{${escapedName}\\}\\})`).test(this.editorHtml);
+  }
+
+  private insertTokenIntoSource(token: string): void {
+    const sourceEditor = this.sourceEditor?.nativeElement;
+    if (!sourceEditor) {
+      return;
+    }
+    const start = sourceEditor.selectionStart ?? this.editorHtml.length;
+    const end = sourceEditor.selectionEnd ?? start;
+    this.editorHtml = `${this.editorHtml.slice(0, start)}${token}${this.editorHtml.slice(end)}`;
+    this.setEditorHtml();
+    setTimeout(() => {
+      const caret = start + token.length;
+      sourceEditor.focus();
+      sourceEditor.setSelectionRange(caret, caret);
+    });
   }
 
   private focusEditorAtEnd(): void {
@@ -567,16 +658,26 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit {
   }
 
   private insertText(value: string): void {
+    const editor = this.editor?.nativeElement;
+    if (!editor) {
+      return;
+    }
+    editor.focus();
     this.restoreSelection();
-    this.editor?.nativeElement.focus();
     document.execCommand('insertText', false, value);
+    this.rememberSelection();
     this.syncEditorHtml();
   }
 
   private insertHtml(value: string): void {
+    const editor = this.editor?.nativeElement;
+    if (!editor) {
+      return;
+    }
+    editor.focus();
     this.restoreSelection();
-    this.editor?.nativeElement.focus();
     document.execCommand('insertHTML', false, value);
+    this.rememberSelection();
     this.syncEditorHtml();
   }
 

@@ -3,6 +3,7 @@ import { MinuteDataService } from '../minute-data.service';
 import { FormsModule } from '@angular/forms';
 import {
   AgendaDto,
+  AiStructuredMinuteDto,
   DecisionDto,
   MinuteUpdateDto,
 } from '../../../models/models';
@@ -98,23 +99,31 @@ export class MinuteEditComponent implements OnInit {
     this.aiInProgress = true;
     const meetingId = this.httpParams.get('meetingId');
     this.httpClient
-      .post<Response<{ htmlContent: string }>>(
+      .post<Response<AiStructuredMinuteDto>>(
         `${BACKEND_URL}/api/meetings/${meetingId}/ai-minute`,
         { roughPrompt: this.aiPrompt.trim() },
         { withCredentials: true },
       )
       .subscribe({
         next: (response) => {
-          this.minuteDataService.setMinuteContentHtml(response.mainBody.htmlContent);
-          this.minuteDataService.setFullEditorMode(true);
+          const result = response.mainBody;
+          this.minuteDataService.setStructuredFields(result.agendas, result.decisions);
+          this.minuteDataService.setMinuteContentHtml(result.htmlContent);
+          this.minuteDataService.setFullEditorMode(!!result.htmlContent?.trim());
           this.aiInProgress = false;
-          this.popupService.showPopup('AI minute draft generated. Review it before saving.', 'Success', 3000);
+          this.popupService.showPopup(
+            result.usedCommitteeTemplate
+              ? 'Agenda and decision entries refined. The committee template was filled with them.'
+              : 'Agenda and decision entries refined. Review them before saving.',
+            'Success',
+            3500,
+          );
         },
         error: (error) => {
           this.aiInProgress = false;
           const message = error?.error?.message;
           this.popupService.showPopup(
-            message || 'AI minute generation failed. Check the AI configuration.',
+            message || 'AI refinement failed. Check the AI configuration.',
             'Error',
             3000,
           );

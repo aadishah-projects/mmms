@@ -274,7 +274,6 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { bootstrapApplication } from '@angular/platform-browser';
 
 // Interface for our meeting data
 interface MinuteItem {
@@ -286,7 +285,7 @@ interface MinuteItem {
 }
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-demo',
   standalone: true,
   imports: [CommonModule, FormsModule],
   encapsulation: ViewEncapsulation.None, // Allows global styles for print/body
@@ -481,3 +480,26 @@ interface MinuteItem {
     }
   `]
 })
+export class DemoComponent {
+  data = {
+    title: '',
+    date: '',
+    location: '',
+    attendees: '',
+    items: [] as MinuteItem[],
+  };
+
+  addItem(): void {
+    this.data.items.push({
+      id: Date.now(),
+      topic: '',
+      discussion: '',
+      action: '',
+      owner: '',
+    });
+  }
+
+  removeItem(index: number): void {
+    this.data.items.splice(index, 1);
+  }
+}

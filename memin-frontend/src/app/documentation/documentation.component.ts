@@ -43,6 +43,7 @@ export class DocumentationComponent {
       description: [
         'Create a new meeting from the sidebar, the committee dropdown, or by pressing Alt + N.',
         'Define the context of the meeting by entering the date, time, title, and location.',
+        'The selected committee\'s saved minute template is used as the single meeting document.',
         'Add agendas and decisions. Double-click to remove an item',
         'Curate the attendee list from the left panel.(double click to unselect)',
       ],
@@ -60,7 +61,7 @@ export class DocumentationComponent {
       id: 5,
       title: 'Live Minute Editing',
       description: [
-        'Draft and revise meeting minutes continuously in the live editor.',
+        'Use the AI assistant to clarify rough agenda and decision notes; it does not draft the whole minute.',
         'Save your progression effortlessly',
       ],
       image: 'images/minute.png',

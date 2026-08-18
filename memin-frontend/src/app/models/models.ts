@@ -112,6 +112,13 @@ export interface MinuteTemplateUpdateDto {
   minuteTemplateHtml: string | null;
 }
 
+export interface AiStructuredMinuteDto {
+  agendas: AgendaDto[];
+  decisions: DecisionDto[];
+  htmlContent: string | null;
+  usedCommitteeTemplate: boolean;
+}
+
 export class DecisionDto {
   decisionId: number = 0;
   decision: string = '';

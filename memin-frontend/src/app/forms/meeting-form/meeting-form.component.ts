@@ -1,13 +1,14 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
   Component,
+  AfterViewChecked,
   effect,
   ElementRef,
   input,
   OnInit,
   output,
+  ViewChild,
   viewChild,
-  viewChildren,
 } from '@angular/core';
 import {
   FormGroup,
@@ -44,7 +45,7 @@ import { Response } from '../../response/response';
   templateUrl: './meeting-form.component.html',
   styleUrl: './meeting-form.component.scss',
 })
-export class MeetingForm implements OnInit {
+export class MeetingForm implements OnInit, AfterViewChecked {
   //outputs
   formSaveEvent = output<MeetingCreationDto>();
   draftWithAiEvent = output<string>();
@@ -142,6 +143,9 @@ export class MeetingForm implements OnInit {
       heldDate: this.heldDate,
       heldTime: this.heldTime,
       heldPlace: this.heldPlace,
+    });
+    this.minuteDetailsSubscription = this.meetingFormGroup.valueChanges.subscribe(() => {
+      this.updateMinuteDocument();
     });
 
     //INITIALIZING VARIABLES FOR THE LEFT PANEL
@@ -261,6 +265,7 @@ export class MeetingForm implements OnInit {
         possibleInvitee.memberId !== selectedInvitee.memberId,
     );
     this.displayedPossibleInvitees = this.possibleInvitees;
+    this.updateMinuteDocument();
   }
 
   setupObservableForInviteeSearchBarInputChange() {
@@ -368,6 +373,8 @@ export class MeetingForm implements OnInit {
     this.possibleInvitees = [];
     this.displayedPossibleInvitees = [];
     this.selectedInvitees = [];
+    this.minuteDocumentHtml = '';
+    this.renderedDocumentHtml = '';
 
     this.hasInviteeDataLoaded = false;
     this.coordinatorName = '';
@@ -457,69 +464,42 @@ export class MeetingForm implements OnInit {
 
   count = -1; //unique negative number which is assigned as the decision or agenda id which is used for deletion
 
-  agendaInputFields = viewChildren<ElementRef>('agendaInputFields');
+  @ViewChild('minuteDocument') minuteDocument?: ElementRef<HTMLDivElement>;
+  minuteDocumentHtml = '';
+  private renderedDocumentHtml = '';
+  private minuteDocumentVersion = 0;
+  private minuteDetailsSubscription?: Subscription;
 
   createEmptyAgenda() {
     const newAgenda = new AgendaDto();
     newAgenda.agendaId = this.count;
     this.count--;
     this.agendas.push(newAgenda);
-
-    // Wait for DOM Update
-    setTimeout(() => {
-      const inputs = this.agendaInputFields();
-      const lastInput = inputs[inputs.length - 1];
-
-      if (lastInput) {
-        const element = lastInput.nativeElement;
-
-        element.focus();
-
-        //Scroll it into the center of the view
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-      }
-    });
+    this.updateMinuteDocument();
+    this.focusLastMinuteItem('agenda');
   }
-
-  decisionInputFields = viewChildren<ElementRef>('decisionInputFields');
 
   createEmptyDecision() {
     const newDecision = new DecisionDto();
     newDecision.decisionId = this.count;
     this.count--;
     this.decisions.push(newDecision);
-    // Wait for DOM Update
-    setTimeout(() => {
-      const inputs = this.decisionInputFields();
-      const lastInput = inputs[inputs.length - 1];
-
-      if (lastInput) {
-        const element = lastInput.nativeElement;
-
-        element.focus();
-
-        //Scroll it into the center of the view
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-      }
-    });
+    this.updateMinuteDocument();
+    this.focusLastMinuteItem('decision');
   }
 
   deleteAgenda(agendaId: number) {
     this.agendas = this.agendas.filter(
       (agenda) => agenda.agendaId !== agendaId,
     );
+    this.updateMinuteDocument();
   }
 
   deleteDecision(decisionId: number) {
     this.decisions = this.decisions.filter(
       (decision) => decision.decisionId !== decisionId,
     );
+    this.updateMinuteDocument();
   }
 
   coordinatorName = '';
@@ -535,6 +515,7 @@ export class MeetingForm implements OnInit {
       this.minuteTemplateLanguage = '';
       this.isMinuteTemplateLoading = false;
       this.minuteTemplateLoadError = false;
+      this.updateMinuteDocument();
       return;
     }
 
@@ -548,9 +529,11 @@ export class MeetingForm implements OnInit {
       .subscribe({
         next: (response) => {
           this.coordinatorName = response.mainBody.coordinatorName || '';
+          this.updateMinuteDocument();
         },
         error: () => {
           this.coordinatorName = '';
+          this.updateMinuteDocument();
         },
       });
   }
@@ -571,12 +554,14 @@ export class MeetingForm implements OnInit {
           this.minuteTemplateHtml = template.minuteTemplateHtml?.trim() || null;
           this.minuteTemplateLanguage = template.minuteLanguage || '';
           this.isMinuteTemplateLoading = false;
+          this.updateMinuteDocument();
         },
         error: () => {
           this.minuteTemplateHtml = null;
           this.minuteTemplateLanguage = '';
           this.isMinuteTemplateLoading = false;
           this.minuteTemplateLoadError = true;
+          this.updateMinuteDocument();
         },
       });
   }
@@ -585,12 +570,8 @@ export class MeetingForm implements OnInit {
     return !!this.minuteTemplateHtml?.trim();
   }
 
-  get committeeMinuteTemplatePreviewHtml(): string {
-    const template = this.minuteTemplateHtml;
-    if (!template) {
-      return '';
-    }
-
+  private buildMinuteDocumentHtml(): string {
+    const template = this.minuteTemplateHtml?.trim() || this.getFallbackMinuteTemplate();
     const meetingDate = this.heldDate?.value || 'Date to be confirmed';
     const dateObject = meetingDate ? new Date(`${meetingDate}T00:00:00`) : null;
     const meetingDay = dateObject && !Number.isNaN(dateObject.getTime())
@@ -607,12 +588,12 @@ export class MeetingForm implements OnInit {
       { names: ['place', 'location'], value: this.heldPlace?.value || 'Venue to be confirmed' },
       { names: ['coordinator'], value: this.coordinatorDisplayName },
       { names: ['header', 'openingParagraph'], value: '' },
-      { names: ['attendance', 'participants'], value: this.renderTemplateAttendancePreview() },
-      { names: ['agendas'], value: this.renderTemplateListPreview(this.agendas.map((agenda) => agenda.agenda), 'Agenda items will appear here.') },
-      { names: ['decisions'], value: this.renderTemplateListPreview(this.decisions.map((decision) => decision.decision), 'Decisions will appear here.') },
+      { names: ['attendance', 'participants'], value: this.templateSlotMarker('attendance') },
+      { names: ['agendas'], value: this.templateSlotMarker('agendas') },
+      { names: ['decisions'], value: this.templateSlotMarker('decisions') },
     ];
 
-    return values.reduce((html, replacement) => {
+    let rendered = values.reduce((html, replacement) => {
       const safeValue = replacement.names.some((name) => ['attendance', 'participants', 'agendas', 'decisions'].includes(name))
         ? replacement.value
         : this.escapeTemplatePreviewValue(replacement.value);
@@ -625,27 +606,197 @@ export class MeetingForm implements OnInit {
         html,
       );
     }, template);
+
+    // A custom template may contain only the header and meeting metadata. Keep
+    // that template as the document source of truth, but append any omitted
+    // live sections inside the same document so editable meeting content can
+    // never fall back to a second generic page.
+    const missingSections: Array<{ names: string[]; heading: string; slot: 'attendance' | 'agendas' | 'decisions' }> = [
+      { names: ['attendance', 'participants'], heading: this.minuteTemplateLanguage === 'NEPALI' ? 'उपस्थिति' : 'Attendance', slot: 'attendance' },
+      { names: ['agendas'], heading: this.minuteTemplateLanguage === 'NEPALI' ? 'कार्यसूची' : 'Agendas', slot: 'agendas' },
+      { names: ['decisions'], heading: this.minuteTemplateLanguage === 'NEPALI' ? 'निर्णयहरू' : 'Decisions and resolutions', slot: 'decisions' },
+    ];
+    missingSections.forEach(({ names, heading, slot }) => {
+      if (!this.templateContainsToken(template, names)) {
+        rendered += `<h2>${heading}</h2>${this.templateSlotMarker(slot)}`;
+      }
+    });
+    return rendered;
   }
 
-  private renderTemplateAttendancePreview(): string {
+  private templateContainsToken(template: string, names: string[]): boolean {
+    return names.some((name) => template.includes(`@${name}`)
+      || template.includes(`{${name}}`)
+      || template.includes(`{{${name}}}`));
+  }
+
+  private updateMinuteDocument(): void {
+    if (!this.selectedCommitteeId) {
+      this.minuteDocumentHtml = '';
+      this.renderedDocumentHtml = '';
+      return;
+    }
+    // The template string itself can remain unchanged when a user adds,
+    // removes, or edits an item. Change the binding value so Angular rebuilds
+    // the live controls from the latest arrays.
+    this.minuteDocumentVersion++;
+    this.minuteDocumentHtml = `<!-- minute-document-${this.minuteDocumentVersion} -->${this.buildMinuteDocumentHtml()}`;
+    this.renderedDocumentHtml = '';
+  }
+
+  private templateSlotMarker(slot: 'attendance' | 'agendas' | 'decisions'): string {
+    // CSS classes survive Angular's HTML sanitizer; custom data attributes do not.
+    return `<span class="minute-slot-marker minute-slot-${slot}"></span>`;
+  }
+
+  private getFallbackMinuteTemplate(): string {
     const isNepali = this.minuteTemplateLanguage === 'NEPALI';
-    const rows = this.selectedInvitees.map((invitee, index) => `
-      <tr><td>${index + (this.coordinatorName ? 2 : 1)}</td><td>${this.escapeTemplatePreviewValue(this.getInviteeName(invitee))}</td>
-      <td>${isNepali ? 'आमन्त्रित' : 'Invitee'}</td><td></td></tr>`).join('');
-    const coordinatorRow = this.coordinatorName
-      ? `<tr><td>1</td><td>${this.escapeTemplatePreviewValue(this.coordinatorName)}</td><td>${isNepali ? 'समन्वयक' : 'Coordinator'}</td><td></td></tr>`
-      : '';
-
-    return `<table class="memberships"><thead><tr><th>${isNepali ? 'क्र.सं.' : 'S.N.'}</th><th>${isNepali ? 'नाम' : 'Name'}</th><th>${isNepali ? 'पद/भूमिका' : 'Position'}</th><th>${isNepali ? 'हस्ताक्षर' : 'Signature'}</th></tr></thead><tbody>${coordinatorRow}${rows}</tbody></table>`;
+    return isNepali
+      ? `<h1 style="text-align:center">@committee</h1><p><strong>बैठकको विषय:</strong> @title</p><p><strong>मिति:</strong> @date&nbsp;&nbsp;&nbsp;<strong>समय:</strong> @time&nbsp;&nbsp;&nbsp;<strong>स्थान:</strong> @location</p><h2>उपस्थिति</h2>@attendance<h2>कार्यसूची</h2>@agendas<h2>निर्णयहरू</h2>@decisions`
+      : `<h1 style="text-align:center">@committee</h1><p><strong>Meeting:</strong> @title</p><p><strong>Date:</strong> @date&nbsp;&nbsp;&nbsp;<strong>Time:</strong> @time&nbsp;&nbsp;&nbsp;<strong>Venue:</strong> @location</p><h2>Attendance</h2>@attendance<h2>Agendas</h2>@agendas<h2>Decisions and resolutions</h2>@decisions`;
   }
 
-  private renderTemplateListPreview(items: string[], emptyLabel: string): string {
-    const nonEmptyItems = items.filter((item) => item?.trim());
-    if (nonEmptyItems.length === 0) {
-      return `<p class="template-preview-empty">${emptyLabel}</p>`;
+  ngAfterViewChecked(): void {
+    const documentElement = this.minuteDocument?.nativeElement;
+    if (!documentElement || !this.minuteDocumentHtml || this.renderedDocumentHtml === this.minuteDocumentHtml) {
+      return;
     }
 
-    return `<ol>${nonEmptyItems.map((item) => `<li>${this.escapeTemplatePreviewValue(item)}</li>`).join('')}</ol>`;
+    const markers = Array.from(documentElement.querySelectorAll<HTMLElement>('.minute-slot-marker'));
+    markers.forEach((marker) => {
+      const slot = (['attendance', 'agendas', 'decisions'] as const)
+        .find((candidate) => marker.classList.contains(`minute-slot-${candidate}`));
+      if (slot === 'attendance') {
+        marker.replaceWith(this.createAttendanceSlot());
+      } else if (slot === 'agendas') {
+        marker.replaceWith(this.createAgendaSlot());
+      } else if (slot === 'decisions') {
+        marker.replaceWith(this.createDecisionSlot());
+      }
+    });
+    this.renderedDocumentHtml = this.minuteDocumentHtml;
+  }
+
+  private createAttendanceSlot(): HTMLElement {
+    const isNepali = this.minuteTemplateLanguage === 'NEPALI';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'template-slot-content template-attendance-slot';
+    const table = document.createElement('table');
+    table.className = 'memberships';
+    table.innerHTML = `<thead><tr><th>${isNepali ? 'क्र.सं.' : 'S.N.'}</th><th>${isNepali ? 'नाम' : 'Name'}</th><th>${isNepali ? 'पद/भूमिका' : 'Position'}</th><th>${isNepali ? 'हस्ताक्षर' : 'Signature'}</th></tr></thead>`;
+    const body = document.createElement('tbody');
+    const participants: Array<{ name: string; role: string }> = [];
+    if (this.coordinatorName) {
+      participants.push({ name: this.coordinatorName, role: isNepali ? 'समन्वयक' : 'Coordinator' });
+    }
+    this.selectedInvitees.forEach((invitee) => participants.push({
+      name: this.getInviteeName(invitee),
+      role: isNepali ? 'आमन्त्रित' : 'Invitee',
+    }));
+    if (participants.length === 0) {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td colspan="4" class="template-slot-empty">${isNepali ? 'बायाँपट्टिबाट सदस्य छान्नुहोस्।' : 'Select members from the left panel to add them here.'}</td>`;
+      body.appendChild(row);
+    } else {
+      participants.forEach((participant, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${index + 1}</td><td></td><td></td><td></td>`;
+        row.children[1].textContent = participant.name;
+        row.children[2].textContent = participant.role;
+        body.appendChild(row);
+      });
+    }
+    table.appendChild(body);
+    wrapper.appendChild(table);
+    return wrapper;
+  }
+
+  private createAgendaSlot(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'template-slot-content template-list-slot';
+    wrapper.appendChild(this.createSlotAction('agenda', '+ Add Agenda', () => this.createEmptyAgenda()));
+    const list = document.createElement('ol');
+    this.agendas.forEach((agenda, index) => {
+      const row = document.createElement('li');
+      row.className = 'template-item-row';
+      const input = document.createElement('textarea');
+      input.rows = 1;
+      input.value = agenda.agenda || '';
+      input.placeholder = 'Enter an agenda item';
+      input.setAttribute('aria-label', `Agenda item ${index + 1}`);
+      input.addEventListener('input', () => agenda.agenda = input.value);
+      const remove = this.createRemoveButton(`Remove agenda ${index + 1}`, () => this.deleteAgenda(agenda.agendaId));
+      row.append(input, remove);
+      list.appendChild(row);
+    });
+    if (this.agendas.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'template-slot-empty template-slot-empty-list-item';
+      empty.textContent = 'Add an agenda item using the button above.';
+      list.appendChild(empty);
+    }
+    wrapper.appendChild(list);
+    return wrapper;
+  }
+
+  private createDecisionSlot(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'template-slot-content template-list-slot';
+    wrapper.appendChild(this.createSlotAction('decision', '+ Add Decision', () => this.createEmptyDecision()));
+    const list = document.createElement('ol');
+    this.decisions.forEach((decision, index) => {
+      const row = document.createElement('li');
+      row.className = 'template-item-row';
+      const input = document.createElement('textarea');
+      input.rows = 1;
+      input.value = decision.decision || '';
+      input.placeholder = 'Record the decision or resolution';
+      input.setAttribute('aria-label', `Decision or resolution ${index + 1}`);
+      input.addEventListener('input', () => decision.decision = input.value);
+      const remove = this.createRemoveButton(`Remove decision ${index + 1}`, () => this.deleteDecision(decision.decisionId));
+      row.append(input, remove);
+      list.appendChild(row);
+    });
+    if (this.decisions.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'template-slot-empty template-slot-empty-list-item';
+      empty.textContent = 'Add a decision or resolution using the button above.';
+      list.appendChild(empty);
+    }
+    wrapper.appendChild(list);
+    return wrapper;
+  }
+
+  private createSlotAction(type: 'agenda' | 'decision', label: string, action: () => void): HTMLElement {
+    const actionBar = document.createElement('div');
+    actionBar.className = 'template-slot-action-bar';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'minute-slot-add-button';
+    button.textContent = label;
+    button.dataset['slotAction'] = type;
+    button.addEventListener('click', action);
+    actionBar.appendChild(button);
+    return actionBar;
+  }
+
+  private createRemoveButton(label: string, action: () => void): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'item-remove-button';
+    button.textContent = '×';
+    button.title = label;
+    button.setAttribute('aria-label', label);
+    button.addEventListener('click', action);
+    return button;
+  }
+
+  private focusLastMinuteItem(type: 'agenda' | 'decision'): void {
+    setTimeout(() => {
+      const selector = `[data-slot-action="${type}"]`;
+      const action = this.minuteDocument?.nativeElement.querySelector<HTMLButtonElement>(selector);
+      action?.closest('.template-slot-content')?.querySelector<HTMLTextAreaElement>('textarea:last-of-type')?.focus();
+    });
   }
 
   private escapeTemplatePreviewValue(value: string | null | undefined): string {
@@ -793,10 +944,12 @@ export class MeetingForm implements OnInit {
     //add to possible invtees
     //not added to displayedPossibleInvittes because when not being searched possibleInvitees and displayedPossibleInvitees point to the same array
     this.possibleInvitees.push(inviteeToUnselect);
+    this.updateMinuteDocument();
   }
 
   ngOnDestroy() {
     this.committeeSearchSubscription.unsubscribe();
     this.invitteeSearchInputFieldSubscription.unsubscribe();
+    this.minuteDetailsSubscription?.unsubscribe();
   }
 }

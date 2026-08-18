@@ -162,6 +162,45 @@ public class MeetingService {
         meetingRepository.save(existingMeeting);
     }
 
+    /**
+     * Replaces only the structured agenda and decision records returned by the
+     * AI assistant. The assistant never owns the meeting's HTML document.
+     */
+    @Transactional
+    public void replaceAgendaAndDecisionItems(
+            int meetingId,
+            List<String> agendas,
+            List<String> decisions,
+            String username) {
+        Meeting meeting = getMeetingIfAccessible(meetingId, username);
+
+        meeting.getAgendas().clear();
+        if (agendas != null) {
+            agendas.stream()
+                    .map(String::trim)
+                    .filter(value -> !value.isBlank())
+                    .forEach(value -> {
+                        Agenda agenda = new Agenda();
+                        agenda.setAgenda(value);
+                        meeting.addAgenda(agenda);
+                    });
+        }
+
+        meeting.getDecisions().clear();
+        if (decisions != null) {
+            decisions.stream()
+                    .map(String::trim)
+                    .filter(value -> !value.isBlank())
+                    .forEach(value -> {
+                        Decision decision = new Decision();
+                        decision.setDecision(value);
+                        meeting.addDecision(decision);
+                    });
+        }
+
+        meetingRepository.save(meeting);
+    }
+
     @Transactional
     public void updateMinuteContent(Integer meetingId, String htmlContent, String username) {
         Meeting meeting = findMeetingById(meetingId);

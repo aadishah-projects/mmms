@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 public class MeetingMinuteController {
@@ -59,10 +62,39 @@ public class MeetingMinuteController {
         Meeting meeting = meetingService.findMeetingById(meetingId);
         MinuteDataDto minuteData = meetingMinutePreparationService.prepareDataForMinute(
                 meeting.getCommittee(), meeting, authentication.getName());
-        String htmlContent = aiMinuteService.generateMinute(minuteData, request.getRoughPrompt());
-        htmlContent = meetingMinutePreparationService.ensureAttendanceTable(htmlContent, minuteData);
+        var structuredResult = aiMinuteService.extractStructuredItems(minuteData, request.getRoughPrompt());
+        List<String> agendas = structuredResult.getAgendas().stream().map(item -> item.getAgenda()).toList();
+        List<String> decisions = structuredResult.getDecisions().stream().map(item -> item.getDecision()).toList();
+        // Preserve existing records if a provider violates the prompt by returning
+        // an empty array for a non-empty section.
+        if (agendas.isEmpty() && minuteData.getAgendas() != null) {
+            agendas = minuteData.getAgendas().stream().map(item -> item.getAgenda()).toList();
+        }
+        if (decisions.isEmpty() && minuteData.getDecisions() != null) {
+            decisions = minuteData.getDecisions().stream().map(item -> item.getDecision()).toList();
+        }
+        meetingService.replaceAgendaAndDecisionItems(
+                meetingId,
+                agendas,
+                decisions,
+                authentication.getName());
+
+        // Reload the structured records before rendering. A custom committee
+        // template is rendered by the server; with no custom template the
+        // normal structured minute view remains active.
+        Meeting updatedMeeting = meetingService.findMeetingById(meetingId);
+        MinuteDataDto updatedData = meetingMinutePreparationService.prepareDataForMinute(
+                updatedMeeting.getCommittee(), updatedMeeting, authentication.getName());
+        String htmlContent = meetingMinutePreparationService.renderCommitteeTemplate(
+                updatedMeeting.getCommittee(), updatedData);
         meetingService.updateMinuteContent(meetingId, htmlContent, authentication.getName());
-        return ResponseEntity.ok(new Response("AI minute draft generated", java.util.Map.of("htmlContent", htmlContent)));
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("agendas", updatedData.getAgendas());
+        result.put("decisions", updatedData.getDecisions());
+        result.put("htmlContent", htmlContent);
+        result.put("usedCommitteeTemplate", htmlContent != null && !htmlContent.isBlank());
+        return ResponseEntity.ok(new Response("Agenda and decision entries refined with AI", result));
     }
 
     @PostMapping("api/word-file-for-minute")

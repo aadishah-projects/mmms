@@ -95,7 +95,7 @@ public class Meeting {
     public List<Member> invitees = new ArrayList<>();
 
     @OneToMany(mappedBy = "meeting", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
-    private Set<Decision> decisions = new HashSet<>();
+    private Set<Decision> decisions = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "meeting", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<Agenda> agendas = new ArrayList<>();

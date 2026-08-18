@@ -10,6 +10,10 @@
 
     <div class="header-actions">
       <button type="button" class="secondary-action" (click)="cancel()">Back</button>
+      @if (hasUnsavedChanges) {
+        <span class="unsaved-indicator">Unsaved changes</span>
+        <button type="button" class="secondary-action" (click)="restoreSavedTemplate()">Restore saved</button>
+      }
       <button type="button" class="primary-action" [disabled]="!hasDataLoaded || isSaving" (click)="saveTemplate()">
         {{ isSaving ? 'Saving…' : 'Save template' }}
       </button>
@@ -51,16 +55,47 @@
           </button>
         }
       </div>
+      <div class="starter-tip">
+        <strong>Quick start:</strong> choose a starter, edit the words directly on the paper, or switch to
+        <strong>HTML source</strong> when you want precise control. Blue chips insert live meeting data.
+      </div>
     </section>
 
     <div class="editor-layout">
       <main class="editor-card">
+        <div class="editor-mode-bar" role="tablist" aria-label="Template editing mode">
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="editorMode === 'visual'"
+            [class.active]="editorMode === 'visual'"
+            (click)="setEditorMode('visual')"
+          >Visual editor</button>
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="editorMode === 'source'"
+            [class.active]="editorMode === 'source'"
+            (click)="setEditorMode('source')"
+          >HTML source</button>
+          <span class="mode-help">
+            {{ editorMode === 'visual' ? 'Format the paper like a document.' : 'Edit the HTML directly; tokens remain unchanged.' }}
+          </span>
+        </div>
+
+        @if (editorMode === 'visual') {
         <div class="editor-toolbar" aria-label="Template formatting toolbar">
           <div class="toolbar-group">
             <button type="button" title="Bold" (mousedown)="preventToolbarFocus($event)" (click)="format('bold')"><strong>B</strong></button>
             <button type="button" title="Italic" (mousedown)="preventToolbarFocus($event)" (click)="format('italic')"><em>I</em></button>
             <button type="button" title="Underline" (mousedown)="preventToolbarFocus($event)" (click)="format('underline')"><u>U</u></button>
             <button type="button" title="Strike through" (mousedown)="preventToolbarFocus($event)" (click)="format('strikeThrough')"><s>S</s></button>
+            <button type="button" title="Clear formatting" (mousedown)="preventToolbarFocus($event)" (click)="format('removeFormat')">Clear</button>
+          </div>
+
+          <div class="toolbar-group">
+            <button type="button" title="Undo" (mousedown)="preventToolbarFocus($event)" (click)="format('undo')">Undo</button>
+            <button type="button" title="Redo" (mousedown)="preventToolbarFocus($event)" (click)="format('redo')">Redo</button>
           </div>
 
           <div class="toolbar-group">
@@ -70,6 +105,14 @@
               <option value="h2">Heading 2</option>
               <option value="h3">Heading 3</option>
               <option value="blockquote">Quote</option>
+            </select>
+            <select title="Font size" (mousedown)="rememberSelection()" (change)="format('fontSize', $any($event.target).value)">
+              <option value="3">Font size</option>
+              <option value="1">Small</option>
+              <option value="2">Normal</option>
+              <option value="4">Large</option>
+              <option value="5">Extra large</option>
+              <option value="6">Huge</option>
             </select>
           </div>
 
@@ -104,6 +147,7 @@
             </div>
           }
         </div>
+        }
 
         <div class="token-bar">
           <span class="token-bar-label">Insert meeting data</span>
@@ -119,7 +163,7 @@
           }
         </div>
 
-        @if (showTokenSuggestions) {
+        @if (showTokenSuggestions && editorMode === 'visual') {
           <div class="token-suggestions" role="listbox">
             <span class="suggestion-heading">Choose meeting data</span>
             @for (token of tokenSuggestions; track token.token; let i = $index) {
@@ -137,6 +181,7 @@
           </div>
         }
 
+        @if (editorMode === 'visual') {
         <div
           #editor
           class="paper"
@@ -150,6 +195,16 @@
           (mouseup)="rememberSelection()"
           (blur)="rememberSelection()"
         ></div>
+        } @else {
+          <textarea
+            #sourceEditor
+            class="source-editor"
+            [ngModel]="editorHtml"
+            (ngModelChange)="onSourceInput($event)"
+            spellcheck="false"
+            aria-label="Minute template HTML source"
+          ></textarea>
+        }
       </main>
 
       <aside class="template-help">
@@ -160,11 +215,22 @@
             Type normally, format text, and insert tables. When a meeting uses this template, the values beginning with
             <code>&#64;</code> are replaced automatically.
           </p>
+          <p>Use <strong>HTML source</strong> for precise edits. Keep <code>&#64;attendance</code>, <code>&#64;agendas</code>,
+            and <code>&#64;decisions</code> where the live meeting sections should appear.</p>
           <p class="example">
             The <code>&#64;committee</code> was held on <code>&#64;day</code>, <code>&#64;date</code>, at
             <code>&#64;time</code> at <code>&#64;location</code>. Its purpose was <code>&#64;purpose</code>.
           </p>
         </div>
+
+        @if (templateWarnings.length > 0) {
+          <div class="help-card template-warning-card">
+            <h2>Template checks</h2>
+            @for (warning of templateWarnings; track warning) {
+              <p>{{ warning }}</p>
+            }
+          </div>
+        }
 
         <div class="help-card token-reference">
           <h2>Available data</h2>

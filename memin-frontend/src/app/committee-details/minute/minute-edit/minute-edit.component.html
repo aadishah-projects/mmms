@@ -8,7 +8,7 @@
         </button>
       }
     </div>
-    <p class="panel-subtitle">Create or update the meeting minute</p>
+    <p class="panel-subtitle">Record the meeting facts, then use the template to produce the final minute.</p>
     @if (!fullEditorMode()) {
       <button type="button" class="btn btn-secondary" (click)="startFullEditor()">Open full editor</button>
     } @else {
@@ -17,15 +17,15 @@
   </div>
 
   <div class="ai-draft-panel">
-    <label for="ai-minute-prompt">AI minute assistant</label>
+    <label for="ai-minute-prompt">AI agenda and decision assistant</label>
     <textarea
       id="ai-minute-prompt"
       name="aiPrompt"
       [(ngModel)]="aiPrompt"
-      placeholder="Optional: add discussion notes, actions, tone, or a translation instruction. Meeting details are included automatically."
+      placeholder="Optional: paste rough agenda or decision notes. AI only clarifies these entries; it does not write the whole minute."
     ></textarea>
     <button type="button" class="btn btn-primary" (click)="generateAiMinute()" [disabled]="aiInProgress">
-      {{ aiInProgress ? 'Generating...' : 'Use AI to draft minute' }}
+      {{ aiInProgress ? 'Refining...' : 'Refine agenda and decisions' }}
     </button>
   </div>
 

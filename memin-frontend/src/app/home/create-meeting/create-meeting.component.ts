@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { BACKEND_URL } from "../../../global_constants";
-import { MeetingCreationDto, MeetingFormData, MeetingSummaryDto } from "../../models/models";
+import { AiStructuredMinuteDto, MeetingCreationDto, MeetingFormData, MeetingSummaryDto } from "../../models/models";
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { Response } from "../../response/response"
@@ -56,7 +56,7 @@ export class CreateMeetingComponent  {
           const meetingId = response.mainBody.id;
           if (aiPrompt !== null) {
             this.httpClient
-              .post<Response<{ htmlContent: string }>>(
+              .post<Response<AiStructuredMinuteDto>>(
                 `${BACKEND_URL}/api/meetings/${meetingId}/ai-minute`,
                 { roughPrompt: aiPrompt },
                 { withCredentials: true },
@@ -64,11 +64,11 @@ export class CreateMeetingComponent  {
               .subscribe({
                 next: () => {
                   this.navigateToMinute(requestBody.committeeId, meetingId);
-                  this.popupService.showPopup('Meeting created and AI minute drafted.', 'Success', 3000);
+                  this.popupService.showPopup('Meeting created and agenda/decision entries refined with AI.', 'Success', 3000);
                 },
                 error: (error) => {
                   this.navigateToMinute(requestBody.committeeId, meetingId);
-                  const message = error?.error?.message || 'AI minute generation failed. You can retry from the minute editor.';
+                  const message = error?.error?.message || 'AI refinement failed. You can retry from the minute editor.';
                   this.popupService.showPopup(message, 'Error', 4000);
                 },
               });

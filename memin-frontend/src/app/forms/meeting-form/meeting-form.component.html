@@ -249,13 +249,13 @@
       </section>
 
       @if (selectedCommitteeId) {
-        <section class="committee-template-card" aria-labelledby="committee-template-heading">
-          <div class="committee-template-card-header">
+        <section class="minute-document-card" aria-labelledby="minute-document-heading">
+          <div class="minute-document-card-header">
             <div>
-              <p class="template-preview-kicker">Committee minute template</p>
-              <h2 id="committee-template-heading">Saved template preview</h2>
+              <p class="template-preview-kicker">Meeting minute document</p>
+              <h2 id="minute-document-heading">{{ committeeDisplayName }} template</h2>
               <p class="template-preview-note">
-                This is the template configured for {{ committeeDisplayName }}. The meeting values below are previewed inside its saved layout.
+                This single document uses the selected committee template. Meeting details, participants, agendas, and decisions are inserted at its live sections.
               </p>
             </div>
             @if (minuteTemplateLanguage) {
@@ -264,186 +264,25 @@
           </div>
 
           @if (isMinuteTemplateLoading) {
-            <div class="template-preview-status">Loading the committee template…</div>
+            <div class="minute-document-status">Loading the committee template…</div>
           } @else if (minuteTemplateLoadError) {
-            <div class="template-preview-status template-preview-error">
-              The committee template could not be loaded. The meeting can still be completed using the editable record below.
-            </div>
-          } @else if (hasCommitteeMinuteTemplate) {
-            <div class="committee-template-preview" [innerHTML]="committeeMinuteTemplatePreviewHtml"></div>
-          } @else {
-            <div class="template-preview-status">
-              No custom minute template has been set for this committee yet.
+            <div class="minute-document-status minute-document-error">
+              The committee template could not be loaded. You can still complete the meeting record and try again later.
             </div>
           }
+          <div #minuteDocument class="single-minute-document" [innerHTML]="minuteDocumentHtml"></div>
         </section>
       }
 
-      <section class="paper-document-sheet" aria-label="Meeting minutes document">
-        <header class="paper-header">
-          <p class="paper-kicker">Official committee record</p>
-          <h1>{{ committeeDisplayName }}</h1>
-          <p class="paper-subtitle">Meeting Minutes &amp; Resolution</p>
-          <div class="paper-rule"></div>
-        </header>
-
-        <section class="paper-section opening-section">
-          <div class="paper-section-heading">
-            <h2>Opening Information</h2>
-            <span class="section-index">01</span>
-          </div>
-          <p class="meeting-title-preview">{{ title.value || 'Meeting title' }}</p>
-          <dl class="meeting-metadata">
-            <div>
-              <dt>Date</dt>
-              <dd>{{ formatMeetingDate(heldDate.value) }}</dd>
-            </div>
-            <div>
-              <dt>Time</dt>
-              <dd>{{ formatMeetingTime(heldTime.value) }}</dd>
-            </div>
-            <div>
-              <dt>Venue</dt>
-              <dd>{{ heldPlace.value || 'Venue to be confirmed' }}</dd>
-            </div>
-            <div>
-              <dt>Coordinator</dt>
-              <dd>{{ coordinatorDisplayName }}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section class="paper-section participants-section">
-          <div class="paper-section-heading">
-            <h2>Attendance &amp; Participants</h2>
-            <span class="section-index">02</span>
-          </div>
-          <div class="participants-table-wrapper">
-            <table class="participants-table">
-              <thead>
-                <tr>
-                  <th scope="col">Attendee</th>
-                  <th scope="col">Role</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (invitee of selectedInvitees; track invitee.memberId) {
-                  <tr>
-                    <td>{{ getInviteeName(invitee) }}</td>
-                    <td>Invitee</td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="2" class="empty-table-state">Select members from the left panel to add them here.</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="paper-section agenda-section">
-          <div class="paper-section-heading section-heading-with-action">
-            <div>
-              <span class="section-index">03</span>
-              <h2>Agendas</h2>
-            </div>
-            <button type="button" class="paper-add-button" (click)="createEmptyAgenda()">+ Add Agenda</button>
-          </div>
-          <div class="document-items-list">
-            @for (agenda of agendas; track agenda.agendaId; let i = $index) {
-              <div class="document-item-row">
-                <span class="item-number">{{ i + 1 }}.</span>
-                <textarea
-                  #agendaInputFields
-                  [(ngModel)]="agenda.agenda"
-                  [ngModelOptions]="{ standalone: true }"
-                  placeholder="Enter an agenda item"
-                  aria-label="Agenda item"
-                  rows="1"
-                ></textarea>
-                <button
-                  type="button"
-                  class="item-remove-button"
-                  (click)="deleteAgenda(agenda.agendaId)"
-                  [attr.aria-label]="'Remove agenda ' + (i + 1)"
-                >
-                  &times;
-                </button>
-              </div>
-            } @empty {
-              <p class="document-empty-state">No agenda items yet. Add the topics to be discussed.</p>
-            }
-          </div>
-        </section>
-
-        <section class="paper-section decision-section">
-          <div class="paper-section-heading section-heading-with-action">
-            <div>
-              <span class="section-index">04</span>
-              <h2>Decisions &amp; Resolutions<span class="required-astrick">*</span></h2>
-            </div>
-            <button type="button" class="paper-add-button" (click)="createEmptyDecision()">+ Add Decision</button>
-          </div>
-          @if (showAllFormErrors && hasNoNonEmptyDecisions()) {
-            <p class="field-error document-error">Add at least one non-empty decision.</p>
-          }
-          <div class="document-items-list">
-            @for (decision of decisions; track decision.decisionId; let i = $index) {
-              <div class="document-item-row decision-row" [class.invalid-item]="isDecisionInvalid(decision)">
-                <span class="item-number">{{ i + 1 }}.</span>
-                <div class="item-editor">
-                  <textarea
-                    #decisionInputFields
-                    [(ngModel)]="decision.decision"
-                    [ngModelOptions]="{ standalone: true }"
-                    placeholder="Record the decision or resolution"
-                    aria-label="Decision or resolution"
-                    rows="1"
-                  ></textarea>
-                  @if (isDecisionInvalid(decision)) {
-                    <p class="field-error">This decision cannot be empty.</p>
-                  }
-                </div>
-                <button
-                  type="button"
-                  class="item-remove-button"
-                  (click)="deleteDecision(decision.decisionId)"
-                  [attr.aria-label]="'Remove decision ' + (i + 1)"
-                >
-                  &times;
-                </button>
-              </div>
-            } @empty {
-              <p class="document-empty-state">No decisions yet. Add at least one decision before saving.</p>
-            }
-          </div>
-        </section>
-
-        <footer class="paper-footer">
-          <p>Prepared for the official records of {{ committeeDisplayName }}.</p>
-          <div class="signature-grid">
-            <div class="signature-line">
-              <span></span>
-              <strong>Coordinator</strong>
-            </div>
-            <div class="signature-line">
-              <span></span>
-              <strong>Secretary</strong>
-            </div>
-          </div>
-        </footer>
-      </section>
-
       @if (!isEditPage()) {
         <div class="ai-draft-panel">
-          <label for="new-minute-ai-prompt">AI minute assistant</label>
+          <label for="new-minute-ai-prompt">AI agenda and decision assistant</label>
           <textarea
             id="new-minute-ai-prompt"
             name="newMinuteAiPrompt"
             [(ngModel)]="aiDraftPrompt"
             [ngModelOptions]="{ standalone: true }"
-            placeholder="Optional: add discussion notes, actions, tone, or a translation instruction. Meeting details and attendees are included automatically."
+            placeholder="Optional: paste rough agenda or decision notes. AI will only clarify those entries; the saved template creates the minute layout."
             class="form-input"
           ></textarea>
         </div>
@@ -474,7 +313,7 @@
             (click)="onSubmitWithAi($event)"
             [disabled]="isFormSaving"
           >
-            Save meeting and draft minute with AI
+            Save meeting and refine entries with AI
           </button>
         }
       </div>

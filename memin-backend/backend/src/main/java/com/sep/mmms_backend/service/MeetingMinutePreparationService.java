@@ -89,6 +89,19 @@ public class MeetingMinutePreparationService {
     }
 
     /**
+     * Renders the committee-authored full template with current structured
+     * meeting data. This is used after AI refinement so the template, not the
+     * model, remains the source of the document layout and prose.
+     */
+    public String renderCommitteeTemplate(Committee committee, MinuteDataDto data) {
+        if (committee == null || committee.getMinuteTemplateHtml() == null
+                || committee.getMinuteTemplateHtml().isBlank()) {
+            return null;
+        }
+        return renderFullMinuteTemplate(committee.getMinuteTemplateHtml(), data);
+    }
+
+    /**
      * AI providers occasionally omit the attendance table even though it is
      * requested in the prompt. Normalize the generated fragment before it is
      * persisted so every rendered minute contains the meeting members.
