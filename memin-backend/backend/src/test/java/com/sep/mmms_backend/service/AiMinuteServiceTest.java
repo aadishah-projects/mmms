@@ -103,4 +103,47 @@ class AiMinuteServiceTest {
                 .containsExactly("Allocated 100k");
         server.verify();
     }
+
+    @Test
+    void extractsStructuredItemsFromOpenAiResponsesProvider() throws Exception {
+        var restClientBuilder = RestClient.builder().baseUrl("https://opencode.test");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
+
+        AiMinuteService service = new AiMinuteService(restClientBuilder, new ObjectMapper(), systemSettingService);
+
+        when(systemSettingService.getEffectiveAiSettings()).thenReturn(AiSettingsDto.builder()
+                .providerType("OPENAI_RESPONSES")
+                .baseUrl("https://opencode.test/v1")
+                .apiKey("sk-opencode-key")
+                .model("muse-spark-1.2-contributor-free")
+                .maxTokens(1500)
+                .build());
+
+        String providerText = "{\"agendas\":[\"Budget allocation\"],\"decisions\":[\"Allocated 100k\"]}";
+        String providerResponse = new ObjectMapper().writeValueAsString(
+                Map.of("output", List.of(Map.of(
+                        "type", "message",
+                        "content", List.of(Map.of("type", "output_text", "text", providerText))))));
+
+        server.expect(requestTo("https://opencode.test/v1/responses"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer sk-opencode-key"))
+                .andExpect(content().string(containsString("\"input\"")))
+                .andExpect(content().string(containsString("\"max_output_tokens\"")))
+                .andExpect(content().string(containsString("\"safety_identifier\":\"memin-application\"")))
+                .andRespond(withSuccess(providerResponse, MediaType.APPLICATION_JSON));
+
+        MinuteDataDto input = new MinuteDataDto();
+        input.setMeetingTitle("Budget review");
+        input.setAgendas(List.of(new AgendaDto(1, "budget")));
+        input.setDecisions(List.of(new DecisionDto(2, "100k approved")));
+
+        var result = service.extractStructuredItems(input, "Formal phrasing");
+
+        assertThat(result.getAgendas()).extracting(AgendaDto::getAgenda)
+                .containsExactly("Budget allocation");
+        assertThat(result.getDecisions()).extracting(DecisionDto::getDecision)
+                .containsExactly("Allocated 100k");
+        server.verify();
+    }
 }

@@ -37,6 +37,9 @@ public class SystemSettingService {
     @Value("${llm.base-url:}")
     private String defaultAiBaseUrl;
 
+    @Value("${llm.provider-type:}")
+    private String defaultAiProviderType;
+
     @Value("${llm.api-key:}")
     private String defaultAiApiKey;
 
@@ -179,10 +182,6 @@ public class SystemSettingService {
     public AiSettingsDto getEffectiveAiSettings() {
         SystemSetting setting = systemSettingRepository.findDefaultSettings().orElse(null);
 
-        String providerType = setting != null && setting.getAiProviderType() != null && !setting.getAiProviderType().isBlank()
-                ? setting.getAiProviderType()
-                : detectProviderType(setting != null ? setting.getAiBaseUrl() : defaultAiBaseUrl);
-
         String baseUrl = setting != null && setting.getAiBaseUrl() != null && !setting.getAiBaseUrl().isBlank()
                 ? setting.getAiBaseUrl()
                 : defaultAiBaseUrl;
@@ -198,6 +197,15 @@ public class SystemSettingService {
         int maxTokens = setting != null && setting.getAiMaxTokens() != null && setting.getAiMaxTokens() > 0
                 ? setting.getAiMaxTokens()
                 : defaultAiMaxTokens;
+
+        String configuredProviderType = setting != null && setting.getAiProviderType() != null
+                && !setting.getAiProviderType().isBlank()
+                ? setting.getAiProviderType()
+                : defaultAiProviderType;
+        String providerType = configuredProviderType != null && !configuredProviderType.isBlank()
+                ? configuredProviderType
+                : detectProviderType(baseUrl, model);
+        providerType = normalizeProviderType(providerType, baseUrl, model);
 
         return AiSettingsDto.builder()
                 .providerType(providerType)
@@ -328,11 +336,39 @@ public class SystemSettingService {
                 ? customPrompt
                 : "Respond with a single short greeting confirming you are online and working.";
 
+        boolean isOpenAiResponses = "OPENAI_RESPONSES".equalsIgnoreCase(aiSettings.getProviderType());
         boolean isOpenAi = "OPENAI_COMPATIBLE".equalsIgnoreCase(aiSettings.getProviderType());
         String baseUrl = cleanBaseUrl(aiSettings.getBaseUrl());
 
         try {
-            if (isOpenAi) {
+            if (isOpenAiResponses) {
+                String uri = baseUrl.endsWith("/v1") ? "/responses" : "/v1/responses";
+                Map<String, Object> request = Map.of(
+                        "model", aiSettings.getModel(),
+                        "max_output_tokens", Math.min(200, aiSettings.getMaxTokens() != null ? aiSettings.getMaxTokens() : 200),
+                        "user", "memin-settings-test",
+                        "safety_identifier", "memin-settings-test",
+                        "input", List.of(
+                                Map.of("role", "system", "content", List.of(
+                                        Map.of("type", "input_text", "text", "You are a test assistant.")
+                                )),
+                                Map.of("role", "user", "content", List.of(
+                                        Map.of("type", "input_text", "text", prompt)
+                                ))
+                        )
+                );
+
+                Map<?, ?> response = restClientBuilder.baseUrl(baseUrl).build()
+                        .post()
+                        .uri(uri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + aiSettings.getApiKey())
+                        .body(request)
+                        .retrieve()
+                        .body(Map.class);
+
+                return extractResponsesResponse(response);
+            } else if (isOpenAi) {
                 String uri = baseUrl.endsWith("/v1") ? "/chat/completions" : "/v1/chat/completions";
                 Map<String, Object> request = Map.of(
                         "model", aiSettings.getModel(),
@@ -414,7 +450,34 @@ public class SystemSettingService {
         return "Connected successfully (Empty response text)";
     }
 
-    private String detectProviderType(String baseUrl) {
+    private String extractResponsesResponse(Map<?, ?> response) {
+        JsonNode responseNode = objectMapper.valueToTree(response);
+        String outputText = responseNode == null ? "" : responseNode.path("output_text").asText("");
+        if (!outputText.isBlank()) {
+            return outputText.trim();
+        }
+
+        JsonNode output = responseNode == null ? null : responseNode.path("output");
+        if (output != null && output.isArray()) {
+            for (JsonNode outputItem : output) {
+                JsonNode content = outputItem.path("content");
+                if (content.isArray()) {
+                    for (JsonNode contentBlock : content) {
+                        String text = contentBlock.path("text").asText("");
+                        if (!text.isBlank()) {
+                            return text.trim();
+                        }
+                    }
+                }
+            }
+        }
+        return "Connected successfully (Empty response text)";
+    }
+
+    private String detectProviderType(String baseUrl, String model) {
+        if (isOpenCodeResponsesConfiguration(baseUrl, model)) {
+            return "OPENAI_RESPONSES";
+        }
         if (baseUrl != null) {
             String lower = baseUrl.toLowerCase();
             if (lower.contains("openai") || lower.contains("groq") || lower.contains("ollama")
@@ -424,6 +487,21 @@ public class SystemSettingService {
             }
         }
         return "ANTHROPIC";
+    }
+
+    private String normalizeProviderType(String providerType, String baseUrl, String model) {
+        // Preserve existing databases while correcting the known OpenCode Zen/Muse
+        // configuration, which was previously saved as ANTHROPIC by the UI.
+        if (isOpenCodeResponsesConfiguration(baseUrl, model)) {
+            return "OPENAI_RESPONSES";
+        }
+        return providerType;
+    }
+
+    private boolean isOpenCodeResponsesConfiguration(String baseUrl, String model) {
+        return baseUrl != null
+                && baseUrl.toLowerCase().contains("opencode.ai/zen")
+                && "muse-spark-1.2-contributor-free".equalsIgnoreCase(model != null ? model.trim() : "");
     }
 
     private String cleanBaseUrl(String baseUrl) {

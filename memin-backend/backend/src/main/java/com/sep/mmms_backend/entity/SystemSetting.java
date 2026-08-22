@@ -20,7 +20,7 @@ public class SystemSetting {
 
     // AI Settings
     @Column(name = "ai_provider_type", length = 50)
-    private String aiProviderType; // "ANTHROPIC" or "OPENAI_COMPATIBLE"
+    private String aiProviderType; // "ANTHROPIC", "OPENAI_COMPATIBLE", or "OPENAI_RESPONSES"
 
     @Column(name = "ai_base_url", length = 500)
     private String aiBaseUrl;

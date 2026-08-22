@@ -71,11 +71,37 @@ public class AiMinuteService {
                 + "If an array has no source items, return an empty array. The application will place these values into "
                 + "the selected minute template.";
 
+        boolean isOpenAiResponses = "OPENAI_RESPONSES".equalsIgnoreCase(aiSettings.getProviderType());
         boolean isOpenAi = "OPENAI_COMPATIBLE".equalsIgnoreCase(aiSettings.getProviderType());
 
         try {
             Map<?, ?> response;
-            if (isOpenAi) {
+            if (isOpenAiResponses) {
+                String uri = baseUrl.endsWith("/v1") ? "/responses" : "/v1/responses";
+                Map<String, Object> request = Map.of(
+                        "model", model,
+                        "max_output_tokens", Math.max(500, maxTokens),
+                        "user", "memin-application",
+                        "safety_identifier", "memin-application",
+                        "input", List.of(
+                                Map.of("role", "system", "content", List.of(
+                                        Map.of("type", "input_text", "text", systemPrompt)
+                                )),
+                                Map.of("role", "user", "content", List.of(
+                                        Map.of("type", "input_text", "text", prompt)
+                                ))
+                        )
+                );
+
+                response = restClientBuilder.baseUrl(baseUrl).build()
+                        .post()
+                        .uri(uri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + apiKey)
+                        .body(request)
+                        .retrieve()
+                        .body(Map.class);
+            } else if (isOpenAi) {
                 String uri = baseUrl.endsWith("/v1") ? "/chat/completions" : "/v1/chat/completions";
                 Map<String, Object> request = Map.of(
                         "model", model,
@@ -166,6 +192,30 @@ public class AiMinuteService {
         }
         if (generatedText.isEmpty() && responseNode != null && responseNode.path("choices").isArray()) {
             generatedText.append(responseNode.path("choices").path(0).path("message").path("content").asText(""));
+        }
+        if (generatedText.isEmpty() && responseNode != null) {
+            String outputText = responseNode.path("output_text").asText("");
+            if (!outputText.isBlank()) {
+                generatedText.append(outputText);
+            } else {
+                JsonNode output = responseNode.path("output");
+                if (output.isArray()) {
+                    for (JsonNode outputItem : output) {
+                        JsonNode outputContent = outputItem.path("content");
+                        if (outputContent.isArray()) {
+                            for (JsonNode contentBlock : outputContent) {
+                                String text = contentBlock.path("text").asText("");
+                                if (!text.isBlank()) {
+                                    if (!generatedText.isEmpty()) {
+                                        generatedText.append('\n');
+                                    }
+                                    generatedText.append(text);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         return removeCodeFences(generatedText.toString()).trim();
     }

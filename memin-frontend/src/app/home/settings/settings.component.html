@@ -84,8 +84,9 @@
               >
                 <option value="ANTHROPIC">Anthropic Messages Format (/v1/messages — Claude, Mimo, etc.)</option>
                 <option value="OPENAI_COMPATIBLE">OpenAI Chat Completions (/v1/chat/completions — OpenAI, Groq, Ollama, DeepSeek, OpenRouter)</option>
+                <option value="OPENAI_RESPONSES">OpenAI Responses (/v1/responses — OpenCode Zen Muse Spark, GPT, etc.)</option>
               </select>
-              <span class="help-text">Select the API specification used by your provider or proxy.</span>
+              <span class="help-text">Select the API specification used by your provider or proxy. OpenCode Zen's Muse Spark Contributor Free model requires Responses.</span>
             </div>
 
             <div class="form-group full-width">
@@ -133,7 +134,7 @@
                 type="text"
                 class="form-control"
                 [(ngModel)]="aiModel"
-                placeholder="e.g. mimo-v2.5-pro, gpt-4o-mini, claude-3-5-sonnet"
+                placeholder="e.g. muse-spark-1.2-contributor-free, gpt-4o-mini, claude-3-5-sonnet"
               />
             </div>
 
@@ -156,7 +157,7 @@
         <div class="section-card test-card">
           <div class="card-header">
             <h3 class="card-title">Test AI API Connection</h3>
-            <p class="card-subtitle">Send a quick test request to verify API key validity and connectivity.</p>
+            <p class="card-subtitle">Clicking <strong>Verify Connection</strong> will save the current settings above and immediately test the AI API.</p>
           </div>
 
           <div class="test-controls">
@@ -315,7 +316,7 @@
         <div class="section-card test-card">
           <div class="card-header">
             <h3 class="card-title">Send Test Email</h3>
-            <p class="card-subtitle">Verify that outbound SMTP emails are delivered without errors.</p>
+            <p class="card-subtitle">Clicking <strong>Send Test Email</strong> will save the current SMTP settings above and immediately dispatch a test email to the address entered below.</p>
           </div>
 
           <div class="test-controls">

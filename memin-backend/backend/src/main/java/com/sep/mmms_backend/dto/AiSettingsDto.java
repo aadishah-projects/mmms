@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 public class AiSettingsDto {
-    private String providerType; // "ANTHROPIC" or "OPENAI_COMPATIBLE"
+    private String providerType; // "ANTHROPIC", "OPENAI_COMPATIBLE", or "OPENAI_RESPONSES"
     private String baseUrl;
     private String apiKey;
     private boolean hasApiKey;

@@ -21,9 +21,11 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
@@ -151,6 +153,42 @@ public class SystemSettingServiceTest {
     }
 
     @Test
+    void createMailSender_RereadsUpdatedDatabaseSettingsWithoutRestart() {
+        AtomicReference<SystemSetting> current = new AtomicReference<>(SystemSetting.builder()
+                .id(1)
+                .mailHost("smtp.first.example")
+                .mailPort(587)
+                .mailUsername("first@example.com")
+                .mailPassword("first-secret")
+                .mailAuth(true)
+                .mailStarttls(true)
+                .build());
+        when(systemSettingRepository.findDefaultSettings())
+                .thenAnswer(invocation -> Optional.of(current.get()));
+
+        JavaMailSenderImpl firstSender = (JavaMailSenderImpl) systemSettingService.createMailSender();
+
+        current.set(SystemSetting.builder()
+                .id(1)
+                .mailHost("smtp.second.example")
+                .mailPort(465)
+                .mailUsername("second@example.com")
+                .mailPassword("second-secret")
+                .mailAuth(true)
+                .mailStarttls(false)
+                .build());
+        JavaMailSenderImpl secondSender = (JavaMailSenderImpl) systemSettingService.createMailSender();
+
+        assertThat(firstSender.getHost()).isEqualTo("smtp.first.example");
+        assertThat(secondSender.getHost()).isEqualTo("smtp.second.example");
+        assertThat(secondSender.getPort()).isEqualTo(465);
+        assertThat(secondSender.getUsername()).isEqualTo("second@example.com");
+        assertThat(secondSender.getPassword()).isEqualTo("second-secret");
+        assertThat(secondSender.getJavaMailProperties().getProperty("mail.smtp.starttls.enable"))
+                .isEqualTo("false");
+    }
+
+    @Test
     void testAiConnection_WithOpenAiCompatibleProvider_Succeeds() {
         SystemSetting setting = SystemSetting.builder()
                 .id(1)
@@ -172,6 +210,54 @@ public class SystemSettingServiceTest {
         String response = systemSettingService.testAiConnection("Ping");
 
         assertThat(response).isEqualTo("Hello from OpenAI");
+        server.verify();
+    }
+
+    @Test
+    void getEffectiveAiSettings_NormalizesLegacyOpenCodeMuseConfigurationToResponses() {
+        SystemSetting setting = SystemSetting.builder()
+                .id(1)
+                .aiProviderType("ANTHROPIC")
+                .aiBaseUrl("https://opencode.ai/zen/v1")
+                .aiApiKey("sk-test-key")
+                .aiModel("muse-spark-1.2-contributor-free")
+                .aiMaxTokens(1500)
+                .build();
+
+        when(systemSettingRepository.findDefaultSettings()).thenReturn(Optional.of(setting));
+
+        AiSettingsDto result = systemSettingService.getEffectiveAiSettings();
+
+        assertThat(result.getProviderType()).isEqualTo("OPENAI_RESPONSES");
+    }
+
+    @Test
+    void testAiConnection_WithOpenAiResponsesProvider_Succeeds() {
+        SystemSetting setting = SystemSetting.builder()
+                .id(1)
+                .aiProviderType("OPENAI_RESPONSES")
+                .aiBaseUrl("https://opencode.ai/zen/v1")
+                .aiApiKey("sk-test-key")
+                .aiModel("muse-spark-1.2-contributor-free")
+                .aiMaxTokens(1500)
+                .build();
+
+        when(systemSettingRepository.findDefaultSettings()).thenReturn(Optional.of(setting));
+
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
+        server.expect(requestTo("https://opencode.ai/zen/v1/responses"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer sk-test-key"))
+                .andExpect(content().string(containsString("\"input\"")))
+                .andExpect(content().string(containsString("\"max_output_tokens\"")))
+                .andExpect(content().string(containsString("\"safety_identifier\":\"memin-settings-test\"")))
+                .andRespond(withSuccess(
+                        "{\"output\":[{\"type\":\"message\",\"content\":[{\"type\":\"output_text\",\"text\":\"Hello from Responses\"}]}]}",
+                        MediaType.APPLICATION_JSON));
+
+        String response = systemSettingService.testAiConnection("Ping");
+
+        assertThat(response).isEqualTo("Hello from Responses");
         server.verify();
     }
 

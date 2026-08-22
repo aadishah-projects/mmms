@@ -105,11 +105,14 @@ export class SettingsComponent implements OnInit {
   saveSettings(): void {
     this.isSaving = true;
 
+    const trimmedApiKey = (this.aiApiKey || '').trim();
+    const trimmedMailPassword = (this.mailPassword || '').trim();
+
     const payload: Partial<SystemSettings> = {
       ai: {
         providerType: this.aiProviderType,
         baseUrl: this.aiBaseUrl,
-        apiKey: this.aiApiKey ? this.aiApiKey : undefined,
+        apiKey: trimmedApiKey.length > 0 ? trimmedApiKey : undefined,
         hasApiKey: this.aiHasApiKey,
         model: this.aiModel,
         maxTokens: this.aiMaxTokens,
@@ -118,7 +121,7 @@ export class SettingsComponent implements OnInit {
         host: this.mailHost,
         port: this.mailPort,
         username: this.mailUsername,
-        password: this.mailPassword ? this.mailPassword : undefined,
+        password: trimmedMailPassword.length > 0 ? trimmedMailPassword : undefined,
         hasPassword: this.mailHasPassword,
         auth: this.mailAuth,
         starttls: this.mailStarttls,
@@ -156,17 +159,55 @@ export class SettingsComponent implements OnInit {
   }
 
   testAi(): void {
+    // Save first, then test — so the user never has to manually click Save before testing
     this.isTestingAi = true;
     this.aiTestResult = null;
     this.aiTestError = null;
 
-    this.settingsService.testAi(this.testAiPrompt).subscribe({
-      next: (response) => {
-        this.aiTestResult = response.mainBody?.reply || 'Connected and verified successfully!';
-        this.isTestingAi = false;
+    const trimmedApiKey = (this.aiApiKey || '').trim();
+    const payload = {
+      ai: {
+        providerType: this.aiProviderType,
+        baseUrl: this.aiBaseUrl,
+        apiKey: trimmedApiKey.length > 0 ? trimmedApiKey : undefined,
+        hasApiKey: this.aiHasApiKey,
+        model: this.aiModel,
+        maxTokens: this.aiMaxTokens,
+      },
+      email: {
+        host: this.mailHost,
+        port: this.mailPort,
+        username: this.mailUsername,
+        password: undefined,
+        hasPassword: this.mailHasPassword,
+        auth: this.mailAuth,
+        starttls: this.mailStarttls,
+        fromAddress: this.mailFrom,
+        frontendUrl: this.frontendUrl,
+      },
+    };
+
+    this.settingsService.updateSettings(payload).subscribe({
+      next: (saveResponse) => {
+        const saved = saveResponse.mainBody;
+        if (saved?.ai) {
+          this.aiHasApiKey = saved.ai.hasApiKey;
+          this.aiApiKey = '';
+        }
+        // Now run the actual test
+        this.settingsService.testAi(this.testAiPrompt).subscribe({
+          next: (response) => {
+            this.aiTestResult = response.mainBody?.reply || 'Connected and verified successfully!';
+            this.isTestingAi = false;
+          },
+          error: (err) => {
+            this.aiTestError = err.error?.message || 'AI service test failed. Check your Base URL and API Key.';
+            this.isTestingAi = false;
+          },
+        });
       },
       error: (err) => {
-        this.aiTestError = err.error?.message || 'AI service test failed. Check your Base URL and API Key.';
+        this.aiTestError = 'Could not save settings before testing: ' + (err.error?.message || err.message);
         this.isTestingAi = false;
       },
     });
@@ -182,20 +223,63 @@ export class SettingsComponent implements OnInit {
     this.emailTestResult = null;
     this.emailTestError = null;
 
-    this.settingsService.testEmail(this.testEmailAddress.trim()).subscribe({
-      next: (response) => {
-        this.emailTestResult = response.message || 'Test email sent successfully!';
-        this.isTestingEmail = false;
+    const trimmedMailPassword = (this.mailPassword || '').trim();
+    const payload = {
+      ai: {
+        providerType: this.aiProviderType,
+        baseUrl: this.aiBaseUrl,
+        apiKey: undefined,
+        hasApiKey: this.aiHasApiKey,
+        model: this.aiModel,
+        maxTokens: this.aiMaxTokens,
+      },
+      email: {
+        host: this.mailHost,
+        port: this.mailPort,
+        username: this.mailUsername,
+        password: trimmedMailPassword.length > 0 ? trimmedMailPassword : undefined,
+        hasPassword: this.mailHasPassword,
+        auth: this.mailAuth,
+        starttls: this.mailStarttls,
+        fromAddress: this.mailFrom,
+        frontendUrl: this.frontendUrl,
+      },
+    };
+
+    this.settingsService.updateSettings(payload).subscribe({
+      next: (saveResponse) => {
+        const saved = saveResponse.mainBody;
+        if (saved?.email) {
+          this.mailHasPassword = saved.email.hasPassword;
+          this.mailPassword = '';
+        }
+        this.settingsService.testEmail(this.testEmailAddress.trim()).subscribe({
+          next: (response) => {
+            this.emailTestResult = response.message || 'Test email sent successfully!';
+            this.isTestingEmail = false;
+          },
+          error: (err) => {
+            this.emailTestError = err.error?.message || 'Failed to send test email. Check your SMTP host, port, username, and password.';
+            this.isTestingEmail = false;
+          },
+        });
       },
       error: (err) => {
-        this.emailTestError = err.error?.message || 'Failed to send test email. Check your SMTP host, port, username, and password.';
+        this.emailTestError = 'Could not save settings before testing: ' + (err.error?.message || err.message);
         this.isTestingEmail = false;
       },
     });
   }
 
   setProviderDefaults(): void {
-    if (this.aiProviderType === 'OPENAI_COMPATIBLE') {
+    if (this.aiProviderType === 'OPENAI_RESPONSES') {
+      if (!this.aiBaseUrl || this.aiBaseUrl.includes('anthropic') || this.aiBaseUrl.includes('openai.com')) {
+        this.aiBaseUrl = 'https://opencode.ai/zen/v1';
+      }
+      if (!this.aiModel || this.aiModel === 'mimo-v2.5-pro' || this.aiModel === 'gpt-4o-mini') {
+        this.aiModel = 'muse-spark-1.2-contributor-free';
+      }
+    } else if (this.aiProviderType === 'OPENAI_COMPATIBLE') {
       if (!this.aiBaseUrl || this.aiBaseUrl.includes('anthropic')) {
         this.aiBaseUrl = 'https://api.openai.com';
       }
