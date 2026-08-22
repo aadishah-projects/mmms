@@ -21,6 +21,7 @@ import { DocumentationComponent } from './documentation/documentation.component'
 import { ManageUsersComponent } from './home/manage-users/manage-users.component';
 import { RegisterComponent } from './register/register.component';
 import { MinuteTemplateComponent } from './committee-details/minute-template/minute-template.component';
+import { SettingsComponent } from './home/settings/settings.component';
 
 export const routes: Routes = [
   {
@@ -84,6 +85,11 @@ export const routes: Routes = [
       {
         path: 'manage-users',
         component: ManageUsersComponent,
+        canActivate: [deptHeadGuard],
+      },
+      {
+        path: 'settings',
+        component: SettingsComponent,
         canActivate: [deptHeadGuard],
       },
       {

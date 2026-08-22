@@ -64,9 +64,16 @@ A **+ New Meeting** button on the committee overview (visible to department head
 and secretaries) opens the meeting form with the current committee pre-selected —
 no need to re-pick the committee from the global create-meeting screen.
 
+### 4. Department Head **System Settings Panel** (Dynamic AI & SMTP Email Configuration)
+Department heads can configure AI LLM endpoints and SMTP credentials dynamically without restarting or redeploying the backend:
+- **AI Language Model Configuration**: Support for both **Anthropic Messages** (`/v1/messages` format for Claude, Xiaomi Mimo) and **OpenAI-Compatible Chat Completions** (`/v1/chat/completions` format for OpenAI, Groq, Ollama, DeepSeek, OpenRouter, etc.). Includes a built-in connection tester.
+- **SMTP Email Configuration**: Dynamic host, port, username, password/app-key, sender from address, frontend URL, and STARTTLS settings with an integrated test email sender.
+- **Multi-Domain Email Invitations**: Registration invitations can now be delivered to any valid email address/domain (not restricted to `@pcampus.edu.np`).
+- **Access Control**: Strictly restricted to users with the `DEPARTMENT_HEAD` role on both the frontend UI (`/home/settings`) and backend REST endpoints (`/api/settings/**`).
+
 ---
 
 ## Roadmap (from `todo.md`, not yet done)
 - Per-committee **dynamic minute template** (core feature).
 - **Email invitations to a meeting** (registration invites already exist).
-- AI-assisted minute drafting from rough agendas.
+- Additional custom minute export styling.

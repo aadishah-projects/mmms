@@ -84,5 +84,16 @@ export class DocumentationComponent {
       ],
       image: 'images/search-bar.png',
     },
+    {
+      id: 8,
+      title: 'System Settings & Multi-Domain Invitations (Department Head)',
+      description: [
+        'Access the Settings panel from the sidebar to dynamically configure AI and Email parameters without restarting the backend.',
+        'Configure Anthropic Messages or OpenAI-compatible LLM endpoints with custom models and test connections in real time.',
+        'Configure SMTP mail credentials, ports, and STARTTLS encryption to deliver invitation emails to any domain.',
+        'Invite new members and assign roles directly from the Manage Users panel.',
+      ],
+      image: '',
+    },
   ];
 }

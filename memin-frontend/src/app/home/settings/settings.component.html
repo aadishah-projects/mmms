@@ -1,0 +1,373 @@
+<div class="settings-container">
+  @if (feedbackMessage) {
+    <div class="feedback" [class.success]="feedbackType === 'success'" [class.error]="feedbackType === 'error'">
+      {{ feedbackMessage }}
+    </div>
+  }
+
+  @if (isLoaded && !loadError) {
+    <div class="header-section">
+      <div class="header-titles">
+        <h1 class="heading">System Settings</h1>
+        <p class="sub-heading">Configure AI Language Model APIs and Email (SMTP) service dynamically without reloading the backend</p>
+      </div>
+
+      <button class="save-button" (click)="saveSettings()" [disabled]="isSaving">
+        @if (isSaving) {
+          <span class="btn-spinner"></span> Saving...
+        } @else {
+          <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Save All Settings
+        }
+      </button>
+    </div>
+
+    @if (updatedAt) {
+      <div class="audit-info">
+        Last updated on <strong>{{ updatedAt | date:'medium' }}</strong>
+        @if (updatedBy) {
+          by <strong>{{ updatedBy }}</strong>
+        }
+      </div>
+    }
+
+    <!-- Tab Navigation -->
+    <div class="tabs-nav">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'ai'"
+        (click)="activeTab = 'ai'"
+      >
+        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        AI Model Configuration
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'email'"
+        (click)="activeTab = 'email'"
+      >
+        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        Email (SMTP) Configuration
+      </button>
+    </div>
+
+    <!-- AI Settings Tab -->
+    @if (activeTab === 'ai') {
+      <div class="tab-panel">
+        <div class="section-card">
+          <div class="card-header">
+            <h2 class="card-title">LLM API Connection</h2>
+            <p class="card-subtitle">
+              Configure the AI endpoint used to automatically refine agenda notes and decisions into structured minutes.
+              Compatible with Anthropic Claude, Xiaomi Mimo, OpenAI, Groq, Ollama, DeepSeek, and OpenRouter.
+            </p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="form-label" for="aiProvider">API Protocol / Provider Format</label>
+              <select
+                id="aiProvider"
+                class="form-control"
+                [(ngModel)]="aiProviderType"
+                (ngModelChange)="setProviderDefaults()"
+              >
+                <option value="ANTHROPIC">Anthropic Messages Format (/v1/messages — Claude, Mimo, etc.)</option>
+                <option value="OPENAI_COMPATIBLE">OpenAI Chat Completions (/v1/chat/completions — OpenAI, Groq, Ollama, DeepSeek, OpenRouter)</option>
+              </select>
+              <span class="help-text">Select the API specification used by your provider or proxy.</span>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label" for="aiBaseUrl">API Base URL</label>
+              <input
+                id="aiBaseUrl"
+                type="text"
+                class="form-control"
+                [(ngModel)]="aiBaseUrl"
+                placeholder="e.g. https://api.xiaomimimo.com/anthropic or https://api.openai.com"
+              />
+              <span class="help-text">Base URL without endpoint path (e.g. https://api.openai.com or http://localhost:11434)</span>
+            </div>
+
+            <div class="form-group full-width">
+              <div class="label-row">
+                <label class="form-label" for="aiApiKey">API Key</label>
+                @if (aiHasApiKey) {
+                  <span class="badge configured-badge">Key is currently set in backend</span>
+                }
+              </div>
+              <div class="input-with-action">
+                <input
+                  id="aiApiKey"
+                  [type]="showAiApiKey ? 'text' : 'password'"
+                  class="form-control"
+                  [(ngModel)]="aiApiKey"
+                  [placeholder]="aiHasApiKey ? '•••••••••••••••• (Leave blank to keep existing key)' : 'sk-...'"
+                />
+                <button
+                  type="button"
+                  class="toggle-visibility-btn"
+                  (click)="showAiApiKey = !showAiApiKey"
+                  [title]="showAiApiKey ? 'Hide' : 'Show'"
+                >
+                  {{ showAiApiKey ? 'Hide' : 'Show' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="aiModel">Model Identifier</label>
+              <input
+                id="aiModel"
+                type="text"
+                class="form-control"
+                [(ngModel)]="aiModel"
+                placeholder="e.g. mimo-v2.5-pro, gpt-4o-mini, claude-3-5-sonnet"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="aiMaxTokens">Max Completion Tokens</label>
+              <input
+                id="aiMaxTokens"
+                type="number"
+                class="form-control"
+                [(ngModel)]="aiMaxTokens"
+                min="100"
+                max="100000"
+                placeholder="2500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Test Connection Card -->
+        <div class="section-card test-card">
+          <div class="card-header">
+            <h3 class="card-title">Test AI API Connection</h3>
+            <p class="card-subtitle">Send a quick test request to verify API key validity and connectivity.</p>
+          </div>
+
+          <div class="test-controls">
+            <input
+              type="text"
+              class="form-control test-input"
+              [(ngModel)]="testAiPrompt"
+              placeholder="Test prompt..."
+            />
+            <button
+              type="button"
+              class="test-button"
+              (click)="testAi()"
+              [disabled]="isTestingAi"
+            >
+              @if (isTestingAi) {
+                <span class="btn-spinner"></span> Testing...
+              } @else {
+                Verify Connection
+              }
+            </button>
+          </div>
+
+          @if (aiTestResult) {
+            <div class="test-output success-output">
+              <div class="output-header">
+                <span class="status-dot success"></span> Response Received:
+              </div>
+              <pre class="output-body">{{ aiTestResult }}</pre>
+            </div>
+          }
+
+          @if (aiTestError) {
+            <div class="test-output error-output">
+              <div class="output-header">
+                <span class="status-dot error"></span> Error:
+              </div>
+              <div class="output-body">{{ aiTestError }}</div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Email Settings Tab -->
+    @if (activeTab === 'email') {
+      <div class="tab-panel">
+        <div class="section-card">
+          <div class="card-header">
+            <h2 class="card-title">SMTP Mail Server</h2>
+            <p class="card-subtitle">
+              Configure SMTP credentials for sending user registration invitations and meeting notifications to any email address.
+            </p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="mailHost">SMTP Host</label>
+              <input
+                id="mailHost"
+                type="text"
+                class="form-control"
+                [(ngModel)]="mailHost"
+                placeholder="e.g. smtp.gmail.com or mail.domain.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailPort">SMTP Port</label>
+              <input
+                id="mailPort"
+                type="number"
+                class="form-control"
+                [(ngModel)]="mailPort"
+                placeholder="587"
+              />
+              <span class="help-text">Standard ports: 587 (TLS/STARTTLS), 465 (SSL), 25</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailUsername">Username / Sender Email</label>
+              <input
+                id="mailUsername"
+                type="text"
+                class="form-control"
+                [(ngModel)]="mailUsername"
+                placeholder="e.g. department@pcampus.edu.np or admin@gmail.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label class="form-label" for="mailPassword">Password / App Key</label>
+                @if (mailHasPassword) {
+                  <span class="badge configured-badge">Password is set in backend</span>
+                }
+              </div>
+              <div class="input-with-action">
+                <input
+                  id="mailPassword"
+                  [type]="showMailPassword ? 'text' : 'password'"
+                  class="form-control"
+                  [(ngModel)]="mailPassword"
+                  [placeholder]="mailHasPassword ? '•••••••••••• (Leave blank to keep existing password)' : 'App password / API key'"
+                />
+                <button
+                  type="button"
+                  class="toggle-visibility-btn"
+                  (click)="showMailPassword = !showMailPassword"
+                  [title]="showMailPassword ? 'Hide' : 'Show'"
+                >
+                  {{ showMailPassword ? 'Hide' : 'Show' }}
+                </button>
+              </div>
+              <span class="help-text">For Gmail, use a 16-character App Password (not your account password).</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailFrom">Sender From Header (Optional)</label>
+              <input
+                id="mailFrom"
+                type="text"
+                class="form-control"
+                [(ngModel)]="mailFrom"
+                placeholder="e.g. MeMin System <noreply@domain.com>"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="frontendUrl">Frontend Base URL</label>
+              <input
+                id="frontendUrl"
+                type="text"
+                class="form-control"
+                [(ngModel)]="frontendUrl"
+                placeholder="http://localhost:4200 or https://memin.vercel.app"
+              />
+              <span class="help-text">Used for constructing invitation and meeting links sent via email.</span>
+            </div>
+
+            <div class="form-group full-width toggles-row">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="mailAuth" />
+                <span>Enable SMTP Authentication (AUTH LOGIN)</span>
+              </label>
+
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="mailStarttls" />
+                <span>Enable STARTTLS Encryption</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Test Card -->
+        <div class="section-card test-card">
+          <div class="card-header">
+            <h3 class="card-title">Send Test Email</h3>
+            <p class="card-subtitle">Verify that outbound SMTP emails are delivered without errors.</p>
+          </div>
+
+          <div class="test-controls">
+            <input
+              type="email"
+              class="form-control test-input"
+              [(ngModel)]="testEmailAddress"
+              placeholder="Recipient email address (e.g. your email)..."
+            />
+            <button
+              type="button"
+              class="test-button"
+              (click)="testEmail()"
+              [disabled]="isTestingEmail"
+            >
+              @if (isTestingEmail) {
+                <span class="btn-spinner"></span> Sending...
+              } @else {
+                Send Test Email
+              }
+            </button>
+          </div>
+
+          @if (emailTestResult) {
+            <div class="test-output success-output">
+              <div class="output-header">
+                <span class="status-dot success"></span> Success:
+              </div>
+              <div class="output-body">{{ emailTestResult }}</div>
+            </div>
+          }
+
+          @if (emailTestError) {
+            <div class="test-output error-output">
+              <div class="output-header">
+                <span class="status-dot error"></span> Error:
+              </div>
+              <div class="output-body">{{ emailTestError }}</div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  } @else if (loadError) {
+    <div class="load-error">
+      <p>Could not load system settings. Please verify backend connection.</p>
+      <button class="retry-btn" (click)="loadSettings()">Retry</button>
+    </div>
+  } @else {
+    <div class="loader-container">
+      <span class="loader"></span>
+      <p>Loading system settings...</p>
+    </div>
+  }
+</div>
