@@ -145,3 +145,22 @@ CREATE TABLE invite_tokens (
     used BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (committee_id) REFERENCES committees(committee_id)
 ) ;
+
+CREATE TABLE system_settings (
+    id INT PRIMARY KEY,
+    ai_provider_type VARCHAR(50),
+    ai_base_url VARCHAR(500),
+    ai_api_key VARCHAR(500),
+    ai_model VARCHAR(100),
+    ai_max_tokens INT,
+    mail_host VARCHAR(255),
+    mail_port INT,
+    mail_username VARCHAR(255),
+    mail_password VARCHAR(255),
+    mail_auth BOOLEAN,
+    mail_starttls BOOLEAN,
+    mail_from VARCHAR(255),
+    frontend_url VARCHAR(255),
+    updated_at TIMESTAMP,
+    updated_by VARCHAR(100)
+) ;
