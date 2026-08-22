@@ -104,8 +104,9 @@ export class ManageUsersComponent implements OnInit {
 
   sendInvite(): void {
     const email = this.inviteEmail.trim().toLowerCase();
-    if (!email || !email.endsWith('@pcampus.edu.np') || this.isInviting) {
-      this.feedbackMessage = 'Enter a valid @pcampus.edu.np email address.';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email) || this.isInviting) {
+      this.feedbackMessage = 'Enter a valid email address.';
       this.feedbackType = 'error';
       return;
     }
