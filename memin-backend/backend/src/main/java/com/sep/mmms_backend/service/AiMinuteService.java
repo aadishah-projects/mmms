@@ -4,11 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sep.mmms_backend.dto.AgendaDto;
+import com.sep.mmms_backend.dto.AiSettingsDto;
 import com.sep.mmms_backend.dto.AiStructuredMinuteDto;
 import com.sep.mmms_backend.dto.DecisionDto;
 import com.sep.mmms_backend.dto.MinuteDataDto;
 import com.sep.mmms_backend.exceptions.IllegalOperationException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -23,31 +23,33 @@ import java.util.Map;
 public class AiMinuteService {
     private final RestClient.Builder restClientBuilder;
     private final ObjectMapper objectMapper;
+    private final SystemSettingService systemSettingService;
 
-    @Value("${llm.base-url:}")
-    private String baseUrl;
-
-    @Value("${llm.api-key:}")
-    private String apiKey;
-
-    @Value("${llm.model:mimo-v2.5-pro}")
-    private String model;
-
-    @Value("${llm.max-tokens:2500}")
-    private int maxTokens;
-
-    public AiMinuteService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
+    public AiMinuteService(
+            RestClient.Builder restClientBuilder,
+            ObjectMapper objectMapper,
+            SystemSettingService systemSettingService) {
         this.restClientBuilder = restClientBuilder;
         this.objectMapper = objectMapper;
+        this.systemSettingService = systemSettingService;
     }
 
     /**
-     * Turns rough agenda/decision notes into structured values. This method
-     * deliberately does not ask the model for HTML or a complete minute.
+     * Turns rough agenda/decision notes into structured values. Supports both
+     * Anthropic and OpenAI-compatible endpoints configured dynamically.
      */
     public AiStructuredMinuteDto extractStructuredItems(MinuteDataDto minuteData, String roughPrompt) {
-        if (baseUrl == null || baseUrl.isBlank() || apiKey == null || apiKey.isBlank()) {
-            throw new IllegalOperationException("AI agenda and decision refinement is not configured. Set LLM_BASE_URL and LLM_API_KEY.");
+        AiSettingsDto aiSettings = systemSettingService.getEffectiveAiSettings();
+
+        String baseUrl = cleanBaseUrl(aiSettings.getBaseUrl());
+        String apiKey = aiSettings.getApiKey();
+        String model = aiSettings.getModel();
+        int maxTokens = aiSettings.getMaxTokens() != null && aiSettings.getMaxTokens() > 0
+                ? aiSettings.getMaxTokens()
+                : 2500;
+
+        if (baseUrl.isBlank() || apiKey == null || apiKey.isBlank()) {
+            throw new IllegalOperationException("AI agenda and decision refinement is not configured. Set the AI configuration in System Settings.");
         }
 
         String prompt = "Meeting language: " + safe(minuteData.getMinuteLanguage()) + "\n"
@@ -69,27 +71,53 @@ public class AiMinuteService {
                 + "If an array has no source items, return an empty array. The application will place these values into "
                 + "the selected minute template.";
 
-        Map<String, Object> request = Map.of(
-                "model", model,
-                "max_tokens", Math.max(500, maxTokens),
-                "system", systemPrompt,
-                "messages", List.of(Map.of("role", "user", "content", prompt)),
-                "stream", false
-        );
+        boolean isOpenAi = "OPENAI_COMPATIBLE".equalsIgnoreCase(aiSettings.getProviderType());
 
         try {
-            Map<?, ?> response = restClientBuilder.baseUrl(baseUrl).build()
-                    .post()
-                    .uri("/v1/messages")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    // x-api-key is the Anthropic-compatible header; api-key is
-                    // retained for providers that use the older convention.
-                    .header("x-api-key", apiKey)
-                    .header("api-key", apiKey)
-                    .header("anthropic-version", "2023-06-01")
-                    .body(request)
-                    .retrieve()
-                    .body(Map.class);
+            Map<?, ?> response;
+            if (isOpenAi) {
+                String uri = baseUrl.endsWith("/v1") ? "/chat/completions" : "/v1/chat/completions";
+                Map<String, Object> request = Map.of(
+                        "model", model,
+                        "max_tokens", Math.max(500, maxTokens),
+                        "messages", List.of(
+                                Map.of("role", "system", "content", systemPrompt),
+                                Map.of("role", "user", "content", prompt)
+                        ),
+                        "stream", false
+                );
+
+                response = restClientBuilder.baseUrl(baseUrl).build()
+                        .post()
+                        .uri(uri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + apiKey)
+                        .body(request)
+                        .retrieve()
+                        .body(Map.class);
+            } else {
+                String uri = baseUrl.endsWith("/v1") ? "/messages" : "/v1/messages";
+                Map<String, Object> request = Map.of(
+                        "model", model,
+                        "max_tokens", Math.max(500, maxTokens),
+                        "system", systemPrompt,
+                        "messages", List.of(Map.of("role", "user", "content", prompt)),
+                        "stream", false
+                );
+
+                response = restClientBuilder.baseUrl(baseUrl).build()
+                        .post()
+                        .uri(uri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        // x-api-key is the Anthropic-compatible header; api-key is
+                        // retained for providers that use the older convention.
+                        .header("x-api-key", apiKey)
+                        .header("api-key", apiKey)
+                        .header("anthropic-version", "2023-06-01")
+                        .body(request)
+                        .retrieve()
+                        .body(Map.class);
+            }
 
             String responseText = extractResponseText(response);
             JsonNode result = parseJsonObject(responseText);
@@ -196,5 +224,16 @@ public class AiMinuteService {
 
     private String safe(Object value) {
         return value == null ? "" : String.valueOf(value);
+    }
+
+    private String cleanBaseUrl(String baseUrl) {
+        if (baseUrl == null) {
+            return "";
+        }
+        String cleaned = baseUrl.trim();
+        while (cleaned.endsWith("/")) {
+            cleaned = cleaned.substring(0, cleaned.length() - 1);
+        }
+        return cleaned;
     }
 }
