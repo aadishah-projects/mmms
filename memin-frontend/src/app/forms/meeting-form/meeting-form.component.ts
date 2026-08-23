@@ -510,19 +510,21 @@ export class MeetingForm implements OnInit, AfterViewChecked {
   private minuteDocumentVersion = 0;
   private minuteDetailsSubscription?: Subscription;
 
-  createEmptyAgenda() {
+  createEmptyAgenda(): void {
+    const tempId = -Math.floor(Math.random() * 1000000);
     const newAgenda = new AgendaDto();
-    newAgenda.agendaId = this.count;
-    this.count--;
+    newAgenda.agendaId = tempId;
+    newAgenda.agenda = '';
     this.agendas.push(newAgenda);
     this.updateMinuteDocument();
     this.focusLastMinuteItem('agenda');
   }
 
-  createEmptyDecision() {
+  createEmptyDecision(): void {
+    const tempId = -Math.floor(Math.random() * 1000000);
     const newDecision = new DecisionDto();
-    newDecision.decisionId = this.count;
-    this.count--;
+    newDecision.decisionId = tempId;
+    newDecision.decision = '';
     this.decisions.push(newDecision);
     this.updateMinuteDocument();
     this.focusLastMinuteItem('decision');
@@ -793,7 +795,8 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     const list = document.createElement('ol');
     this.agendas.forEach((agenda, index) => {
       const row = document.createElement('li');
-      row.className = 'template-item-row';
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'template-item-row';
       const input = document.createElement('textarea');
       input.rows = 1;
       input.className = 'template-item-input';
@@ -805,7 +808,8 @@ export class MeetingForm implements OnInit, AfterViewChecked {
         this.autoGrowTextarea(input);
       });
       const remove = this.createRemoveButton(`Remove agenda ${index + 1}`, () => this.deleteAgenda(agenda.agendaId));
-      row.append(input, remove);
+      contentWrapper.append(input, remove);
+      row.append(contentWrapper);
       list.appendChild(row);
       this.autoGrowTextarea(input);
     });
@@ -826,7 +830,8 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     const list = document.createElement('ol');
     this.decisions.forEach((decision, index) => {
       const row = document.createElement('li');
-      row.className = 'template-item-row';
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'template-item-row';
       const input = document.createElement('textarea');
       input.rows = 1;
       input.className = 'template-item-input';
@@ -838,7 +843,8 @@ export class MeetingForm implements OnInit, AfterViewChecked {
         this.autoGrowTextarea(input);
       });
       const remove = this.createRemoveButton(`Remove decision ${index + 1}`, () => this.deleteDecision(decision.decisionId));
-      row.append(input, remove);
+      contentWrapper.append(input, remove);
+      row.append(contentWrapper);
       list.appendChild(row);
       this.autoGrowTextarea(input);
     });

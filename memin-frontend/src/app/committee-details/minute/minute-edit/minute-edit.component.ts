@@ -9,6 +9,7 @@ import {
 } from '../../../models/models';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { toNepaliDigits } from '../../../../utils/custom-functions';
 import { Response } from '../../../response/response';
 import { BACKEND_URL } from '../../../../global_constants';
 import { PopupService } from '../../../popup/popup.service';
@@ -112,10 +113,10 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
         classNames.includes(className.toLowerCase()),
       ));
     if (classSection) {
-      if (classSection.matches('ol, ul')) {
+      if (classSection.matches('ol, ul, .minute-list')) {
         return classSection;
       }
-      const list = classSection.querySelector<HTMLElement>('ol, ul');
+      const list = classSection.querySelector<HTMLElement>('ol, ul, .minute-list');
       if (list) {
         return list;
       }
@@ -133,10 +134,10 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
       if (/^H[1-6]$/.test(sibling.tagName)) {
         break;
       }
-      if (sibling.matches('ol, ul')) {
+      if (sibling.matches('ol, ul, .minute-list')) {
         return sibling;
       }
-      const list = sibling.querySelector<HTMLElement>('ol, ul');
+      const list = sibling.querySelector<HTMLElement>('ol, ul, .minute-list');
       if (list) {
         return list;
       }
@@ -180,10 +181,25 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
       while (list.firstChild) {
         list.removeChild(list.firstChild);
       }
-      for (const value of section.values) {
-        const item = document.createElement('li');
-        item.textContent = value;
-        list.appendChild(item);
+      
+      const isDivList = list.tagName.toLowerCase() === 'div';
+      const isNepali = data.minuteLanguage === 'NEPALI';
+
+      for (let i = 0; i < section.values.length; i++) {
+        const value = section.values[i];
+        if (isDivList) {
+          const item = document.createElement('p');
+          let numStr = String(i + 1);
+          if (isNepali) {
+            numStr = toNepaliDigits(numStr) || numStr;
+          }
+          item.textContent = `${numStr}. ${value}`;
+          list.appendChild(item);
+        } else {
+          const item = document.createElement('li');
+          item.textContent = value;
+          list.appendChild(item);
+        }
       }
       changed = true;
     }

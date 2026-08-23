@@ -78,6 +78,9 @@ public class MeetingMinutePreparationService {
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm");
         String meetingHeldTime = meeting.getHeldTime().format(timeFormatter);
+        if (MinuteLanguage.NEPALI.equals(committee.getMinuteLanguage())) {
+            meetingHeldTime = toNepaliDigits(meetingHeldTime);
+        }
 
         minuteData.setMeetingHeldTime(meetingHeldTime);
 
@@ -163,9 +166,9 @@ public class MeetingMinutePreparationService {
                 + "<div class=\"memberships\"><h5 class=\"heading\">" + attendanceLabel + "</h5>"
                 + renderAttendance(data) + "</div>"
                 + "<div class=\"agendas\"><h5 class=\"heading\">" + agendasLabel + "</h5>"
-                + renderList(data.getAgendas(), true) + "</div>"
+                + renderList(data.getAgendas(), data.getMinuteLanguage()) + "</div>"
                 + "<div class=\"decisions\"><h5 class=\"heading\">" + decisionsLabel + "</h5>"
-                + renderList(data.getDecisions(), false) + "</div>"
+                + renderList(data.getDecisions(), data.getMinuteLanguage()) + "</div>"
                 + "</div>";
     }
 
@@ -265,9 +268,32 @@ public class MeetingMinutePreparationService {
         rendered = replaceToken(rendered, renderAttendance(data), "attendanceTable");
         rendered = replaceToken(rendered, renderAttendanceList(data), "attendanceList");
         rendered = replaceToken(rendered, renderAttendance(data), "attendance", "participants");
-        rendered = replaceToken(rendered, renderList(data.getAgendas(), true), "agendas");
-        rendered = replaceToken(rendered, renderList(data.getDecisions(), false), "decisions");
+        rendered = replaceToken(rendered, renderList(data.getAgendas(), data.getMinuteLanguage()), "agendas");
+        rendered = replaceToken(rendered, renderList(data.getDecisions(), data.getMinuteLanguage()), "decisions");
+
+        boolean nepali = MinuteLanguage.NEPALI.equals(data.getMinuteLanguage());
+
+        if (!templateContainsToken(template, "attendance", "participants", "attendanceTable", "attendanceList")) {
+            rendered += "\n<h2 style=\"margin-top:2rem\">" + (nepali ? "\u0909\u092a\u0938\u094d\u0925\u093f\u0924\u093f" : "Attendance") + "</h2>\n" + renderAttendance(data);
+        }
+        if (!templateContainsToken(template, "agendas")) {
+            rendered += "\n<h2 style=\"margin-top:2rem\">" + (nepali ? "\u0915\u093e\u0930\u094d\u092f\u0938\u0942\u091a\u0940" : "Agendas") + "</h2>\n" + renderList(data.getAgendas(), data.getMinuteLanguage());
+        }
+        if (!templateContainsToken(template, "decisions")) {
+            rendered += "\n<h2 style=\"margin-top:2rem\">" + (nepali ? "\u0928\u093f\u0930\u094d\u0923\u092f\u0939\u0930\u0942" : "Decisions and resolutions") + "</h2>\n" + renderList(data.getDecisions(), data.getMinuteLanguage());
+        }
+
         return rendered;
+    }
+
+    private boolean templateContainsToken(String template, String... names) {
+        if (template == null) return false;
+        for (String name : names) {
+            if (template.contains("{{" + name + "}}") || template.contains("{" + name + "}") || template.contains("@" + name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -324,15 +350,19 @@ public class MeetingMinutePreparationService {
         return html.append("</div>").toString();
     }
 
-    private String renderList(List<?> items, boolean agendas) {
-        StringBuilder html = new StringBuilder("<ol>");
+    private String renderList(List<?> items, MinuteLanguage language) {
+        StringBuilder html = new StringBuilder("<div class=\"minute-list\">");
         int index = 1;
+        boolean nepali = MinuteLanguage.NEPALI.equals(language);
         for (Object item : items) {
             String value = item instanceof AgendaDto agenda ? agenda.getAgenda() : ((DecisionDto) item).getDecision();
-            html.append("<li>").append(escapeHtml(value)).append("</li>");
-            index++;
+            String num = String.valueOf(index++);
+            if (nepali) {
+                num = toNepaliDigits(num);
+            }
+            html.append("<p>").append(num).append(". ").append(escapeHtml(value)).append("</p>");
         }
-        return html.append("</ol>").toString();
+        return html.append("</div>").toString();
     }
 
     private String textFragment(String value) {
@@ -717,6 +747,14 @@ public class MeetingMinutePreparationService {
                                 run = paragraph.createRun();
                                 run.setText(listItemText(agenda));
                             }
+                        } else if (child.className().contains("minute-list")) {
+                            for (Element item : child.children()) {
+                                paragraph = document.createParagraph();
+                                paragraph.setIndentationLeft(720);      
+                                paragraph.setIndentationHanging(360);   
+                                run = paragraph.createRun();
+                                run.setText(item.text().trim());
+                            }
                         }
                     }
                 } else if (element.className().contains("decisions")) {
@@ -768,6 +806,14 @@ public class MeetingMinutePreparationService {
 
                                 run = paragraph.createRun();
                                 run.setText(listItemText(decision));
+                            }
+                        } else if (child.className().contains("minute-list")) {
+                            for (Element item : child.children()) {
+                                paragraph = document.createParagraph();
+                                paragraph.setIndentationLeft(720);      
+                                paragraph.setIndentationHanging(360);   
+                                run = paragraph.createRun();
+                                run.setText(item.text().trim());
                             }
                         }
                     }

@@ -484,13 +484,13 @@ public class MeetingService {
         List<Agenda> existingAgendas = existingMeeting.getAgendas();
 
         //remove agendas that are NOT in the new list
-        existingAgendas.removeIf(existing -> meetingCreationDto.getAgendas().stream().noneMatch(newAgenda -> newAgenda.getAgendaId() == existing.getAgendaId()));
+        existingAgendas.removeIf(existing -> meetingCreationDto.getAgendas().stream().noneMatch(newAgenda -> java.util.Objects.equals(newAgenda.getAgendaId(), existing.getAgendaId())));
 
         //add new ones or update existing ones
         for (AgendaDto newAgendaDto : meetingCreationDto.getAgendas()) {
 
             //check if the agenda is already in the current list
-            Agenda existingAgenda = existingAgendas.stream().filter(agenda -> agenda.getAgendaId() == newAgendaDto.getAgendaId()).findFirst().orElse(null);
+            Agenda existingAgenda = existingAgendas.stream().filter(agenda -> java.util.Objects.equals(agenda.getAgendaId(), newAgendaDto.getAgendaId())).findFirst().orElse(null);
 
             if(existingAgenda == null) {
                 //CASE: It's a new agenda -> Add It
@@ -504,15 +504,15 @@ public class MeetingService {
             }
         }
 
-        List<Decision> existingDecisions = new ArrayList<>(existingMeeting.getDecisions());
+        Set<Decision> existingDecisions = existingMeeting.getDecisions();
 
         //remove decisions that are NOT in the new list
-        existingDecisions.removeIf(existing -> meetingCreationDto.getDecisions().stream().noneMatch(newDecision -> newDecision.getDecisionId() == existing.getDecisionId()));
+        existingDecisions.removeIf(existing -> meetingCreationDto.getDecisions().stream().noneMatch(newDecision -> java.util.Objects.equals(newDecision.getDecisionId(), existing.getDecisionId())));
 
         //add new ones or update existing ones
         for (DecisionDto newDecisionDto : meetingCreationDto.getDecisions()) {
             //check if the decision is already in the current list
-            Decision existingDecision = existingDecisions.stream().filter(decision -> decision.getDecisionId() == newDecisionDto.getDecisionId()).findFirst().orElse(null);
+            Decision existingDecision = existingDecisions.stream().filter(decision -> java.util.Objects.equals(decision.getDecisionId(), newDecisionDto.getDecisionId())).findFirst().orElse(null);
 
             if(existingDecision == null) {
                 //CASE: It's a new decision -> Add It

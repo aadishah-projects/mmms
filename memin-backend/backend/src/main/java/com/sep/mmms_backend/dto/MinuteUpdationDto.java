@@ -23,6 +23,7 @@ public class MinuteUpdationDto {
     LocalDate meetingHeldDate;
 
     @NotNull(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.sep.mmms_backend.util.NepaliLocalTimeDeserializer.class)
     LocalTime meetingHeldTime;
 
     @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)

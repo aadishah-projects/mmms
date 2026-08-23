@@ -22,10 +22,12 @@ import java.util.LinkedHashMap;
 public class MeetingController {
     private final MeetingService meetingService;
     private final CommitteeService committeeService;
+    private final com.sep.mmms_backend.service.MeetingMinutePreparationService meetingMinutePreparationService;
 
-    MeetingController(MeetingService meetingService, CommitteeService committeeService) {
+    MeetingController(MeetingService meetingService, CommitteeService committeeService, com.sep.mmms_backend.service.MeetingMinutePreparationService meetingMinutePreparationService) {
         this.meetingService = meetingService;
         this.committeeService = committeeService;
+        this.meetingMinutePreparationService = meetingMinutePreparationService;
     }
 
 
@@ -66,6 +68,16 @@ public class MeetingController {
     @PatchMapping("meeting")
     public ResponseEntity<Response> updateMeeting(@RequestBody MeetingCreationDto meetingCreationDto, @RequestParam Integer meetingId, Authentication authentication) {
        Meeting meeting = meetingService.updateExistingMeeting(meetingCreationDto, meetingId, authentication.getName());
+       
+       String templateText = meeting.getCommittee().getMinuteTemplateHtml();
+       if (meeting.getMinuteContentHtml() != null || (templateText != null && !templateText.isBlank())) {
+           MinuteDataDto updatedData = meetingMinutePreparationService.prepareDataForMinute(
+                   meeting.getCommittee(), meeting, authentication.getName());
+           String htmlContent = meetingMinutePreparationService.renderCommitteeTemplate(
+                   meeting.getCommittee(), updatedData);
+           meetingService.updateMinuteContent(meetingId, htmlContent, authentication.getName());
+       }
+
        return ResponseEntity.ok(new Response(ResponseMessages.MEETING_UPDATION_SUCCESS));
     }
 
