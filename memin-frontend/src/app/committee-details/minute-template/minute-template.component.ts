@@ -53,6 +53,7 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
     { token: '@time', label: 'Time', description: 'Meeting time' },
     { token: '@location', label: 'Location', description: 'Where the meeting was held' },
     { token: '@coordinator', label: 'Coordinator', description: 'Coordinator full name' },
+    { token: '@chairman', label: 'Chairman', description: 'Meeting chairperson full name' },
     { token: '@attendance', label: 'Attendance table', description: 'Participant table with roles and signatures', block: true },
     { token: '@attendanceTable', label: 'Attendance table (explicit)', description: 'Participant table with roles and signatures', block: true },
     { token: '@attendanceList', label: 'Attendance list', description: 'Numbered participant list', block: true },
@@ -121,9 +122,24 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
 
   readonly nepaliTemplatePresets: TemplatePreset[] = [
     {
-      id: 'nepali-formal-college',
-      name: 'Formal college committee minutes',
-      description: 'Formal minutes and decision records for academic and administrative college committees.',
+      id: 'nepali-drc-standard',
+      name: 'DRC standard minute',
+      description: 'Standard departmental research committee minute layout with meeting-specific chairmanship.',
+      html: `<p style="text-align: center"><strong>@committee</strong></p>
+        <p>बैठक नं. @title</p>
+        <p>आज मिति @date (@day) यस @committee को बैठक, @chairman ज्यूको अध्यक्षतामा बसी देहाय बमोजिम छलफल तथा निर्णय गरियो ।</p>
+        <p><strong>उपस्थितिः</strong></p>
+        @attendance
+        <p>बैठक बसेको समयः @time बजे</p>
+        <p><strong>निर्णयः</strong></p>
+        @agendas
+        @decisions
+        <p>अध्यक्षः @chairman&nbsp;&nbsp;&nbsp;&nbsp;हस्ताक्षरः ____________________</p>`,
+    },
+    {
+      id: 'nepali-legacy-structured',
+      name: 'Legacy structured minute',
+      description: 'Legacy structured academic minute layout retained for existing committees.',
       html: `<h1 style="text-align: center">@committee</h1>
         <p style="text-align: center"><strong>बैठकको कार्यवृत्त तथा निर्णय अभिलेख</strong></p>
         <p style="text-align: center">@title</p>
@@ -195,12 +211,13 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
   ];
 
   get allTemplatePresets(): TemplatePreset[] {
-    return [...this.templatePresets, ...this.nepaliTemplatePresets];
+    return [...this.templatePresets, ...this.nepaliTemplatePresets]
+      .filter((preset) => preset.id !== 'nepali-legacy-structured');
   }
 
   get availableTemplatePresets(): TemplatePreset[] {
     return this.normalizeTemplateLanguage(this.minuteLanguage) === 'NEPALI'
-      ? this.nepaliTemplatePresets
+      ? this.nepaliTemplatePresets.filter((preset) => preset.id !== 'nepali-legacy-structured')
       : this.templatePresets;
   }
 

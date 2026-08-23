@@ -55,7 +55,7 @@ public class Committee {
     private MinuteLanguage minuteLanguage;
 
     // Per-committee editable opening paragraph for the meeting minute. May contain
-    // placeholders like {committeeName}, {date}, {time}, {place}, {coordinator}, etc.
+    // placeholders like {committeeName}, {date}, {time}, {place}, {coordinator}, {chairman}, etc.
     // Null means "use the built-in default opening paragraph".
     @Column(name = "committee_minute_opening_template", columnDefinition = "TEXT")
     private String minuteOpeningTemplate;

@@ -14,8 +14,14 @@ public class MemberCreationDto {
     @NotBlank(message = "member's last name can't be blank")
     private String lastName;
 
+    @NotBlank(message = "member's Nepali first name can't be blank")
+    private String firstNameNepali;
+
+    @NotBlank(message = "member's Nepali last name can't be blank")
+    private String lastNameNepali;
+
     @NotBlank(message = "member's title can't be blank")
-    private String title;  //example: Mr, Dr
+    private String title;  //romanized pad code, for example pra, upra, da
 
     private String post;  //example: IMO Cheif, Campus Chief
 

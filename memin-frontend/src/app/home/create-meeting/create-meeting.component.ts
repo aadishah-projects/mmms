@@ -33,6 +33,7 @@ export class CreateMeetingComponent  {
     agendas: [],
     possibleInvitees: [],
     selectedInvitees: [],
+    chairman: null,
   }
 
 

@@ -18,6 +18,7 @@ public class MeetingDetailsForEditDto {
     private final LocalDate heldDate;
     private final LocalTime heldTime;
     private final String heldPlace;
+    private final MemberSearchResultDto chairman;
     private final List<MemberSearchResultDto> selectedInvitees = new LinkedList<>();
     private final List<MemberSearchResultDto> possibleInvitees;
     private final List<DecisionDto> decisions = new ArrayList<>();
@@ -30,6 +31,10 @@ public class MeetingDetailsForEditDto {
         this.heldDate = meeting.getHeldDate();
         this.heldTime = meeting.getHeldTime();
         this.heldPlace = meeting.getHeldPlace();
+        Member meetingChairman = meeting.getChairman() != null
+                ? meeting.getChairman()
+                : meeting.getCommittee().getCoordinator();
+        this.chairman = new MemberSearchResultDto(meetingChairman);
         Set<Integer> selectedInviteeIds = meeting.getInvitees().stream()
                 .map(Member::getId)
                 .collect(java.util.stream.Collectors.toSet());

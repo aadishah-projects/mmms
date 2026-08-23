@@ -24,7 +24,11 @@ export class MinuteNepali1Component {
   toNepaliDigits = toNepaliDigits;
 
   getNepaliDate(dateStr: string | number) {
-    return toNepaliDigits(this.datePipe.transform(dateStr, 'yyyy/MM/dd') || '');
+    const storedDate = this.minuteData().meetingHeldDateNepali;
+    if (storedDate) {
+      return toNepaliDigits(storedDate);
+    }
+    return this.toNepaliDate(String(dateStr));
   }
 
   getDay(dateStr: string) {
@@ -43,6 +47,10 @@ export class MinuteNepali1Component {
 
   toNepaliDate(dateStr: string) {
     try {
+      const storedDate = this.minuteData().meetingHeldDateNepali;
+      if (storedDate) {
+        return toNepaliDigits(storedDate);
+      }
       const nepaliDate = NepaliDate.fromAD(new Date(dateStr));
       return toNepaliDigits(nepaliDate.format('YYYY/MM/DD'));
     } catch {

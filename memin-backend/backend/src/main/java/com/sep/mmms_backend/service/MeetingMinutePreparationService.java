@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,10 +42,17 @@ import java.util.stream.Collectors;
 @Service
 public class MeetingMinutePreparationService {
     private final TemplateEngine templateEngine;
+    private final NepaliDateService nepaliDateService;
 
     @Autowired
-    public MeetingMinutePreparationService(TemplateEngine templateEngine) {
+    public MeetingMinutePreparationService(TemplateEngine templateEngine, NepaliDateService nepaliDateService) {
         this.templateEngine = templateEngine;
+        this.nepaliDateService = nepaliDateService;
+    }
+
+    /** Compatibility constructor retained for existing unit tests and callers. */
+    public MeetingMinutePreparationService(TemplateEngine templateEngine) {
+        this(templateEngine, new NepaliDateService());
     }
 
     /** Compatibility constructor retained for existing unit tests and callers. */
@@ -53,7 +61,7 @@ public class MeetingMinutePreparationService {
             CommitteeRepository ignoredCommitteeRepository,
             MemberService ignoredMemberService,
             TemplateEngine templateEngine) {
-        this(templateEngine);
+        this(templateEngine, new NepaliDateService());
     }
 
 
@@ -61,9 +69,8 @@ public class MeetingMinutePreparationService {
     @CheckCommitteeAccess(shouldValidateMeeting = true)
     public MinuteDataDto prepareDataForMinute(Committee committee, Meeting meeting, String username) {
         MinuteDataDto minuteData = new MinuteDataDto();
-        setDates(minuteData, meeting);
-
         minuteData.setMinuteLanguage(committee.getMinuteLanguage());
+        setDates(minuteData, meeting);
 
         minuteData.setMeetingHeldDay(getMeetingHeldDay(meeting.getHeldDate(), committee.getMinuteLanguage()));
 
@@ -81,7 +88,10 @@ public class MeetingMinutePreparationService {
 
         minuteData.setCommitteeName(meeting.getCommittee().getName());
 
-        minuteData.setCoordinatorFullName(getCoordinatorFullName(committee));
+        minuteData.setCoordinatorFullName(getFullNameOfParticipant(committee.getCoordinator(), committee.getMinuteLanguage()));
+        minuteData.setChairmanFullName(getFullNameOfParticipant(
+                meeting.getChairman() != null ? meeting.getChairman() : committee.getCoordinator(),
+                committee.getMinuteLanguage()));
 
         minuteData.setDecisions(meeting.getDecisions().stream().map(decision -> new DecisionDto(decision.getDecisionId(), decision.getDecision())).toList());
 
@@ -130,6 +140,7 @@ public class MeetingMinutePreparationService {
 
     private String renderFallbackMinuteHtml(MinuteDataDto data) {
         boolean nepali = MinuteLanguage.NEPALI.equals(data.getMinuteLanguage());
+        String chairmanLabel = nepali ? "\u0905\u0927\u094d\u092f\u0915\u094d\u0937" : "Chairman";
         String meetingLabel = nepali ? "बैठकको विषय" : "Meeting";
         String dateLabel = nepali ? "मिति" : "Date";
         String timeLabel = nepali ? "समय" : "Time";
@@ -141,9 +152,10 @@ public class MeetingMinutePreparationService {
         return "<div id=\"a4-box\">"
                 + "<div class=\"introduction\"><p class=\"introduction-body\"><strong>"
                 + meetingLabel + ":</strong> " + escapeHtml(data.getMeetingTitle())
-                + "<br><strong>" + dateLabel + ":</strong> " + escapeHtml(String.valueOf(data.getMeetingHeldDate()))
+                + "<br><strong>" + dateLabel + ":</strong> " + escapeHtml(getDateForTemplate(data))
                 + "<br><strong>" + timeLabel + ":</strong> " + escapeHtml(data.getMeetingHeldTime())
                 + "<br><strong>" + placeLabel + ":</strong> " + escapeHtml(data.getMeetingHeldPlace())
+                + "<br><strong>" + chairmanLabel + ":</strong> " + escapeHtml(data.getChairmanFullName())
                 + "</p></div>"
                 + "<div class=\"memberships\"><h5 class=\"heading\">" + attendanceLabel + "</h5>"
                 + renderAttendance(data) + "</div>"
@@ -235,12 +247,13 @@ public class MeetingMinutePreparationService {
         rendered = replaceToken(rendered, escapeHtml(data.getCommitteeName()), "committeeName", "committee", "committe");
         rendered = replaceToken(rendered, escapeHtml(data.getCommitteeDescription()), "committeeDescription", "purpose");
         rendered = replaceToken(rendered, escapeHtml(data.getMeetingTitle()), "meetingTitle", "title");
-        rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldDate() == null ? "" : data.getMeetingHeldDate().toString()), "date", "data");
+        rendered = replaceToken(rendered, escapeHtml(getDateForTemplate(data)), "date", "data");
         rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldDay()), "day");
         rendered = replaceToken(rendered, escapeHtml(data.getPartOfDay()), "partOfDay");
         rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldTime()), "time");
         rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldPlace()), "place", "location");
         rendered = replaceToken(rendered, escapeHtml(data.getCoordinatorFullName()), "coordinator");
+        rendered = replaceToken(rendered, escapeHtml(data.getChairmanFullName()), "chairman", "chairperson");
         rendered = replaceToken(rendered, textFragment(data.getHeader()), "header");
         rendered = replaceToken(rendered, textFragment(data.getOpeningParagraph()), "openingParagraph");
         // The legacy @attendance token remains a table. Template authors can
@@ -256,7 +269,7 @@ public class MeetingMinutePreparationService {
     /**
      * Replace both the original brace syntax and the shorter @ syntax used by
      * the committee template editor. The aliases make the editor read like
-     * normal prose: @committee, @date, @location, @purpose and @coordinator.
+     * normal prose: @committee, @date, @location, @purpose, @coordinator and @chairman.
      */
     private String replaceToken(String template, String value, String... names) {
         String safeValue = value == null ? "" : value;
@@ -341,12 +354,13 @@ public class MeetingMinutePreparationService {
         rendered = replaceToken(rendered, nullSafe(data.getCommitteeName()), "committeeName", "committee", "committe");
         rendered = replaceToken(rendered, nullSafe(data.getCommitteeDescription()), "committeeDescription", "purpose");
         rendered = replaceToken(rendered, nullSafe(data.getMeetingTitle()), "meetingTitle", "title");
-        rendered = replaceToken(rendered, data.getMeetingHeldDate() != null ? data.getMeetingHeldDate().toString() : "", "date", "data");
+        rendered = replaceToken(rendered, getDateForTemplate(data), "date", "data");
         rendered = replaceToken(rendered, nullSafe(data.getMeetingHeldDay()), "day");
         rendered = replaceToken(rendered, nullSafe(data.getPartOfDay()), "partOfDay");
         rendered = replaceToken(rendered, nullSafe(data.getMeetingHeldTime()), "time");
         rendered = replaceToken(rendered, nullSafe(data.getMeetingHeldPlace()), "place", "location");
-        return replaceToken(rendered, nullSafe(data.getCoordinatorFullName()), "coordinator");
+        rendered = replaceToken(rendered, nullSafe(data.getCoordinatorFullName()), "coordinator");
+        return replaceToken(rendered, nullSafe(data.getChairmanFullName()), "chairman", "chairperson");
     }
 
     private String nullSafe(String value) {
@@ -357,6 +371,30 @@ public class MeetingMinutePreparationService {
     private void setDates(MinuteDataDto minuteDataDto, Meeting meeting) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         minuteDataDto.setMeetingHeldDate(meeting.getHeldDate());
+        minuteDataDto.setMeetingHeldDateNepali(nepaliDateService.toNepaliDate(meeting.getHeldDate()));
+    }
+
+    private String getDateForTemplate(MinuteDataDto data) {
+        if (MinuteLanguage.NEPALI.equals(data.getMinuteLanguage())
+                && data.getMeetingHeldDateNepali() != null
+                && !data.getMeetingHeldDateNepali().isBlank()) {
+            return toNepaliDigits(data.getMeetingHeldDateNepali());
+        }
+        return data.getMeetingHeldDate() == null ? "" : data.getMeetingHeldDate().toString();
+    }
+
+    private String toNepaliDigits(String value) {
+        return value
+                .replace('0', '\u0966')
+                .replace('1', '\u0967')
+                .replace('2', '\u0968')
+                .replace('3', '\u0969')
+                .replace('4', '\u096A')
+                .replace('5', '\u096B')
+                .replace('6', '\u096C')
+                .replace('7', '\u096D')
+                .replace('8', '\u096E')
+                .replace('9', '\u096F');
     }
 
     private List<CommitteeMembershipDto> getDefaultParticipants(Committee committee, Meeting meeting) {
@@ -364,16 +402,22 @@ public class MeetingMinutePreparationService {
 
         memberships = committee.getSortedMemberships().stream().map(membership -> {
             Member member = membership.getMember();
-            String fullName = getFullNameOfParticipant(member);
+            String fullName = getFullNameOfParticipant(member, committee.getMinuteLanguage());
             return new CommitteeMembershipDto(member.getId(), fullName, membership.getRole());
         }).collect(Collectors.toCollection(ArrayList::new));
 
         String coordinatorRole = committee.getMinuteLanguage() == MinuteLanguage.ENGLISH ? "Coordinator" : "संयोजक";
 
-        memberships.addFirst(new CommitteeMembershipDto(committee.getCoordinator().getId(), getFullNameOfParticipant(committee.getCoordinator()), coordinatorRole ));
+        memberships.addFirst(new CommitteeMembershipDto(committee.getCoordinator().getId(), getFullNameOfParticipant(committee.getCoordinator(), committee.getMinuteLanguage()), coordinatorRole ));
+        Member chairman = meeting.getChairman() != null ? meeting.getChairman() : committee.getCoordinator();
+        memberships.removeIf(participant -> participant.getMemberId().equals(chairman.getId()));
+        memberships.addFirst(new CommitteeMembershipDto(
+                chairman.getId(),
+                getFullNameOfParticipant(chairman, committee.getMinuteLanguage()),
+                committee.getMinuteLanguage() == MinuteLanguage.ENGLISH ? "Chairman" : "\u0905\u0927\u094d\u092f\u0915\u094d\u0937"));
 
         meeting.getInvitees().forEach( invitee -> {
-            String fullname = getFullNameOfParticipant(invitee);
+            String fullname = getFullNameOfParticipant(invitee, committee.getMinuteLanguage());
             String role;
             if(committee.getMinuteLanguage() == MinuteLanguage.ENGLISH) {
                 role = "Invitee";
@@ -410,14 +454,43 @@ public class MeetingMinutePreparationService {
         return ordered.isEmpty() ? defaults : ordered;
     }
 
-    private String getFullNameOfParticipant(Member member) {
-        String fullname =  member.getTitle() + " " + member.getFirstName() + " " + member.getLastName();
+    private String getFullNameOfParticipant(Member member, MinuteLanguage language) {
+        String title = localizeTitle(member.getTitle(), language);
+        String firstName = MinuteLanguage.NEPALI.equals(language) && hasText(member.getFirstNameNepali())
+                ? member.getFirstNameNepali() : member.getFirstName();
+        String lastName = MinuteLanguage.NEPALI.equals(language) && hasText(member.getLastNameNepali())
+                ? member.getLastNameNepali() : member.getLastName();
+        String fullname =  (title + " " + firstName + " " + lastName).trim();
         if(member.getPost() != null && !member.getPost().isBlank()) {
            fullname = fullname + ", " + member.getPost();
         } else if(member.getInstitution() != null && !member.getInstitution().isBlank()) {
             fullname = fullname + ", " + member.getInstitution();
         }
         return fullname;
+    }
+
+    private String localizeTitle(String title, MinuteLanguage language) {
+        if (!hasText(title)) {
+            return "";
+        }
+        String normalized = title.trim().toLowerCase(Locale.ROOT)
+                .replaceAll("[.,]", "")
+                .replaceAll("\\s+", " ");
+        boolean nepali = MinuteLanguage.NEPALI.equals(language);
+        if (!nepali && "prof".equals(normalized)) {
+            return title.trim();
+        }
+        return switch (normalized) {
+            case "pra", "prof", "professor", "प्रा" -> nepali ? "\u092a\u094d\u0930\u093e." : "Professor";
+            case "upra", "assistant professor", "asst professor", "asst. professor", "उप्रा" -> nepali ? "\u0909\u092a\u094d\u0930\u093e." : "Assistant Professor";
+            case "associate professor", "assoc professor", "सहप्राध्यापक" -> nepali ? "\u0938\u0939\u092a\u094d\u0930\u093e\u0927\u094d\u092f\u093e\u092a\u0915" : "Associate Professor";
+            case "da", "dr", "doctor", "डा" -> nepali ? "\u0921\u093e." : "Dr.";
+            default -> title.trim();
+        };
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
 
@@ -473,11 +546,6 @@ public class MeetingMinutePreparationService {
                 partOfDay = "Night";
         }
         return partOfDay;
-    }
-
-
-    private String getCoordinatorFullName(Committee committee) {
-        return committee.getCoordinator().getTitle() + " " + committee.getCoordinator().getFirstName() + " " + committee.getCoordinator().getLastName();
     }
 
 

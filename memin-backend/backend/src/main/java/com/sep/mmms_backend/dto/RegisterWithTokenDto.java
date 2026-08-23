@@ -26,6 +26,17 @@ public class RegisterWithTokenDto {
     private String lastName;
 
     @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)
+    private String firstNameNepali;
+
+    @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)
+    private String lastNameNepali;
+
+    @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)
+    private String title;
+
+    private String post;
+
+    @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)
     @UsernameFormat
     private String username;
 

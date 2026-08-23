@@ -214,6 +214,15 @@ public class CommitteeService {
         committeeOverview.setDecisionCount(decisionCount);
 
         committeeOverview.setCoordinatorName(committee.getCoordinator().getFirstName() + " " + committee.getCoordinator().getLastName());
+        committeeOverview.setCoordinatorId(committee.getCoordinator().getId());
+        List<MemberSearchResultDto> chairmanCandidates = new ArrayList<>();
+        chairmanCandidates.add(new MemberSearchResultDto(committee.getCoordinator()));
+        committee.getSortedMemberships().forEach(membership -> {
+            if (chairmanCandidates.stream().noneMatch(candidate -> candidate.getMemberId() == membership.getMember().getId())) {
+                chairmanCandidates.add(new MemberSearchResultDto(membership.getMember()));
+            }
+        });
+        committeeOverview.setChairmanCandidates(chairmanCandidates);
 
         // Expose the currently assigned secretary (nullable) so the committee page can
         // display it and pre-select it in the assignment control.

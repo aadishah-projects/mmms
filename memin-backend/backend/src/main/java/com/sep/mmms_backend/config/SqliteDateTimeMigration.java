@@ -73,6 +73,8 @@ public class SqliteDateTimeMigration implements ApplicationRunner {
                     migrateColumn(connection, column);
                 }
                 migrateMeetingAttendeeOrder(connection);
+                migrateMeetingChairman(connection);
+                migrateMemberNepaliNames(connection);
                 migrateLegacySecretaryUniqueness(connection);
                 connection.commit();
             } catch (Exception exception) {
@@ -115,6 +117,30 @@ public class SqliteDateTimeMigration implements ApplicationRunner {
                 WHERE target.display_order IS NULL
                 """)) {
             statement.executeUpdate();
+        }
+    }
+
+    private void migrateMeetingChairman(Connection connection) throws Exception {
+        if (!tableHasColumn(connection, "meetings", "meeting_chairman_id")) {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "ALTER TABLE meetings ADD COLUMN meeting_chairman_id INTEGER")) {
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    private void migrateMemberNepaliNames(Connection connection) throws Exception {
+        if (!tableHasColumn(connection, "members", "member_first_name_nepali")) {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "ALTER TABLE members ADD COLUMN member_first_name_nepali TEXT")) {
+                statement.executeUpdate();
+            }
+        }
+        if (!tableHasColumn(connection, "members", "member_last_name_nepali")) {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "ALTER TABLE members ADD COLUMN member_last_name_nepali TEXT")) {
+                statement.executeUpdate();
+            }
         }
     }
 

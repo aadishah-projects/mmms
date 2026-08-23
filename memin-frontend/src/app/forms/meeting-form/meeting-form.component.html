@@ -205,6 +205,28 @@
           </div>
         </div>
 
+        @if (selectedCommitteeId) {
+          <div class="form-group chairman-control">
+            <label for="meeting-chairman">Meeting chairman<span class="required-astrick">*</span></label>
+            <select
+              id="meeting-chairman"
+              class="form-input"
+              [value]="selectedChairman?.memberId ?? ''"
+              (change)="onChairmanSelection($event)"
+              [disabled]="chairmanCandidates.length === 0"
+            >
+              @for (candidate of chairmanCandidates; track candidate.memberId) {
+                <option [value]="candidate.memberId">
+                  {{ getInviteeName(candidate) }}
+                </option>
+              }
+            </select>
+            @if (showAllFormErrors && !selectedChairman) {
+              <p class="field-error">(Select the meeting chairman)</p>
+            }
+          </div>
+        }
+
         <div class="form-element-pair control-pair">
           <div class="form-group">
             <label for="meeting-title">Meeting Title<span class="required-astrick">*</span></label>

@@ -25,6 +25,7 @@ public class MinuteDataDto {
     String committeeName;
     String committeeDescription;
     String coordinatorFullName;
+    String chairmanFullName;
     // Resolved per-committee opening paragraph (placeholders substituted). Null when the
     // committee has no custom template — the frontend then renders its built-in default.
     String openingParagraph;

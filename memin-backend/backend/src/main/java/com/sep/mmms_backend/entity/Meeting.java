@@ -69,6 +69,11 @@ public class Meeting {
     @JoinColumn(name = "committee_id", referencedColumnName = "committee_id")
     Committee committee;
 
+    /** Chairperson for this meeting; older meetings fall back to the coordinator. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "meeting_chairman_id", referencedColumnName = "member_id")
+    private Member chairman;
+
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "meeting_attendees",

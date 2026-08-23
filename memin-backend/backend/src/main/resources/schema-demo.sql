@@ -19,6 +19,8 @@ CREATE TABLE members (
 
                          member_first_name VARCHAR(255) NOT NULL,
                          member_last_name VARCHAR(255) NOT NULL,
+                         member_first_name_nepali VARCHAR(255),
+                         member_last_name_nepali VARCHAR(255),
 
                          member_post VARCHAR(255),
     member_title VARCHAR(255) NOT NULL,
@@ -82,7 +84,9 @@ CREATE TABLE meetings (
           updated_date DATE NOT NULL,
 
           committee_id INT NOT NULL,
-          FOREIGN KEY (committee_id) REFERENCES committees(committee_id)
+          meeting_chairman_id INT,
+          FOREIGN KEY (committee_id) REFERENCES committees(committee_id),
+          FOREIGN KEY (meeting_chairman_id) REFERENCES members(member_id)
 ) ;
 
 

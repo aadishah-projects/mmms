@@ -70,6 +70,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       this.heldTime.valid &&
       this.heldDate.valid &&
       this.selectedCommitteeId != undefined &&
+      this.selectedChairman != null &&
       !this.hasNoNonEmptyMeetingItems()
     ) {
       return true;
@@ -158,6 +159,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     this.possibleInvitees = this.meetingFormData().possibleInvitees;
     this.displayedPossibleInvitees = this.possibleInvitees;
     this.selectedInvitees = this.meetingFormData().selectedInvitees;
+    this.selectedChairman = this.meetingFormData().chairman;
     this.hasInviteeDataLoaded = true;
 
     //INITIALIZING RIGHT PANELS SELECT COMMITTEE DROPDOWN
@@ -252,6 +254,9 @@ export class MeetingForm implements OnInit, AfterViewChecked {
   possibleInvitees: MemberSearchResult[] = [];
   selectedInvitees: MemberSearchResult[] = [];
   displayedPossibleInvitees: MemberSearchResult[] = [];
+  chairmanCandidates: MemberSearchResult[] = [];
+  selectedChairman: MemberSearchResult | null = null;
+  committeeCoordinatorId: number | null = null;
 
   constructor(
     private router: Router,
@@ -397,11 +402,14 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     this.possibleInvitees = [];
     this.displayedPossibleInvitees = [];
     this.selectedInvitees = [];
+    this.chairmanCandidates = [];
+    this.selectedChairman = null;
     this.minuteDocumentHtml = '';
     this.renderedDocumentHtml = '';
 
     this.hasInviteeDataLoaded = false;
     this.coordinatorName = '';
+    this.committeeCoordinatorId = null;
     this.loadPossibleInvitees(committeeIdAndName.committeeId);
     this.loadCommitteeOverview(committeeIdAndName.committeeId);
   }
@@ -454,13 +462,15 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     if (
       this.meetingFormGroup.invalid ||
       this.hasNoNonEmptyMeetingItems() ||
-      this.selectedCommitteeId == undefined
+      this.selectedCommitteeId == undefined ||
+      this.selectedChairman == null
     ) {
       this.showAllFormErrors = true;
       return;
     }
     const requestBody = new MeetingCreationDto();
     requestBody.committeeId = this.selectedCommitteeId;
+    requestBody.chairmanId = this.selectedChairman?.memberId || null;
     requestBody.title = this.title.value;
     requestBody.heldPlace = this.heldPlace.value;
     requestBody.heldDate = this.heldDate.value;
@@ -538,6 +548,9 @@ export class MeetingForm implements OnInit, AfterViewChecked {
   loadCommitteeOverview(committeeId: number): void {
     if (!committeeId) {
       this.coordinatorName = '';
+      this.committeeCoordinatorId = null;
+      this.chairmanCandidates = [];
+      this.selectedChairman = null;
       this.minuteTemplateHtml = null;
       this.minuteTemplateLanguage = '';
       this.isMinuteTemplateLoading = false;
@@ -556,10 +569,21 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       .subscribe({
         next: (response) => {
           this.coordinatorName = response.mainBody.coordinatorName || '';
+          this.committeeCoordinatorId = response.mainBody.coordinatorId ?? null;
+          this.chairmanCandidates = response.mainBody.chairmanCandidates || [];
+          const currentChairmanId = this.selectedChairman?.memberId;
+          this.selectedChairman = this.chairmanCandidates.find(
+            (candidate) => candidate.memberId === currentChairmanId,
+          ) || this.chairmanCandidates.find(
+            (candidate) => candidate.memberId === this.committeeCoordinatorId,
+          ) || this.chairmanCandidates[0] || null;
           this.updateMinuteDocument();
         },
         error: () => {
           this.coordinatorName = '';
+          this.committeeCoordinatorId = null;
+          this.chairmanCandidates = [];
+          this.selectedChairman = null;
           this.updateMinuteDocument();
         },
       });
@@ -614,6 +638,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       { names: ['time'], value: this.heldTime?.value || 'Time to be confirmed' },
       { names: ['place', 'location'], value: this.heldPlace?.value || 'Venue to be confirmed' },
       { names: ['coordinator'], value: this.coordinatorDisplayName },
+      { names: ['chairman', 'chairperson'], value: this.chairmanDisplayName },
       { names: ['header', 'openingParagraph'], value: '' },
       { names: ['attendance', 'participants'], value: this.templateSlotMarker('attendance') },
       { names: ['agendas'], value: this.templateSlotMarker('agendas') },
@@ -678,6 +703,9 @@ export class MeetingForm implements OnInit, AfterViewChecked {
 
   private getFallbackMinuteTemplate(): string {
     const isNepali = this.minuteTemplateLanguage === 'NEPALI';
+    if (isNepali) {
+      return `<p style="text-align:center"><strong>@committee</strong></p><p>\u092c\u0948\u0920\u0915 \u0928\u0902. @title</p><p>\u0906\u091c \u092e\u093f\u0924\u093f @date (@day) \u092f\u0938 @committee \u0915\u094b \u092c\u0948\u0920\u0915, @chairman \u091c\u094d\u092f\u0942\u0915\u094b \u0905\u0927\u094d\u092f\u0915\u094d\u0937\u0924\u093e\u092e\u093e \u092c\u0938\u0940 \u0926\u0947\u0939\u093e\u092f \u092c\u092e\u094b\u091c\u093f\u092e \u091b\u0932\u092b\u0932 \u0924\u0925\u093e \u0928\u093f\u0930\u094d\u0923\u092f \u0917\u0930\u093f\u092f\u094b \u0964</p><h2>\u0909\u092a\u0938\u094d\u0925\u093f\u0924\u093f\u0903</h2>@attendance<h2>\u0928\u093f\u0930\u094d\u0923\u092f\u0903</h2>@agendas@decisions<p>\u0905\u0927\u094d\u092f\u0915\u094d\u0937\u0903 @chairman&nbsp;&nbsp;&nbsp;&nbsp;\u0939\u0938\u094d\u0924\u093e\u0915\u094d\u0937\u0930\u0903 ____________________</p>`;
+    }
     return isNepali
       ? `<h1 style="text-align:center">@committee</h1><p><strong>बैठकको विषय:</strong> @title</p><p><strong>मिति:</strong> @date&nbsp;&nbsp;&nbsp;<strong>समय:</strong> @time&nbsp;&nbsp;&nbsp;<strong>स्थान:</strong> @location</p><h2>उपस्थिति</h2>@attendance<h2>कार्यसूची</h2>@agendas<h2>निर्णयहरू</h2>@decisions`
       : `<h1 style="text-align:center">@committee</h1><p><strong>Meeting:</strong> @title</p><p><strong>Date:</strong> @date&nbsp;&nbsp;&nbsp;<strong>Time:</strong> @time&nbsp;&nbsp;&nbsp;<strong>Venue:</strong> @location</p><h2>Attendance</h2>@attendance<h2>Agendas</h2>@agendas<h2>Decisions and resolutions</h2>@decisions`;
@@ -722,7 +750,10 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     table.innerHTML = `<thead><tr><th>${isNepali ? 'क्र.सं.' : 'S.N.'}</th><th>${isNepali ? 'नाम' : 'Name'}</th><th>${isNepali ? 'पद/भूमिका' : 'Position'}</th><th>${isNepali ? 'हस्ताक्षर' : 'Signature'}</th></tr></thead>`;
     const body = document.createElement('tbody');
     const participants: Array<{ name: string; role: string }> = [];
-    if (this.coordinatorName) {
+    if (this.selectedChairman) {
+      participants.push({ name: this.chairmanDisplayName, role: isNepali ? 'अध्यक्ष' : 'Chairman' });
+    }
+    if (this.coordinatorName && this.selectedChairman?.memberId !== this.committeeCoordinatorId) {
       participants.push({ name: this.coordinatorName, role: isNepali ? 'समन्वयक' : 'Coordinator' });
     }
     this.selectedInvitees.forEach((invitee) => participants.push({
@@ -889,6 +920,20 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     return this.coordinatorName || 'Not assigned';
   }
 
+  get chairmanDisplayName(): string {
+    return this.selectedChairman
+      ? this.getInviteeName(this.selectedChairman)
+      : this.coordinatorDisplayName;
+  }
+
+  onChairmanSelection(event: Event): void {
+    const selectedId = Number((event.target as HTMLSelectElement).value);
+    this.selectedChairman = this.chairmanCandidates.find(
+      (candidate) => candidate.memberId === selectedId,
+    ) || null;
+    this.updateMinuteDocument();
+  }
+
   formatMeetingDate(dateValue: string | null | undefined): string {
     if (!dateValue) {
       return 'Date to be confirmed';
@@ -939,6 +984,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       committeeName: this.committeeSearch.value,
       selectedCommitteeId: this.selectedCommitteeId,
       selectedInvitees: this.selectedInvitees,
+      chairman: this.selectedChairman,
       agendas: this.agendas.map((agendaDto) => agendaDto.agenda),
       decisions: this.decisions.map((decisionDto) => decisionDto.decision),
     };
@@ -979,6 +1025,9 @@ export class MeetingForm implements OnInit, AfterViewChecked {
 
         if (Array.isArray(parsedData['selectedInvitees'])) {
           this.selectedInvitees = parsedData['selectedInvitees'];
+        }
+        if (parsedData['chairman']) {
+          this.selectedChairman = parsedData['chairman'];
         }
 
         //the above patchValue does not restore the FormArrays, so manually restoring agendas and decisions

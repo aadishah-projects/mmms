@@ -35,6 +35,12 @@ public class Member {
     @Column(name="member_last_name", nullable=false)
     private String lastName;
 
+    @Column(name="member_first_name_nepali")
+    private String firstNameNepali;
+
+    @Column(name="member_last_name_nepali")
+    private String lastNameNepali;
+
     @Column(name="member_post")
     private String post; //example: professor
 

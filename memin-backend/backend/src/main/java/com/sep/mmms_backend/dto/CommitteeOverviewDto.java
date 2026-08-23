@@ -17,6 +17,8 @@ public class CommitteeOverviewDto {
     private int meetingCount;
     private int decisionCount;
     private String coordinatorName;
+    private Integer coordinatorId;
+    private List<MemberSearchResultDto> chairmanCandidates;
     private String secretaryName;
     private Integer secretaryId;
     private LocalDate firstMeetingDate;

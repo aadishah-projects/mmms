@@ -56,6 +56,7 @@ export class EditMeetingComponent implements OnInit {
               agendas: meetingDetails.agendas,
               selectedInvitees: meetingDetails.selectedInvitees,
               possibleInvitees: meetingDetails.possibleInvitees,
+              chairman: meetingDetails.chairman,
             };
             this.hasMemberFormDataLoaded = true;
           },

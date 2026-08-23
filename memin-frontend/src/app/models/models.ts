@@ -8,6 +8,8 @@ export interface MemberDetails {
   memberId: number;
   firstName: string;
   lastName: string;
+  firstNameNepali: string;
+  lastNameNepali: string;
   post: string;
   title: string;
   institution: string;
@@ -59,6 +61,8 @@ export class CommitteeOverviewDto {
   meetingCount: number = 0;
   decisionCount: number = 0;
   coordinatorName: string = '';
+  coordinatorId: number | null = null;
+  chairmanCandidates: MemberSearchResult[] = [];
   secretaryName: string | null = null;
   secretaryId: number | null = null;
   firstMeetingDate: string = '';
@@ -90,6 +94,7 @@ export class MinuteDataDto {
   committeeName: string = '';
   committeeDescription: string = '';
   coordinatorFullName: string = '';
+  chairmanFullName: string = '';
   openingParagraph: string | null = null;
   header: string | null = null;
   minuteContentHtml: string | null = null;
@@ -161,6 +166,8 @@ export class MemberDetailsDto {
   memberId: number = 0; 
   firstName: string = '';
   lastName: string = '';
+  firstNameNepali: string = '';
+  lastNameNepali: string = '';
   title: string = '';
   post: string = '';
   institution: string = '';
@@ -170,6 +177,8 @@ export class MemberDetailsDto {
 export class MemberCreationDto {
   firstName: string = '';
   lastName: string = '';
+  firstNameNepali: string = '';
+  lastNameNepali: string = '';
   title: string = '';
   post: string = '';
   institution: string = '';
@@ -178,6 +187,7 @@ export class MemberCreationDto {
 
 export class MeetingCreationDto {
   committeeId: number = 0;
+  chairmanId: number | null = null;
   title: string = '';
   heldDate: string = '';
   heldTime: string = '';
@@ -201,6 +211,8 @@ export class CommitteeDetailsForEditDto {
     memberId: 0,
     firstName: '',
     lastName: '',
+    firstNameNepali: '',
+    lastNameNepali: '',
     post: '',
     title:'',
     institution: '',
@@ -214,6 +226,8 @@ export class MemberDetailsWithRole {
     memberId: 0,
     firstName: '',
     lastName: '',
+    firstNameNepali: '',
+    lastNameNepali: '',
     post: '',
     title: '',
     institution: '',
@@ -282,6 +296,8 @@ export interface CommitteeFormData {
 export interface MemberFormData {
   firstName: string;
   lastName: string;
+  firstNameNepali: string;
+  lastNameNepali: string;
   post: string;
   title: string;
   institution: string;
@@ -298,6 +314,7 @@ export interface MeetingFormData {
   agendas: AgendaDto [];
   possibleInvitees: MemberSearchResult[];
   selectedInvitees: MemberSearchResult[];
+  chairman: MemberSearchResult | null;
 }
 
 export interface MeetingDetailsForEdit {
@@ -310,6 +327,7 @@ export interface MeetingDetailsForEdit {
   heldPlace: string;
   selectedInvitees: MemberSearchResult[];
   possibleInvitees: MemberSearchResult[];
+  chairman: MemberSearchResult;
   decisions: DecisionDto[];
   agendas: AgendaDto[];
 }

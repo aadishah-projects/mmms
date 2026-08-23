@@ -18,6 +18,9 @@ public class MeetingCreationDto {
     @Positive(message = "Committee ID should be positive")
     private Integer committeeId;
 
+    /** The member chairing this particular meeting. Null means committee coordinator. */
+    private Integer chairmanId;
+
     @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)
     private String title;
 

@@ -107,6 +107,9 @@ public class InviteService {
         Member linkedMember = memberRepository.findFirstByEmailIgnoreCase(inviteToken.getEmail()).orElse(null);
         if (inviteToken.getCommittee() != null && linkedMember == null) {
             linkedMember = createMemberForInvite(inviteToken, requestDto);
+        } else if (linkedMember != null) {
+            applyRegistrationDetails(linkedMember, requestDto);
+            linkedMember = memberRepository.save(linkedMember);
         }
         if (linkedMember != null) {
             newUser.setLinkedMemberId(linkedMember.getId());
@@ -125,15 +128,22 @@ public class InviteService {
     private Member createMemberForInvite(InviteToken inviteToken, RegisterWithTokenDto requestDto) {
         LocalDate today = LocalDate.now();
         Member member = new Member();
-        member.setFirstName(requestDto.getFirstName());
-        member.setLastName(requestDto.getLastName());
-        member.setTitle("Member");
+        applyRegistrationDetails(member, requestDto);
         member.setEmail(inviteToken.getEmail());
         member.setCreatedBy(inviteToken.getInvitedBy());
         member.setCreatedDate(today);
         member.setModifiedBy(inviteToken.getInvitedBy());
         member.setModifiedDate(today);
         return memberRepository.save(member);
+    }
+
+    private void applyRegistrationDetails(Member member, RegisterWithTokenDto requestDto) {
+        member.setFirstName(requestDto.getFirstName());
+        member.setLastName(requestDto.getLastName());
+        member.setFirstNameNepali(requestDto.getFirstNameNepali());
+        member.setLastNameNepali(requestDto.getLastNameNepali());
+        member.setTitle(requestDto.getTitle());
+        member.setPost(requestDto.getPost());
     }
 
     private void addMemberToCommittee(Committee committee, Member member) {

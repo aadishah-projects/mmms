@@ -52,6 +52,65 @@
         </div>
       </div>
 
+      <div class="input-row">
+        <div class="input-group half">
+          <label>Nepali First Name<span class="required-astrick">*</span></label>
+          <input
+            type="text"
+            formControlName="firstNameNepali"
+            class="form-input"
+            [class.error]="f['firstNameNepali'].touched && f['firstNameNepali'].invalid"
+            autocomplete="off"
+          />
+          @if ((f['firstNameNepali'].touched && f['firstNameNepali'].dirty) || showAllErrors) {
+            @if (f['firstNameNepali'].errors?.['required']) {
+              <p class="field-error">Nepali first name is required</p>
+            }
+          }
+        </div>
+
+        <div class="input-group half">
+          <label>Nepali Last Name<span class="required-astrick">*</span></label>
+          <input
+            type="text"
+            formControlName="lastNameNepali"
+            class="form-input"
+            [class.error]="f['lastNameNepali'].touched && f['lastNameNepali'].invalid"
+            autocomplete="off"
+          />
+          @if ((f['lastNameNepali'].touched && f['lastNameNepali'].dirty) || showAllErrors) {
+            @if (f['lastNameNepali'].errors?.['required']) {
+              <p class="field-error">Nepali last name is required</p>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Pad / Title<span class="required-astrick">*</span></label>
+        <input
+          type="text"
+          formControlName="title"
+          list="register-pad-options"
+          class="form-input"
+          placeholder="pra, upra, da, associate professor"
+          [class.error]="f['title'].touched && f['title'].invalid"
+          autocomplete="off"
+        />
+        <datalist id="register-pad-options">
+          <option value="pra">Professor</option>
+          <option value="upra">Assistant Professor</option>
+          <option value="da">Doctor</option>
+          <option value="associate professor">Associate Professor</option>
+        </datalist>
+        <small class="field-help">Use the romanized pad code used for the member’s designation.</small>
+        @if ((f['title'].touched && f['title'].dirty) || showAllErrors) {
+          @if (f['title'].errors?.['required']) {
+            <p class="field-error">Pad / title is required</p>
+          }
+        }
+      </div>
+
       <div class="input-group">
         <label>Username<span class="required-astrick">*</span></label>
         <input

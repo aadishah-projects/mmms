@@ -45,6 +45,7 @@ public class OpeningParagraphService {
         templateData.put("committeeName", committee.getName());
 
         templateData.put("coordinatorFullName", "Coordinator Name");
+        templateData.put("chairmanFullName", "Chairman Name");
 
         Context context = new Context();
         context.setVariables(templateData);

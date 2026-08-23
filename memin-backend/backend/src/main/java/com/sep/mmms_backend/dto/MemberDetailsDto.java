@@ -8,6 +8,8 @@ public class MemberDetailsDto {
     private final int memberId;
     private final String firstName;
     private final String lastName;
+    private final String firstNameNepali;
+    private final String lastNameNepali;
     private final String post;
     private final String title;
     private final String institution;
@@ -17,6 +19,8 @@ public class MemberDetailsDto {
         this.memberId = member.getId();
         this.firstName = member.getFirstName();
         this.lastName = member.getLastName();
+        this.firstNameNepali = member.getFirstNameNepali();
+        this.lastNameNepali = member.getLastNameNepali();
         this.post = member.getPost();
         this.title = member.getTitle();
         this.institution = member.getInstitution();

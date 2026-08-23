@@ -17,6 +17,8 @@ export class CreateMemberComponent {
   memberFormData: MemberFormData = {
     firstName: '',
     lastName: '',
+    firstNameNepali: '',
+    lastNameNepali: '',
     post: '',
     title: '',
     institution: '',

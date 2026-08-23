@@ -54,6 +54,7 @@ public class MeetingService {
         meeting.setHeldDate(meetingCreationDto.getHeldDate());
         meeting.setHeldTime(meetingCreationDto.getHeldTime());
         meeting.setHeldPlace(meetingCreationDto.getHeldPlace());
+        meeting.setChairman(resolveChairman(meetingCreationDto.getChairmanId(), committee, null));
         meetingCreationDto.getDecisions().forEach(decisionDto -> {
             //check if decision string is blank, if yes, don't save it
             if (decisionDto.getDecision() != null && !decisionDto.getDecision().isBlank()) {
@@ -423,10 +424,30 @@ public class MeetingService {
     private List<Member> getDefaultParticipantOrder(Meeting meeting) {
         Committee committee = meeting.getCommittee();
         List<Member> participants = new ArrayList<>();
+        addParticipantIfMissing(participants, getChairman(meeting));
         addParticipantIfMissing(participants, committee.getCoordinator());
         committee.getSortedMemberships().forEach(membership -> addParticipantIfMissing(participants, membership.getMember()));
         meeting.getInvitees().forEach(invitee -> addParticipantIfMissing(participants, invitee));
         return participants;
+    }
+
+    private Member getChairman(Meeting meeting) {
+        return meeting.getChairman() != null ? meeting.getChairman() : meeting.getCommittee().getCoordinator();
+    }
+
+    private Member resolveChairman(Integer chairmanId, Committee committee, Member currentChairman) {
+        if (chairmanId == null) {
+            return currentChairman != null ? currentChairman : committee.getCoordinator();
+        }
+
+        if (committee.getCoordinator().getId().equals(chairmanId)) {
+            return committee.getCoordinator();
+        }
+        return committee.getSortedMemberships().stream()
+                .map(CommitteeMembership::getMember)
+                .filter(member -> member.getId().equals(chairmanId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalOperationException("The chairman must be a member of the committee"));
     }
 
     private void addParticipantIfMissing(List<Member> participants, Member candidate) {
@@ -447,6 +468,10 @@ public class MeetingService {
         existingMeeting.setHeldPlace(meetingCreationDto.getHeldPlace());
         existingMeeting.setHeldTime(meetingCreationDto.getHeldTime());
         existingMeeting.setHeldDate(meetingCreationDto.getHeldDate());
+        existingMeeting.setChairman(resolveChairman(
+                meetingCreationDto.getChairmanId(),
+                existingMeeting.getCommittee(),
+                existingMeeting.getChairman()));
 
         List<Agenda> existingAgendas = existingMeeting.getAgendas();
 

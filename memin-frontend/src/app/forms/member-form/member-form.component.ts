@@ -38,6 +38,8 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
   //setting aliases for this.memberFormGroup().controls
   firstName!: FormControl<string>;
   lastName!: FormControl<string>;
+  firstNameNepali!: FormControl<string>;
+  lastNameNepali!: FormControl<string>;
   post!: FormControl<string>;
   title!: FormControl<string>;
   institution!: FormControl<string>;
@@ -46,6 +48,8 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
   memberFormGroup!: FormGroup<{
     firstName: FormControl<string>;
     lastName: FormControl<string>;
+    firstNameNepali: FormControl<string>;
+    lastNameNepali: FormControl<string>;
     post: FormControl<string>;
     title: FormControl<string>;
     institution: FormControl<string>;
@@ -65,6 +69,18 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
       Validators.maxLength(50),
     ]},);
 
+    this.firstNameNepali = new FormControl(this.memberFormData().firstNameNepali,{ nonNullable: true, validators: [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(50),
+    ]});
+
+    this.lastNameNepali = new FormControl(this.memberFormData().lastNameNepali,{ nonNullable: true, validators: [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(50),
+    ]});
+
     this.post = new FormControl(this.memberFormData().post,{nonNullable: true} );
     this.title = new FormControl(this.memberFormData().title, {nonNullable: true, validators: [
       Validators.required,
@@ -78,6 +94,8 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
     this.memberFormGroup = new FormGroup({
       firstName: this.firstName,
       lastName: this.lastName,
+      firstNameNepali: this.firstNameNepali,
+      lastNameNepali: this.lastNameNepali,
       post: this.post,
       title: this.title,
       institution: this.institution,
@@ -103,6 +121,8 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
     const memberCreationDto = new MemberCreationDto();
     memberCreationDto.firstName = this.firstName.value!;
     memberCreationDto.lastName = this.lastName.value!;
+    memberCreationDto.firstNameNepali = this.firstNameNepali.value!;
+    memberCreationDto.lastNameNepali = this.lastNameNepali.value!;
     memberCreationDto.post = this.post.value!;
     memberCreationDto.title = this.title.value!;
     memberCreationDto.institution = this.institution.value!;

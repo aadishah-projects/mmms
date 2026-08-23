@@ -82,19 +82,69 @@
 
       <div class="form-row">
         <div class="form-group half-width">
+          <label for="control-firstname-nepali"
+            >Nepali First Name <span class="required-astrick">*</span></label
+          >
+          <input
+            id="control-firstname-nepali"
+            type="text"
+            formControlName="firstNameNepali"
+            class="form-input"
+            placeholder="Enter name in Nepali"
+            [class.error]="firstNameNepali.touched && firstNameNepali.dirty && firstNameNepali.invalid"
+            autocomplete="off"
+          />
+          @if ((firstNameNepali.touched && firstNameNepali.dirty) || showAllErrors) {
+            @if (firstNameNepali.errors?.["required"]) {
+              <p class="field-error">Nepali first name is required</p>
+            }
+          }
+        </div>
+
+        <div class="form-group half-width">
+          <label for="control-lastname-nepali"
+            >Nepali Last Name <span class="required-astrick">*</span></label
+          >
+          <input
+            id="control-lastname-nepali"
+            type="text"
+            formControlName="lastNameNepali"
+            class="form-input"
+            placeholder="Enter surname in Nepali"
+            [class.error]="lastNameNepali.touched && lastNameNepali.dirty && lastNameNepali.invalid"
+            autocomplete="off"
+          />
+          @if ((lastNameNepali.touched && lastNameNepali.dirty) || showAllErrors) {
+            @if (lastNameNepali.errors?.["required"]) {
+              <p class="field-error">Nepali last name is required</p>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group half-width">
           <label for="control-title"
-            >Title <span class="required-astrick">*</span></label
+            >Pad / Title <span class="required-astrick">*</span></label
           >
           <input
             id="control-title"
             type="text"
             formControlName="title"
             class="form-input"
+            list="member-pad-options"
             placeholder = "Eg: डा., प्रा."
             [class.error]="title.touched && title.dirty && title.invalid"
             spellcheck="false"
             autocomplete="off"
           />
+          <datalist id="member-pad-options">
+            <option value="pra">Professor</option>
+            <option value="upra">Assistant Professor</option>
+            <option value="da">Doctor</option>
+            <option value="associate professor">Associate Professor</option>
+          </datalist>
+          <small class="field-help">Use the romanized pad code: pra, upra, da, or associate professor.</small>
           @if ((title.touched && title.dirty) || showAllErrors) {
             @if (title.errors?.["required"]) {
               <p class="field-error">(Title is required)</p>
