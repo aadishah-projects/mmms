@@ -173,8 +173,6 @@
   cursor: pointer;
 }
 
-//for dialog while changing the order of meeting participants
-
 .main-dialog {
   width: 500px;
   height: fit-content;
@@ -187,13 +185,10 @@
   overflow: hidden;
 
   &[open] {
-    display: flex; //flex container only when the dialog is open
-
+    display: flex;
     flex-direction: column;
     gap: 20px;
   }
-
-  //if we keep display: flex outside, the dialog content will be shown even when the dialog is closed
 
   &::backdrop {
     background: rgba(0, 0, 0, 0.7);
@@ -202,12 +197,12 @@
 }
 
 .panel-header {
-  padding: 0;
   padding-bottom: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   border-bottom: 1px solid colors.$color-border-primary;
+  color: colors.$color-text-primary;
 }
 
 .panel-subtitle {
@@ -230,6 +225,7 @@
   justify-content: flex-start;
   height: 30px;
   gap: 20px;
+
   &:hover {
     background: rgba(88, 101, 242, 0.1);
   }
@@ -244,12 +240,6 @@
   color: colors.$color-text-primary;
 }
 
-.panel-header {
-  color: colors.$color-text-primary;
-}
-
-//////////////////////////////////////////////////////
-//for drag and drop feature
 .drag-handle {
   cursor: move;
   margin-right: 10px;
@@ -257,7 +247,6 @@
   font-size: 1.2rem;
 }
 
-// Style the ghost placeholder which appears when a member is lifted
 .custom-placeholder {
   background: colors.$color-card-hover;
   border: 2px dashed #999;
@@ -295,8 +284,6 @@
     opacity: 0.6;
   }
 }
-
-
 
 @media (max-width: 768px) {
   :host {

@@ -2,7 +2,6 @@ import {
   Component,
   ElementRef,
   inject,
-  input,
   ViewChild,
   viewChild,
 } from '@angular/core';
@@ -38,15 +37,12 @@ export class MinuteViewComponent {
   participantOrderSaving = false;
   private participantOrderSnapshot: CommitteeMembershipDto[] = [];
 
-  ///////////////////////////////////////////
-  // for invitee order change dialog
   @ViewChild('participant_order_dialog')
   dialogElementRef!: ElementRef<HTMLDialogElement>;
 
   onDialogClick(event: MouseEvent) {
-    const dlg = this.dialogElementRef.nativeElement;
-    if (event.target === dlg && dlg.open) {
-      const dialog = this.dialogElementRef?.nativeElement;
+    const dialog = this.dialogElementRef.nativeElement;
+    if (event.target === dialog && dialog.open) {
       dialog.close();
     }
   }
@@ -59,18 +55,19 @@ export class MinuteViewComponent {
     this.showMinuteOptions = false;
   }
 
-  printPage() {
-    this.showMinuteOptions = false;
-    // Small delay to allow Angular to update the DOM before printing
-    setTimeout(() => {
-      window.print();
-    }, 1);
+  onDirectContentInput(event: Event): void {
+    if (!this.isEditMode) {
+      return;
+    }
+
+    const target = event.target as HTMLElement;
+    const minuteSurface = target.closest<HTMLElement>('#a4-box');
+    if (minuteSurface) {
+      this.injectedMinuteDataService.setMinuteContentHtml(minuteSurface.innerHTML);
+    }
   }
 
-  ////////////////////////////////////////////////////////////
-  //for participant order change dialog
-
-  drop(event: CdkDragDrop<CommitteeMembershipDto[]>) {
+  drop(event: CdkDragDrop<CommitteeMembershipDto[]>): void {
     moveItemInArray(
       this.minuteData().participants,
       event.previousIndex,
@@ -79,7 +76,8 @@ export class MinuteViewComponent {
   }
 
   diag = viewChild<ElementRef<HTMLDialogElement>>('participant_order_dialog');
-  showChangeParticipantOrderDialog() {
+
+  showChangeParticipantOrderDialog(): void {
     this.showMinuteOptions = false;
     this.participantOrderSnapshot = this.minuteData().participants.map((participant) => ({ ...participant }));
     this.diag()!.nativeElement.showModal();
@@ -92,8 +90,9 @@ export class MinuteViewComponent {
 
   saveParticipantOrder(): void {
     if (this.participantOrderSaving) return;
-    const meetingId = this.routeMeetingId();
+    const meetingId = this.route.snapshot.queryParamMap.get('meetingId');
     if (!meetingId) return;
+
     this.participantOrderSaving = true;
     this.httpClient
       .patch<Response<{ participantIds: number[]; minuteContentHtml: string | null }>>(
@@ -113,9 +112,21 @@ export class MinuteViewComponent {
         },
         error: (error) => {
           this.participantOrderSaving = false;
-          this.popupService.showPopup(error?.error?.message || 'Attendance order could not be saved.', 'Error', 3000);
+          this.popupService.showPopup(
+            error?.error?.message || 'Attendance order could not be saved.',
+            'Error',
+            3000,
+          );
         },
       });
+  }
+
+  printPage() {
+    this.showMinuteOptions = false;
+    // Small delay to allow Angular to update the DOM before printing
+    setTimeout(() => {
+      window.print();
+    }, 1);
   }
 
   //data loading logic is not in the component because data needs to be shared with minute-edit component.
@@ -125,11 +136,11 @@ export class MinuteViewComponent {
   minuteEnglish1 = viewChild(MinuteEnglish1Component);
   customProcessedMinute = viewChild<ElementRef<HTMLDivElement>>('customProcessedMinute');
 
-  constructor(private httpClient: HttpClient, private popupService: PopupService, private route: ActivatedRoute) {}
-
-  private routeMeetingId(): string | null {
-    return this.route.snapshot.queryParamMap.get('meetingId');
-  }
+  constructor(
+    private httpClient: HttpClient,
+    private popupService: PopupService,
+    private route: ActivatedRoute,
+  ) {}
 
   htmlContent!: string | undefined;
 

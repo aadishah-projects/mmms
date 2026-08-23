@@ -8,12 +8,7 @@
         </button>
       }
     </div>
-    <p class="panel-subtitle">Record the meeting facts, then use the template to produce the final minute.</p>
-    @if (!fullEditorMode()) {
-      <button type="button" class="btn btn-secondary" (click)="startFullEditor()">Open full editor</button>
-    } @else {
-      <button type="button" class="btn btn-secondary" (click)="useStructuredEditor()">Use structured fields</button>
-    }
+    <p class="panel-subtitle">Edit the meeting details, agendas, and decisions. Use “Edit Directly” on the minute preview for free-form changes.</p>
   </div>
 
   <div class="ai-draft-panel">
@@ -28,15 +23,6 @@
       {{ aiInProgress ? 'Refining...' : 'Refine agenda and decisions' }}
     </button>
   </div>
-
-  @if (fullEditorMode()) {
-    <div
-      class="full-minute-editor"
-      contenteditable="true"
-      [innerHTML]="minuteData().minuteContentHtml"
-      (input)="onFullContentInput($event)"
-    ></div>
-  } @else {
 
   <form class="actual-form">
     <div class="form-group">
@@ -209,5 +195,4 @@
       </ol>
     </div>
   </form>
-  }
 </div>

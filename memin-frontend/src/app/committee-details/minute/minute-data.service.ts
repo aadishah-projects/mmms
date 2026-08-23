@@ -10,8 +10,6 @@ import { Response } from '../../response/response';
 //data loading logic is not in the component because data needs to be shared with minute-edit component.
 export class MinuteDataService {
   private minuteData = signal<MinuteDataDto>(new MinuteDataDto());
-  private fullEditorMode = signal(false);
-
   private originalDataString: string = '';
 
   public hasMinuteDataLoaded = false;
@@ -30,8 +28,6 @@ export class MinuteDataService {
         distinctUntilChanged(),
         switchMap((meetingId) => {
           this.hasMinuteDataLoaded = false;
-          this.fullEditorMode.set(false);
-
           const params = new HttpParams().set('meetingId', meetingId);
           return this.httpClient.get<Response<MinuteDataDto>>(
             BACKEND_URL + '/api/data-for-minute',
@@ -42,12 +38,9 @@ export class MinuteDataService {
       .subscribe({
         next: (response) => {
           this.minuteData.set(response.mainBody);
-          this.fullEditorMode.set(
-            !!response.mainBody.minuteContentHtml?.trim(),
-          );
           this.hasMinuteDataLoaded = true;
 
-          // Participant order is persisted independently by the minute viewer.
+          // Attendance order is persisted with the meeting and restored here.
           this.markSaved();
         },
         error: (response) => {
@@ -59,14 +52,6 @@ export class MinuteDataService {
 
   getMinuteData(): Signal<MinuteDataDto> {
     return this.minuteData;
-  }
-
-  getFullEditorMode(): Signal<boolean> {
-    return this.fullEditorMode;
-  }
-
-  setFullEditorMode(enabled: boolean): void {
-    this.fullEditorMode.set(enabled);
   }
 
   setMinuteContentHtml(htmlContent: string | null): void {

@@ -1,9 +1,6 @@
-<!-- when this template is rendered for the first time, minuteData()() may not have been populated by the server, and it may be undefined  
--->
-
 <div class="menu-btn-container">
   <button class="menu-btn" (click)="showMinuteOptions = !showMinuteOptions">
-    ⋯
+    ...
   </button>
 </div>
 
@@ -18,16 +15,15 @@
   </div>
 </div>
 
-<!-- Dialog for changing the order of invitees -->
 <dialog
   class="main-dialog"
   cdkDropList
   (cdkDropListDropped)="drop($event)"
   #participant_order_dialog
-    (click)="onDialogClick($event)"
+  (click)="onDialogClick($event)"
 >
   <div class="panel-header">
-    <p class="heading">Drag and Drop with ☰ as handle</p>
+    <p class="heading">Reorder meeting attendance</p>
     <p class="panel-subtitle">
       Drag participants into the order used by the attendance section, then save.
     </p>
@@ -35,16 +31,17 @@
 
   <div class="participants">
     @for (participant of minuteData().participants; track $index) {
-    <div cdkDrag>
-      <div *cdkDragPlaceholder class="custom-placeholder"></div>
-      <div class="participant-info">
-        <span class="drag-handle" cdkDragHandle>☰</span>
-        <div class="participant-name">{{ participant.fullName }}</div>
-        <div class="participant-role">{{ participant.role }}</div>
+      <div cdkDrag>
+        <div *cdkDragPlaceholder class="custom-placeholder"></div>
+        <div class="participant-info">
+          <span class="drag-handle" cdkDragHandle>☰</span>
+          <div class="participant-name">{{ participant.fullName }}</div>
+          <div class="participant-role">{{ participant.role }}</div>
+        </div>
       </div>
-    </div>
     }
   </div>
+
   <div class="participant-order-actions">
     <button type="button" class="order-cancel" (click)="cancelParticipantOrder()">Cancel</button>
     <button type="button" class="order-save" (click)="saveParticipantOrder()" [disabled]="participantOrderSaving">
@@ -59,6 +56,7 @@
     id="a4-box"
     [attr.contenteditable]="isEditMode"
     [innerHTML]="minuteData().minuteContentHtml"
+    (input)="onDirectContentInput($event)"
     (click)="$event.stopPropagation()"
   ></div>
 </div>
@@ -67,6 +65,7 @@
   [minuteData]="minuteData()"
   [isEditable]="isEditMode"
   class="minute"
+  (input)="onDirectContentInput($event)"
   (click)="showMinuteOptions = false"
 ></app-minute-nepali-1>
 } @else if ( minuteData() != undefined && minuteData().minuteLanguage ===
@@ -75,7 +74,7 @@
   [minuteData]="minuteData()"
   [isEditable]="isEditMode"
   class="minute"
+  (input)="onDirectContentInput($event)"
   (click)="showMinuteOptions = false"
 ></app-minute-english-1>
 }
-<div></div>

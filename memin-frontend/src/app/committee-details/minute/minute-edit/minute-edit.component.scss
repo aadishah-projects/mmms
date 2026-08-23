@@ -78,31 +78,6 @@
   }
 }
 
-.full-minute-editor {
-  flex: 1;
-  margin: 15px;
-  padding: 24px;
-  overflow: auto;
-  background: white;
-  color: #222;
-  border: 1px solid colors.$color-border-primary;
-  outline: none;
-  line-height: 1.5;
-
-  &:focus {
-    border-color: colors.$color-border-focus;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th, td {
-    padding: 6px;
-    border: 1px solid #777;
-  }
-}
 .form-element-pair {
   display:flex;
   gap:10px;
@@ -418,11 +393,6 @@ form label, .data-label {
     }
   }
 
-  .full-minute-editor {
-    min-height: 300px;
-    margin: 12px;
-    padding: 16px;
-  }
 }
 
 

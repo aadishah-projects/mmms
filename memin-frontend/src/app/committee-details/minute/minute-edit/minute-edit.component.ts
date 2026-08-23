@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, ElementRef, inject, input, OnInit, viewChildren } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, inject, OnInit, viewChildren } from '@angular/core';
 import { MinuteDataService } from '../minute-data.service';
 import { FormsModule } from '@angular/forms';
 import {
@@ -23,7 +23,6 @@ import { PopupService } from '../../../popup/popup.service';
 export class MinuteEditComponent implements OnInit, AfterViewChecked {
   minuteDataService = inject(MinuteDataService);
   minuteData = this.minuteDataService.getMinuteData();
-  fullEditorMode = this.minuteDataService.getFullEditorMode();
   count = -1; //unique negative number which is assigned as the decision or agenda id which is used for deletion
   httpParams = new HttpParams();
   aiPrompt = '';
@@ -50,9 +49,6 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked(): void {
-    if (this.fullEditorMode()) {
-      return;
-    }
     this.agendaInputFields().forEach((input) => this.resizeTextarea(input.nativeElement));
     this.decisionInputFields().forEach((input) => this.resizeTextarea(input.nativeElement));
   }
@@ -65,43 +61,6 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
       (decision) => !!decision.decision && decision.decision.trim().length > 0,
     );
     return !hasAgenda && !hasDecision;
-  }
-
-  onFullContentInput(event: Event): void {
-    const element = event.target as HTMLElement;
-    this.minuteDataService.setMinuteContentHtml(element.innerHTML);
-  }
-
-  startFullEditor(): void {
-    const data = this.minuteData();
-    // Changing modes must not replace an existing AI/custom draft.
-    if (data.minuteContentHtml?.trim()) {
-      this.minuteDataService.setFullEditorMode(true);
-      return;
-    }
-    const attendance = data.participants
-      .map((participant, index) => `<tr><td>${index + 1}</td><td>${this.escapeHtml(participant.fullName)}</td><td>${this.escapeHtml(participant.role)}</td><td></td></tr>`)
-      .join('');
-    const agendas = data.agendas.map((agenda) => `<li>${this.escapeHtml(agenda.agenda)}</li>`).join('');
-    const decisions = data.decisions.map((decision) => `<li>${this.escapeHtml(decision.decision)}</li>`).join('');
-    this.minuteDataService.setMinuteContentHtml(`
-      <h1>${this.escapeHtml(data.committeeName)} — Meeting Minute</h1>
-      <p>${this.escapeHtml(data.openingParagraph ?? `Meeting held on ${data.meetingHeldDate} at ${data.meetingHeldPlace}.`)}</p>
-      <h2>Attendance</h2>
-      <table class="memberships" border="1"><thead><tr><th>S.N.</th><th>Name</th><th>Position</th><th>Signature</th></tr></thead><tbody>${attendance}</tbody></table>
-      <h2>Agendas</h2><ol>${agendas}</ol>
-      <h2>Decisions</h2><ol>${decisions}</ol>`);
-    this.minuteDataService.setFullEditorMode(true);
-  }
-
-  useStructuredEditor(): void {
-    const htmlContent = this.minuteData().minuteContentHtml;
-    if (htmlContent) {
-      this.copyStructuredFieldsFromHtml(htmlContent);
-    }
-    // Keep the custom HTML as the minute content. The separate mode flag
-    // allows the structured fields to be shown without revealing stale data.
-    this.minuteDataService.setFullEditorMode(false);
   }
 
   generateAiMinute(): void {
@@ -119,7 +78,6 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
           const result = response.mainBody;
           this.minuteDataService.setStructuredFields(result.agendas, result.decisions);
           this.minuteDataService.setMinuteContentHtml(result.htmlContent);
-          this.minuteDataService.setFullEditorMode(!!result.htmlContent?.trim());
           this.aiInProgress = false;
           this.popupService.showPopup(
             result.usedCommitteeTemplate
@@ -139,58 +97,6 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
           );
         },
       });
-  }
-
-  private escapeHtml(value: string): string {
-    return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character] ?? character));
-  }
-
-  private copyStructuredFieldsFromHtml(htmlContent: string): void {
-    const container = document.createElement('div');
-    container.innerHTML = htmlContent;
-
-    const agendaValues = this.extractSectionItems(container, 'agenda');
-    const decisionValues = this.extractSectionItems(container, 'decision');
-    if (agendaValues === null && decisionValues === null) {
-      return;
-    }
-
-    const data = this.minuteData();
-    const agendas = agendaValues === null
-      ? data.agendas
-      : agendaValues.map((agenda, index) => ({
-          agendaId: data.agendas[index]?.agendaId ?? this.count--,
-          agenda,
-        }));
-    const decisions = decisionValues === null
-      ? data.decisions
-      : decisionValues.map((decision, index) => ({
-          decisionId: data.decisions[index]?.decisionId ?? this.count--,
-          decision,
-        }));
-
-    this.minuteDataService.setStructuredFields(agendas, decisions);
-  }
-
-  private extractSectionItems(
-    container: HTMLElement,
-    section: 'agenda' | 'decision',
-  ): string[] | null {
-    const list = this.findSectionList(container, section);
-    if (!list) {
-      return null;
-    }
-
-    return Array.from(list.children)
-      .filter((child): child is HTMLElement => child.tagName.toLowerCase() === 'li')
-      .map((item) => {
-        const itemCopy = item.cloneNode(true) as HTMLElement;
-        itemCopy.querySelectorAll('ol, ul').forEach((nestedList) => nestedList.remove());
-        return (itemCopy.textContent ?? '')
-          .replace(/^\s*(?:\d+|[\u0966-\u096F]+)\s*[.)।:-]?\s*/u, '')
-          .trim();
-      })
-      .filter((item) => item.length > 0);
   }
 
   private findSectionList(
@@ -381,11 +287,8 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
       this.showAllErrors = false;
     }
 
-    // Structured edits must update the same HTML draft that the minute view
-    // and the full editor use. This keeps both editing modes synchronized.
-    if (!this.fullEditorMode()) {
-      this.syncHtmlWithStructuredFields();
-    }
+    // Keep the structured fields and the directly editable minute surface in sync.
+    this.syncHtmlWithStructuredFields();
     
 
     const minuteUpdateDto = new MinuteUpdateDto();
@@ -398,7 +301,7 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
     minuteUpdateDto.decisions = this.minuteData().decisions;
     minuteUpdateDto.agendas = this.minuteData().agendas;
     // Keep the meeting-specific draft when saving structured fields. It is
-    // the same edited minute displayed by the full editor and minute view.
+    // the same edited minute displayed by the minute view.
     minuteUpdateDto.htmlContent = this.minuteData().minuteContentHtml ?? '';
 
     this.saveInProgress = true;
