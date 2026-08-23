@@ -25,25 +25,14 @@ public class MeetingDetailsForEditDto {
     private final List<DecisionDto> decisions = new ArrayList<>();
     private final List<AgendaDto> agendas = new ArrayList<>();
 
-    public MeetingDetailsForEditDto(Meeting meeting, List<MemberSearchResultDto> possibleInvitees) {
+    public MeetingDetailsForEditDto(Meeting meeting, List<MemberSearchResultDto> possibleInvitees, int meetingNumber) {
         this.possibleInvitees = possibleInvitees;
         this.committeeName = meeting.getCommittee().getName();
         this.title = meeting.getTitle();
         this.heldDate = meeting.getHeldDate();
         this.heldTime = meeting.getHeldTime();
         this.heldPlace = meeting.getHeldPlace();
-        List<Meeting> orderedMeetings = meeting.getCommittee().getMeetings().stream()
-                .filter(candidate -> candidate.getId() != null)
-                .sorted(java.util.Comparator.comparing(Meeting::getId))
-                .toList();
-        int resolvedMeetingNumber = 1;
-        for (int index = 0; index < orderedMeetings.size(); index++) {
-            if (java.util.Objects.equals(orderedMeetings.get(index).getId(), meeting.getId())) {
-                resolvedMeetingNumber = index + 1;
-                break;
-            }
-        }
-        this.meetingNumber = resolvedMeetingNumber;
+        this.meetingNumber = meetingNumber;
         Member meetingChairman = meeting.getChairman() != null
                 ? meeting.getChairman()
                 : meeting.getCommittee().getCoordinator();

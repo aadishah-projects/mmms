@@ -24,7 +24,11 @@ public class MinuteTemplateDto {
 
     public MinuteTemplateDto(Committee committee) {
         this.committeeId = committee.getId();
-        this.committeeName = committee.getName();
+        this.committeeName = MinuteLanguage.NEPALI.equals(committee.getMinuteLanguage())
+                && committee.getNepaliName() != null
+                && !committee.getNepaliName().isBlank()
+                ? committee.getNepaliName()
+                : committee.getName();
         this.committeeDescription = committee.getDescription();
         this.minuteLanguage = committee.getMinuteLanguage();
         this.minuteTemplateHtml = committee.getMinuteTemplateHtml();

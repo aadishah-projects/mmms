@@ -104,6 +104,7 @@ public class MinuteTemplateService {
     @Transactional
     public void deleteTemplate(int committeeId, int templateId, String username) {
         Committee committee = getWritableCommittee(committeeId, username);
+        freezeLegacyMeetingTemplates(committee);
         MinuteTemplate template = templateRepository.findByIdAndCommitteeId(templateId, committeeId)
                 .orElseThrow(() -> new IllegalOperationException("Minute template not found"));
         boolean wasActive = template.getId().equals(committee.getActiveMinuteTemplateId());
@@ -125,12 +126,27 @@ public class MinuteTemplateService {
     }
 
     private void activate(Committee committee, MinuteTemplate template) {
+        freezeLegacyMeetingTemplates(committee);
         committee.setActiveMinuteTemplateId(template.getId());
         committee.setMinuteTemplateHtml(template.getMinuteTemplateHtml());
         // CommitteeService owns the repository used for normal committee
         // operations; saving through its public method is intentionally avoided
         // here because this service already has the managed entity instance.
         committeeService.saveTemplateActivation(committee);
+    }
+
+    /**
+     * Older meetings predate per-meeting snapshots. Freeze their current
+     * committee template before changing the active committee template so the
+     * edit cannot alter their rendered minutes.
+     */
+    private void freezeLegacyMeetingTemplates(Committee committee) {
+        String currentTemplate = committee.getMinuteTemplateHtml() == null
+                ? ""
+                : committee.getMinuteTemplateHtml();
+        committee.getMeetings().stream()
+                .filter(meeting -> meeting.getMinuteTemplateHtml() == null)
+                .forEach(meeting -> meeting.setMinuteTemplateHtml(currentTemplate));
     }
 
     private Committee getWritableCommittee(int committeeId, String username) {

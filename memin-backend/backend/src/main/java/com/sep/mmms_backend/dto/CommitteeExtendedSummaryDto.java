@@ -11,6 +11,7 @@ import java.util.List;
 public class CommitteeExtendedSummaryDto {
     private final int committeeId;
     private final String name;
+    private final String nepaliName;
     private final String description;
     private final MinuteLanguage language;
     List<MeetingExtendedSummaryDto> meetings = new ArrayList<>();
@@ -18,6 +19,7 @@ public class CommitteeExtendedSummaryDto {
     public CommitteeExtendedSummaryDto(Committee committee) {
         this.committeeId = committee.getId();
         this.name = committee.getName();
+        this.nepaliName = committee.getNepaliName();
         this.description = committee.getDescription();
         this.language = committee.getMinuteLanguage();
         committee.getMeetings().forEach(meeting -> meetings.add(new MeetingExtendedSummaryDto(meeting)));

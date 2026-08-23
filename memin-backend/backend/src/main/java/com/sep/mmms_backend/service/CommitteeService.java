@@ -7,10 +7,12 @@ import com.sep.mmms_backend.entity.CommitteeMembership;
 import com.sep.mmms_backend.entity.Meeting;
 import com.sep.mmms_backend.entity.Member;
 import com.sep.mmms_backend.enums.CommitteeStatus;
+import com.sep.mmms_backend.enums.MinuteLanguage;
 import com.sep.mmms_backend.exceptions.*;
 import com.sep.mmms_backend.repository.CommitteeMembershipRepository;
 import com.sep.mmms_backend.repository.CommitteeRepository;
 import com.sep.mmms_backend.repository.MemberRepository;
+import com.sep.mmms_backend.repository.MeetingRepository;
 import com.sep.mmms_backend.utils.MemberDisplayNameFormatter;
 import com.sep.mmms_backend.validators.EntityValidator;
 import jakarta.persistence.criteria.Predicate;
@@ -29,12 +31,14 @@ public class CommitteeService {
     private final EntityValidator entityValidator;
     private final MemberRepository memberRepository;
     private final AppUserService appUserService;
+    private final MeetingRepository meetingRepository;
 
-    public CommitteeService(CommitteeRepository committeeRepository, AppUserService appUserService, EntityValidator entityValidator, MemberRepository memberRepository, CommitteeMembershipRepository committeeMembershipRepository) {
+    public CommitteeService(CommitteeRepository committeeRepository, AppUserService appUserService, EntityValidator entityValidator, MemberRepository memberRepository, CommitteeMembershipRepository committeeMembershipRepository, MeetingRepository meetingRepository) {
         this.committeeRepository = committeeRepository;
         this.entityValidator = entityValidator;
         this.memberRepository = memberRepository;
         this.appUserService = appUserService;
+        this.meetingRepository = meetingRepository;
     }
 
 
@@ -74,6 +78,8 @@ public class CommitteeService {
         committee.setCreatedBy(username);
 
         committee.setName(committeeCreationDto.getName());
+        validateNepaliName(committeeCreationDto);
+        committee.setNepaliName(trimToNull(committeeCreationDto.getNepaliName()));
         committee.setDescription(committeeCreationDto.getDescription());
         committee.setStatus(committeeCreationDto.getStatus());
         committee.setMinuteLanguage(committeeCreationDto.getMinuteLanguage());
@@ -137,6 +143,7 @@ public class CommitteeService {
         Committee committee = prepareCommitteeFromCommitteeCreationDto(committeeCreationDto, username);
 
         existingCommittee.setName(committee.getName());
+        existingCommittee.setNepaliName(committee.getNepaliName());
         existingCommittee.setDescription(committee.getDescription());
         existingCommittee.setStatus(committee.getStatus());
         existingCommittee.setMinuteLanguage(committee.getMinuteLanguage());
@@ -147,6 +154,9 @@ public class CommitteeService {
             existingCommittee.setMinuteHeaderTemplate(committee.getMinuteHeaderTemplate());
         }
         if (committeeCreationDto.getMinuteTemplateHtml() != null) {
+            if (!Objects.equals(existingCommittee.getMinuteTemplateHtml(), committee.getMinuteTemplateHtml())) {
+                freezeLegacyMeetingTemplates(existingCommittee);
+            }
             existingCommittee.setMinuteTemplateHtml(committee.getMinuteTemplateHtml());
         }
         existingCommittee.setMaxNoOfMeetings(committee.getMaxNoOfMeetings());
@@ -198,18 +208,34 @@ public class CommitteeService {
         return committeeRepository.save(existingCommittee);
     }
 
+    private void validateNepaliName(CommitteeCreationDto committeeCreationDto) {
+        if (MinuteLanguage.NEPALI.equals(committeeCreationDto.getMinuteLanguage())
+                && (committeeCreationDto.getNepaliName() == null || committeeCreationDto.getNepaliName().isBlank())) {
+            throw new InvalidRequestException(ExceptionMessages.NEPALI_COMMITTEE_NAME_REQUIRED);
+        }
+    }
+
+    private String trimToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     @Transactional
     @CheckCommitteeAccess
     public CommitteeOverviewDto getCommitteeOverview(Committee committee, String username) {
         CommitteeOverviewDto committeeOverview = new CommitteeOverviewDto();
         committeeOverview.setName(committee.getName());
+        committeeOverview.setNepaliName(committee.getNepaliName());
         committeeOverview.setDescription(committee.getDescription());
         committeeOverview.setCreatedDate(committee.getCreatedDate());
         committeeOverview.setMemberCount(committee.getSortedMemberships().size());
-        committeeOverview.setMeetingCount(committee.getMeetings().size());
+        // Do not walk Committee.meetings here. The committee passed by the
+        // controller may be detached; fetch the meetings directly inside this
+        // transaction instead.
+        List<Meeting> meetings = meetingRepository.findByCommitteeIdWithAgendas(committee.getId());
+        committeeOverview.setMeetingCount(meetings.size());
         committeeOverview.setLanguage(committee.getMinuteLanguage());
         int decisionCount = 0;
-        for (Meeting meeting : committee.getMeetings()) {
+        for (Meeting meeting : meetings) {
             decisionCount += meeting.getDecisions().size();
         }
         committeeOverview.setDecisionCount(decisionCount);
@@ -235,10 +261,10 @@ public class CommitteeService {
             committeeOverview.setSecretaryId(secretary.getId());
         }
 
-        if (!committee.getMeetings().isEmpty()) {
+        if (!meetings.isEmpty()) {
             Map<LocalDate, List<Meeting>> dateAndMeetingIdMap = new HashMap<>();
 
-            for(Meeting meeting: committee.getMeetings()) {
+            for(Meeting meeting: meetings) {
                 if(dateAndMeetingIdMap.containsKey(meeting.getHeldDate())) {
                     dateAndMeetingIdMap.get(meeting.getHeldDate()).add(meeting);
                 } else {
@@ -248,7 +274,7 @@ public class CommitteeService {
                 }
             }
 
-            List<LocalDate> meetingDates = committee.getMeetings().stream().map(Meeting::getHeldDate).collect(Collectors.toList());
+            List<LocalDate> meetingDates = meetings.stream().map(Meeting::getHeldDate).collect(Collectors.toList());
 
 
             Comparator<LocalDate> comparator = LocalDate::compareTo;
@@ -306,8 +332,18 @@ public class CommitteeService {
         String templateHtml = minuteTemplateUpdateDto == null
                 ? null
                 : minuteTemplateUpdateDto.getMinuteTemplateHtml();
+        freezeLegacyMeetingTemplates(committee);
         committee.setMinuteTemplateHtml(templateHtml == null || templateHtml.isBlank() ? null : templateHtml);
         committeeRepository.save(committee);
+    }
+
+    private void freezeLegacyMeetingTemplates(Committee committee) {
+        String currentTemplate = committee.getMinuteTemplateHtml() == null
+                ? ""
+                : committee.getMinuteTemplateHtml();
+        committee.getMeetings().stream()
+                .filter(meeting -> meeting.getMinuteTemplateHtml() == null)
+                .forEach(meeting -> meeting.setMinuteTemplateHtml(currentTemplate));
     }
 
     /** Used by the template library service on an already managed committee. */
@@ -373,9 +409,14 @@ public class CommitteeService {
     }
 
     public Optional<Committee> findCommitteeByIdNoException(int committeeId) {
-        return committeeRepository.findById(committeeId);
+        // Access checks and several response DTOs may inspect the committee's
+        // meetings/memberships after this method returns. Load the same
+        // initialized graph used by findCommitteeById instead of returning a
+        // detached committee with a lazy meetings collection.
+        return committeeRepository.findByIdWithDetails(committeeId);
     }
 
+    @Transactional(readOnly = true)
     public Committee getCommitteeIfAccessible(int committeeId, String username) {
         Committee committee = this.findCommitteeByIdNoException(committeeId).orElseThrow(() -> new CommitteeDoesNotExistException(ExceptionMessages.COMMITTEE_DOES_NOT_EXIST, committeeId));
         

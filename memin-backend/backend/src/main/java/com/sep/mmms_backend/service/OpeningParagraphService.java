@@ -1,6 +1,7 @@
 package com.sep.mmms_backend.service;
 
 import com.sep.mmms_backend.entity.Committee;
+import com.sep.mmms_backend.enums.MinuteLanguage;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -42,7 +43,11 @@ public class OpeningParagraphService {
 
         templateData.put("committeeDescription", committee.getDescription());
 
-        templateData.put("committeeName", committee.getName());
+        templateData.put("committeeName", MinuteLanguage.NEPALI.equals(committee.getMinuteLanguage())
+                && committee.getNepaliName() != null
+                && !committee.getNepaliName().isBlank()
+                ? committee.getNepaliName()
+                : committee.getName());
 
         templateData.put("coordinatorFullName", "Coordinator Name");
         templateData.put("chairmanFullName", "Chairman Name");

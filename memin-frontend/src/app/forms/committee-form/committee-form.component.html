@@ -224,6 +224,29 @@
       </div>
 
       <div class="form-group">
+        <label for="committee-nepali-name">
+          Nepali Committee Name
+          @if (minuteLanguage.value === 'NEPALI') {
+            <span class="required-astrick">*</span>
+          }
+        </label>
+        <input
+          id="committee-nepali-name"
+          type="text"
+          placeholder="समितिको नेपाली नाम लेख्नुहोस्"
+          formControlName="nepaliName"
+          class="form-input"
+          autocomplete="off"
+          spellcheck="false"
+          lang="ne"
+        />
+        <p class="field-help">Used in Nepali minutes and templates.</p>
+        @if (showAllFormErrors && !isNepaliNameValid()) {
+          <p class="field-error">(Nepali committee name is required for Nepali minutes)</p>
+        }
+      </div>
+
+      <div class="form-group">
         <label for="committee-description">Description<span class="required-astrick">*</span></label>
         <textarea
           id="committee-description"

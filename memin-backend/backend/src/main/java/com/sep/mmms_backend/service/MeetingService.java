@@ -56,6 +56,11 @@ public class MeetingService {
         meeting.setHeldTime(meetingCreationDto.getHeldTime());
         meeting.setHeldPlace(meetingCreationDto.getHeldPlace());
         meeting.setChairman(resolveChairman(meetingCreationDto.getChairmanId(), committee, null));
+        // Freeze the committee template at meeting creation. A blank snapshot
+        // deliberately means "use the built-in minute view" for this meeting.
+        meeting.setMinuteTemplateHtml(committee.getMinuteTemplateHtml() == null
+                ? ""
+                : committee.getMinuteTemplateHtml());
         meetingCreationDto.getDecisions().forEach(decisionDto -> {
             //check if decision string is blank, if yes, don't save it
             if (decisionDto.getDecision() != null && !decisionDto.getDecision().isBlank()) {
@@ -107,7 +112,11 @@ public class MeetingService {
             //TODO: throw exception
         }
 
-        existingCommittee.setName(minuteUpdationDto.getCommitteeName());
+        if (MinuteLanguage.NEPALI.equals(existingCommittee.getMinuteLanguage())) {
+            existingCommittee.setNepaliName(minuteUpdationDto.getCommitteeName());
+        } else {
+            existingCommittee.setName(minuteUpdationDto.getCommitteeName());
+        }
         existingCommittee.setDescription(minuteUpdationDto.getCommitteeDescription());
 
         existingMeeting.setHeldDate(minuteUpdationDto.getMeetingHeldDate());
@@ -353,7 +362,14 @@ public class MeetingService {
         Meeting meeting = getMeetingIfAccessible(meetingId, username);
         List<Member> possibleInvitees = memberRepository.getPossibleInviteesForMeeting(meetingId, meeting.getCommittee().getId(), username);
         List<MemberSearchResultDto> possibleInviteesFormatted = possibleInvitees.stream().map(MemberSearchResultDto::new).toList();
-        return new MeetingDetailsForEditDto(meeting, possibleInviteesFormatted);
+        int meetingNumber = meetingRepository.findByCommitteeIdWithAgendas(meeting.getCommittee().getId()).stream()
+                .filter(candidate -> candidate.getId() != null)
+                .sorted(java.util.Comparator.comparing(Meeting::getId))
+                .map(Meeting::getId)
+                .toList()
+                .indexOf(meeting.getId()) + 1;
+        return new MeetingDetailsForEditDto(meeting, possibleInviteesFormatted,
+                meetingNumber > 0 ? meetingNumber : 1);
     }
 
     private Meeting getMeetingIfAccessible(Integer memberId, String username) {
@@ -549,6 +565,11 @@ public class MeetingService {
         List<Integer> requestedInviteeIds = meetingCreationDto.getInviteeIds().stream().toList();
         reorderInvitees(existingMeeting, requestedInviteeIds);
         syncParticipantOrder(existingMeeting, requestedInviteeIds);
+        // Keep a previously edited minute as the source of truth. When the
+        // meeting edit form changes the invitee order, update only its saved
+        // attendance rows instead of rebuilding the document from the frozen
+        // committee template.
+        refreshSavedAttendanceTable(existingMeeting, existingMeeting.getAttendees());
         return meetingRepository.save(existingMeeting);
     }
 

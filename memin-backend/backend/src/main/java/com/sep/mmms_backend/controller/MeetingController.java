@@ -69,12 +69,17 @@ public class MeetingController {
     public ResponseEntity<Response> updateMeeting(@RequestBody MeetingCreationDto meetingCreationDto, @RequestParam Integer meetingId, Authentication authentication) {
        Meeting meeting = meetingService.updateExistingMeeting(meetingCreationDto, meetingId, authentication.getName());
        
-       String templateText = meeting.getCommittee().getMinuteTemplateHtml();
-       if (meeting.getMinuteContentHtml() != null || (templateText != null && !templateText.isBlank())) {
+       // A saved minute may contain direct edits or AI-generated content. Do
+       // not replace it with the meeting's frozen template just because the
+       // participant order changed in the edit form. Only render a template
+       // when this meeting does not yet have saved minute HTML.
+       boolean hasSavedMinute = meeting.getMinuteContentHtml() != null
+               && !meeting.getMinuteContentHtml().isBlank();
+       if (!hasSavedMinute && hasMeetingTemplate(meeting)) {
            MinuteDataDto updatedData = meetingMinutePreparationService.prepareDataForMinute(
                    meeting.getCommittee(), meeting, authentication.getName());
-           String htmlContent = meetingMinutePreparationService.renderCommitteeTemplate(
-                   meeting.getCommittee(), updatedData);
+           String htmlContent = meetingMinutePreparationService.renderMeetingTemplate(
+                   meeting, updatedData);
            meetingService.updateMinuteContent(meetingId, htmlContent, authentication.getName());
        }
 
@@ -92,8 +97,27 @@ public class MeetingController {
                 authentication.getName());
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("participantIds", updatedMeeting.getAttendees().stream().map(Member::getId).toList());
-        result.put("minuteContentHtml", updatedMeeting.getMinuteContentHtml());
+        String minuteContentHtml = updatedMeeting.getMinuteContentHtml();
+        if (minuteContentHtml == null && hasMeetingTemplate(updatedMeeting)) {
+            MinuteDataDto minuteData = meetingMinutePreparationService.prepareDataForMinute(
+                    updatedMeeting.getCommittee(), updatedMeeting, authentication.getName());
+            minuteContentHtml = meetingMinutePreparationService.renderMeetingTemplate(
+                    updatedMeeting, minuteData);
+        }
+        // Return a rendered preview for snapshot templates, but do not persist
+        // it here. Reordering participants must never create a new minute table
+        // or replace a template that deliberately has no attendance section.
+        result.put("minuteContentHtml", minuteContentHtml);
         return ResponseEntity.ok(new Response("Participant order saved", result));
+    }
+
+    private boolean hasMeetingTemplate(Meeting meeting) {
+        String snapshot = meeting.getMinuteTemplateHtml();
+        if (snapshot != null) {
+            return !snapshot.isBlank();
+        }
+        String legacyTemplate = meeting.getCommittee().getMinuteTemplateHtml();
+        return legacyTemplate != null && !legacyTemplate.isBlank();
     }
 
     @DeleteMapping("/meeting/{meetingId}")

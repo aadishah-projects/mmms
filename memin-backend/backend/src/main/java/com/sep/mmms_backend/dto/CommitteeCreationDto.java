@@ -16,6 +16,9 @@ public class CommitteeCreationDto {
     @NotBlank(message = "committee name is required")
     private String name;
 
+    // Required by the frontend/backend when the committee minute language is Nepali.
+    private String nepaliName;
+
     @NotBlank(message = "committee description/aim is required")
     private String description;
 

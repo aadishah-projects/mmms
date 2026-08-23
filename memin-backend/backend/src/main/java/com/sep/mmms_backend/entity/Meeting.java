@@ -44,10 +44,15 @@ public class Meeting {
     @Column(name = "meeting_held_place")
     private String heldPlace;
 
-    // A meeting-specific edited/generated minute. When null, the committee
-    // template or the built-in language template is used.
+    // A meeting-specific edited/generated minute. When null, this meeting's
+    // frozen template or its built-in language template is used.
     @Column(name = "meeting_minute_content_html", columnDefinition = "TEXT")
     private String minuteContentHtml;
+
+    // The committee template active when this meeting was created. A blank
+    // value means the meeting intentionally used the built-in minute view.
+    @Column(name = "meeting_minute_template_html", columnDefinition = "TEXT")
+    private String minuteTemplateHtml;
 
     @Column(name = "created_by", updatable = false, nullable = false)
     @CreatedBy

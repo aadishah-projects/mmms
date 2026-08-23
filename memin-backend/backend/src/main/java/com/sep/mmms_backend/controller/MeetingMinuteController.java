@@ -85,8 +85,8 @@ public class MeetingMinuteController {
         Meeting updatedMeeting = meetingService.findMeetingById(meetingId);
         MinuteDataDto updatedData = meetingMinutePreparationService.prepareDataForMinute(
                 updatedMeeting.getCommittee(), updatedMeeting, authentication.getName());
-        String htmlContent = meetingMinutePreparationService.renderCommitteeTemplate(
-                updatedMeeting.getCommittee(), updatedData);
+        String htmlContent = meetingMinutePreparationService.renderMeetingTemplate(
+                updatedMeeting, updatedData);
         meetingService.updateMinuteContent(meetingId, htmlContent, authentication.getName());
 
         Map<String, Object> result = new LinkedHashMap<>();

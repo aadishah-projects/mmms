@@ -49,6 +49,7 @@ export class CommitteeFormComponent implements OnInit {
   isNextButtonInMobileViewActive() {
     if (
       this.name.valid &&
+      this.isNepaliNameValid() &&
       this.description.valid &&
       this.isCoordinatorValid() &&
 	this.isMinuteLanguageValid()
@@ -66,6 +67,10 @@ export class CommitteeFormComponent implements OnInit {
 
   isMinuteLanguageValid() {
     return (this.minuteLanguage.value == 'ENGLISH' || this.minuteLanguage.value=='NEPALI');
+  }
+
+  isNepaliNameValid() {
+    return this.minuteLanguage.value !== 'NEPALI' || this.nepaliName.value.trim().length > 0;
   }
 
   ///////////////////////////////////
@@ -130,6 +135,7 @@ export class CommitteeFormComponent implements OnInit {
 
   //setting aliases for this.committeeFormGroup().controls
   name!: FormControl<string>;
+  nepaliName!: FormControl<string>;
   description!: FormControl<string>;
   coordinator!: FormControl<MemberSearchResult>;
   status!: FormControl<'ACTIVE' | 'INACTIVE'>;
@@ -138,6 +144,7 @@ export class CommitteeFormComponent implements OnInit {
 
   committeeFormGroup!: FormGroup<{
     name: FormControl<string>;
+    nepaliName: FormControl<string>;
     description: FormControl<string>;
     coordinator: FormControl<MemberSearchResult>;
     status: FormControl<'ACTIVE' | 'INACTIVE'>;
@@ -156,6 +163,9 @@ export class CommitteeFormComponent implements OnInit {
 
     this.name = new FormControl(this.committeeFormData().name, {
       validators: [Validators.required],
+      nonNullable: true,
+    });
+    this.nepaliName = new FormControl(this.committeeFormData().nepaliName, {
       nonNullable: true,
     });
     this.description = new FormControl(this.committeeFormData().description, {
@@ -208,6 +218,7 @@ export class CommitteeFormComponent implements OnInit {
     //finally initialize the form group for right panel
     this.committeeFormGroup = new FormGroup({
       name: this.name,
+      nepaliName: this.nepaliName,
       description: this.description,
       coordinator: this.coordinator,
       status: this.status,
@@ -400,6 +411,7 @@ export class CommitteeFormComponent implements OnInit {
     $event.preventDefault();
     if (
       this.committeeFormGroup?.invalid ||
+      !this.isNepaliNameValid() ||
       this.selectedMembersWithRoles.length < 1 ||
       !this.isCoordinatorValid()
     ) {
@@ -409,6 +421,7 @@ export class CommitteeFormComponent implements OnInit {
 
     const committeeCreationDto = new CommitteeCreationDto();
     committeeCreationDto.name = this.name.value as string;
+    committeeCreationDto.nepaliName = this.nepaliName.value as string;
     committeeCreationDto.description = this.description.value as string;
     committeeCreationDto.coordinatorId = this.coordinator.value.memberId;
     committeeCreationDto.status = this.status.value;

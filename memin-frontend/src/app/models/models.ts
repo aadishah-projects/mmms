@@ -23,6 +23,7 @@ export interface MemberDetails {
 
 export class CommitteeCreationDto {
   name: string = '';
+  nepaliName: string = '';
   description: string = '';
   status: 'ACTIVE' | 'INACTIVE' = 'ACTIVE';
   maximumNumberOfMeetings?: number = undefined;
@@ -39,6 +40,7 @@ export class MemberIdAndRole {
 export class CommitteeDetailsDto {
   id: number = 0;
   name: string = '';
+  nepaliName: string = '';
   description: string = '';
   createdDate: string = '';
   status: 'ACTIVE' | 'INACTIVE' = 'ACTIVE';
@@ -60,6 +62,7 @@ export class MeetingSummaryDto {
 
 export class CommitteeOverviewDto {
   name: string = '';
+  nepaliName: string = '';
   description: string = '';
   createdDate: string = '';
   memberCount: number = 0;
@@ -208,6 +211,7 @@ export class MeetingCreationDto {
 export class CommitteeDetailsForEditDto {
   id: number = 0;
   name: string = '';
+  nepaliName: string = '';
   description: string = '';
   status: 'ACTIVE' | 'INACTIVE' = 'ACTIVE';
   maxNoOfMeetings?: number = undefined;
@@ -272,6 +276,7 @@ export class CommitteeIdAndName {
 export class CommitteeExtendedSummary {
   committeeId!: number;
   name!: string;
+  nepaliName?: string;
   description!: string
   language!: "NEPALI" | "ENGLISH" | null;
   meetings!: MeetingExtendedSummary[];
@@ -291,6 +296,7 @@ export class MeetingExtendedSummary {
 //these models are used in committee-form, member-form components
 export interface CommitteeFormData {
   name: string;
+  nepaliName: string;
   description: string;
   coordinator: MemberSearchResult;
   status: 'ACTIVE' | 'INACTIVE';

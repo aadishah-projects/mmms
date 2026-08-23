@@ -10,6 +10,7 @@ import com.sep.mmms_backend.entity.Meeting;
 import com.sep.mmms_backend.entity.Member;
 import com.sep.mmms_backend.enums.MinuteLanguage;
 import com.sep.mmms_backend.repository.CommitteeRepository;
+import com.sep.mmms_backend.repository.MeetingRepository;
 import org.apache.poi.xwpf.usermodel.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -24,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.hibernate.Hibernate;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -43,16 +45,18 @@ import java.util.stream.Collectors;
 public class MeetingMinutePreparationService {
     private final TemplateEngine templateEngine;
     private final NepaliDateService nepaliDateService;
+    private final MeetingRepository meetingRepository;
 
     @Autowired
-    public MeetingMinutePreparationService(TemplateEngine templateEngine, NepaliDateService nepaliDateService) {
+    public MeetingMinutePreparationService(TemplateEngine templateEngine, NepaliDateService nepaliDateService, MeetingRepository meetingRepository) {
         this.templateEngine = templateEngine;
         this.nepaliDateService = nepaliDateService;
+        this.meetingRepository = meetingRepository;
     }
 
     /** Compatibility constructor retained for existing unit tests and callers. */
     public MeetingMinutePreparationService(TemplateEngine templateEngine) {
-        this(templateEngine, new NepaliDateService());
+        this(templateEngine, new NepaliDateService(), null);
     }
 
     /** Compatibility constructor retained for existing unit tests and callers. */
@@ -61,13 +65,25 @@ public class MeetingMinutePreparationService {
             CommitteeRepository ignoredCommitteeRepository,
             MemberService ignoredMemberService,
             TemplateEngine templateEngine) {
-        this(templateEngine, new NepaliDateService());
+        this(templateEngine, new NepaliDateService(), null);
     }
 
 
     @Transactional(readOnly = true)
     @CheckCommitteeAccess(shouldValidateMeeting = true)
     public MinuteDataDto prepareDataForMinute(Committee committee, Meeting meeting, String username) {
+        // Controllers may pass an entity returned by a completed repository call.
+        // Reload it in this transaction before touching lazy minute collections;
+        // otherwise decisions/agendas can still be attached to a closed session.
+        if (meetingRepository != null && meeting != null && meeting.getId() != null) {
+            Meeting managedMeeting = meetingRepository.findById(meeting.getId()).orElse(meeting);
+            initializeMinuteGraph(managedMeeting);
+            meeting = managedMeeting;
+            if (managedMeeting.getCommittee() != null) {
+                committee = managedMeeting.getCommittee();
+            }
+        }
+
         MinuteDataDto minuteData = new MinuteDataDto();
         minuteData.setMinuteLanguage(committee.getMinuteLanguage());
         setDates(minuteData, meeting);
@@ -90,7 +106,7 @@ public class MeetingMinutePreparationService {
 
         minuteData.setCommitteeDescription(committee.getDescription());
 
-        minuteData.setCommitteeName(meeting.getCommittee().getName());
+        minuteData.setCommitteeName(getCommitteeDisplayName(committee));
 
         minuteData.setCoordinatorFullName(getFullNameOfParticipant(committee.getCoordinator(), committee.getMinuteLanguage()));
         minuteData.setChairmanFullName(getFullNameOfParticipant(
@@ -108,11 +124,37 @@ public class MeetingMinutePreparationService {
 
         if (meeting.getMinuteContentHtml() != null && !meeting.getMinuteContentHtml().isBlank()) {
             minuteData.setMinuteContentHtml(meeting.getMinuteContentHtml());
-        } else if (committee.getMinuteTemplateHtml() != null && !committee.getMinuteTemplateHtml().isBlank()) {
-            minuteData.setMinuteContentHtml(renderFullMinuteTemplate(committee.getMinuteTemplateHtml(), minuteData));
+        } else {
+            String meetingTemplate = meeting.getMinuteTemplateHtml();
+            if (meetingTemplate != null) {
+                if (!meetingTemplate.isBlank()) {
+                    minuteData.setMinuteContentHtml(renderFullMinuteTemplate(meetingTemplate, minuteData));
+                }
+            } else if (committee.getMinuteTemplateHtml() != null && !committee.getMinuteTemplateHtml().isBlank()) {
+                // Compatibility for meetings created before per-meeting
+                // snapshots were introduced.
+                minuteData.setMinuteContentHtml(renderFullMinuteTemplate(committee.getMinuteTemplateHtml(), minuteData));
+            }
         }
 
         return minuteData;
+    }
+
+    private void initializeMinuteGraph(Meeting meeting) {
+        Hibernate.initialize(meeting.getDecisions());
+        Hibernate.initialize(meeting.getAgendas());
+        Hibernate.initialize(meeting.getAttendees());
+        Hibernate.initialize(meeting.getInvitees());
+        Hibernate.initialize(meeting.getChairman());
+
+        Committee committee = meeting.getCommittee();
+        if (committee != null) {
+            Hibernate.initialize(committee.getMemberships());
+            Hibernate.initialize(committee.getCoordinator());
+            Hibernate.initialize(committee.getSecretary());
+            committee.getMemberships().forEach(membership ->
+                    Hibernate.initialize(membership.getMember()));
+        }
     }
 
     /**
@@ -126,6 +168,25 @@ public class MeetingMinutePreparationService {
             return null;
         }
         return renderFullMinuteTemplate(committee.getMinuteTemplateHtml(), data);
+    }
+
+    /**
+     * Renders the template frozen for this meeting. Legacy meetings without a
+     * snapshot temporarily fall back to the committee template for backwards
+     * compatibility.
+     */
+    public String renderMeetingTemplate(Meeting meeting, MinuteDataDto data) {
+        if (meeting == null) {
+            return null;
+        }
+        String template = meeting.getMinuteTemplateHtml();
+        if (template == null && meeting.getCommittee() != null) {
+            template = meeting.getCommittee().getMinuteTemplateHtml();
+        }
+        if (template == null || template.isBlank()) {
+            return null;
+        }
+        return renderFullMinuteTemplate(template, data);
     }
 
     /**
@@ -268,22 +329,30 @@ public class MeetingMinutePreparationService {
         rendered = replaceToken(rendered, renderAttendance(data), "attendanceTable");
         rendered = replaceToken(rendered, renderAttendanceList(data), "attendanceList");
         rendered = replaceToken(rendered, renderAttendance(data), "attendance", "participants");
-        rendered = replaceToken(rendered, renderList(data.getAgendas(), data.getMinuteLanguage()), "agendas");
-        rendered = replaceToken(rendered, renderList(data.getDecisions(), data.getMinuteLanguage()), "decisions");
+        // Keep a semantic wrapper around live structured sections. Committee
+        // templates are arbitrary HTML, so the token can be nested inside a
+        // paragraph/div rather than placed directly under an agenda/decision
+        // heading. The wrapper gives the minute editor a stable way to find
+        // the section again when structured values are changed.
+        rendered = replaceToken(rendered,
+                renderStructuredSection("agendas", renderList(data.getAgendas(), data.getMinuteLanguage())),
+                "agendas");
+        rendered = replaceToken(rendered,
+                renderStructuredSection("decisions", renderList(data.getDecisions(), data.getMinuteLanguage())),
+                "decisions");
 
         boolean nepali = MinuteLanguage.NEPALI.equals(data.getMinuteLanguage());
 
-        if (!templateContainsToken(template, "attendance", "participants", "attendanceTable", "attendanceList")) {
-            rendered += "\n<h2 style=\"margin-top:2rem\">" + (nepali ? "\u0909\u092a\u0938\u094d\u0925\u093f\u0924\u093f" : "Attendance") + "</h2>\n" + renderAttendance(data);
-        }
-        if (!templateContainsToken(template, "agendas")) {
-            rendered += "\n<h2 style=\"margin-top:2rem\">" + (nepali ? "\u0915\u093e\u0930\u094d\u092f\u0938\u0942\u091a\u0940" : "Agendas") + "</h2>\n" + renderList(data.getAgendas(), data.getMinuteLanguage());
-        }
         if (!templateContainsToken(template, "decisions")) {
-            rendered += "\n<h2 style=\"margin-top:2rem\">" + (nepali ? "\u0928\u093f\u0930\u094d\u0923\u092f\u0939\u0930\u0942" : "Decisions and resolutions") + "</h2>\n" + renderList(data.getDecisions(), data.getMinuteLanguage());
+            rendered += "\n<h2 style=\"margin-top:2rem\">" + (nepali ? "\u0928\u093f\u0930\u094d\u0923\u092f\u0939\u0942" : "Decisions and resolutions") + "</h2>\n"
+                    + renderStructuredSection("decisions", renderList(data.getDecisions(), data.getMinuteLanguage()));
         }
 
         return rendered;
+    }
+
+    private String renderStructuredSection(String section, String renderedList) {
+        return "<div class=\"" + section + " minute-structured-section\">" + renderedList + "</div>";
     }
 
     private boolean templateContainsToken(String template, String... names) {
@@ -424,7 +493,10 @@ public class MeetingMinutePreparationService {
     }
 
     private String getMeetingNumber(Committee committee, Meeting meeting) {
-        List<Meeting> orderedMeetings = committee.getMeetings().stream()
+        if (meetingRepository == null || committee == null || committee.getId() == null) {
+            return formatMeetingNumber(1, committee);
+        }
+        List<Meeting> orderedMeetings = meetingRepository.findByCommitteeIdWithAgendas(committee.getId()).stream()
                 .filter(candidate -> candidate.getId() != null)
                 .sorted(java.util.Comparator.comparing(Meeting::getId))
                 .toList();
@@ -435,8 +507,12 @@ public class MeetingMinutePreparationService {
                 break;
             }
         }
+        return formatMeetingNumber(position, committee);
+    }
+
+    private String formatMeetingNumber(int position, Committee committee) {
         String number = String.valueOf(position);
-        return MinuteLanguage.NEPALI.equals(committee.getMinuteLanguage())
+        return committee != null && MinuteLanguage.NEPALI.equals(committee.getMinuteLanguage())
                 ? toNepaliDigits(number)
                 : number;
     }
@@ -513,7 +589,9 @@ public class MeetingMinutePreparationService {
     }
 
     private String getFullNameOfParticipant(Member member, MinuteLanguage language) {
-        String title = localizeTitle(member.getTitle(), language);
+        String titleSource = MinuteLanguage.NEPALI.equals(language) && hasText(member.getTitleNepali())
+                ? member.getTitleNepali() : member.getTitle();
+        String title = localizeTitle(titleSource, language);
         String firstName = MinuteLanguage.NEPALI.equals(language) && hasText(member.getFirstNameNepali())
                 ? member.getFirstNameNepali() : member.getFirstName();
         String lastName = MinuteLanguage.NEPALI.equals(language) && hasText(member.getLastNameNepali())
@@ -525,6 +603,14 @@ public class MeetingMinutePreparationService {
             fullname = fullname + ", " + member.getInstitution();
         }
         return fullname;
+    }
+
+    private String getCommitteeDisplayName(Committee committee) {
+        if (MinuteLanguage.NEPALI.equals(committee.getMinuteLanguage())
+                && hasText(committee.getNepaliName())) {
+            return committee.getNepaliName().trim();
+        }
+        return committee.getName();
     }
 
     private String localizeTitle(String title, MinuteLanguage language) {

@@ -11,6 +11,7 @@ import java.util.List;
 @Setter
 public class CommitteeOverviewDto {
     private String name;
+    private String nepaliName;
     private String description;
     private LocalDate createdDate;
     private int memberCount;

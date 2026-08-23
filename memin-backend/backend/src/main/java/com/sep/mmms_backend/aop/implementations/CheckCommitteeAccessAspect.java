@@ -73,6 +73,14 @@ public class CheckCommitteeAccessAspect {
             return;
         }
 
+        // The argument can be a detached entity when a controller calls a
+        // second transactional service. Reload the access graph before
+        // checking memberships so this advice never walks a closed lazy
+        // collection.
+        if (committee.getId() != null) {
+            committee = committeeService.getCommitteeIfAccessible(committee.getId(), username);
+        }
+
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
         boolean isDeptHead = user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD;
         boolean isMember = user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.SECRETARY;

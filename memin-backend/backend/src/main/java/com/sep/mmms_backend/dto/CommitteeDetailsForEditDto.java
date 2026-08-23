@@ -9,6 +9,7 @@ import java.util.List;
 public class CommitteeDetailsForEditDto {
     public Integer id;
     public String name;
+    public String nepaliName;
     public String description;
     public CommitteeStatus status;
     public Integer maxNoOfMeetings;
@@ -23,6 +24,7 @@ public class CommitteeDetailsForEditDto {
     public CommitteeDetailsForEditDto(Committee committee) {
         this.id = committee.getId();
         this.name = committee.getName();
+        this.nepaliName = committee.getNepaliName();
         this.description = committee.getDescription();
         this.status = committee.getStatus();
         this.maxNoOfMeetings = committee.getMaxNoOfMeetings();

@@ -34,6 +34,7 @@ export class EditCommitteeComponent implements OnInit {
 
   committeeFormData: CommitteeFormData = {
     name: '',
+    nepaliName: '',
     description: '',
     coordinator: {
       memberId: 0,
@@ -69,6 +70,7 @@ export class EditCommitteeComponent implements OnInit {
           next: (response) => {
             const mainBody = response.mainBody;
             this.committeeFormData.name = mainBody.name;
+            this.committeeFormData.nepaliName = mainBody.nepaliName || '';
             this.committeeFormData.description = mainBody.description;
             this.committeeFormData.coordinator = mainBody.coordinator;
             this.committeeFormData.status = mainBody.status;

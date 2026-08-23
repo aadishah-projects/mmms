@@ -105,8 +105,8 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
     section: 'agenda' | 'decision',
   ): HTMLElement | null {
     const classNames = section === 'agenda'
-      ? ['agenda', 'agendas']
-      : ['decision', 'decisions'];
+      ? ['agenda', 'agendas', 'minute-agenda', 'minute-agendas']
+      : ['decision', 'decisions', 'minute-decision', 'minute-decisions'];
 
     const classSection = Array.from(container.querySelectorAll<HTMLElement>('[class]'))
       .find((element) => Array.from(element.classList).some((className) =>
@@ -122,8 +122,12 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
       }
     }
 
+    // Templates are user-authored HTML. In particular, the Academic
+    // Committee template uses a paragraph label ("निर्णय") and the
+    // automatically appended agenda heading is Nepali ("कार्यसूची"), so
+    // restricting this lookup to h1-h6 leaves the saved white paper stale.
     const heading = Array.from(
-      container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'),
+      container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6, p'),
     ).find((element) => this.isSectionHeading(element.textContent ?? '', section));
     if (!heading) {
       return null;
@@ -153,9 +157,9 @@ export class MinuteEditComponent implements OnInit, AfterViewChecked {
   ): boolean {
     const normalized = text.trim().toLocaleLowerCase();
     if (section === 'agenda') {
-      return /agenda|proposal|\u092a\u094d\u0930\u0938\u094d\u0924\u093e\u0935/u.test(normalized);
+      return /agenda|proposal|\u092a\u094d\u0930\u0938\u094d\u0924\u093e\u0935|\u0915\u093e\u0930\u094d\u092f\u0938\u0942\u091a\u0940|\u091b\u0932\u092b\u0932/u.test(normalized);
     }
-    return /decision|\u0928\u093f\u0930\u094d\u0923\u092f/u.test(normalized);
+    return /decision|\u0928\u093f\u0930\u094d\u0923\u092f|\u0915\u093e\u0930\u094d\u092f\u093e\u0928\u094d\u0935\u092f\u0928/u.test(normalized);
   }
 
   private syncHtmlWithStructuredFields(): void {

@@ -30,6 +30,7 @@ public class CommitteeController {
 
 
     @PostMapping("/committee")
+    @Transactional
     public ResponseEntity<Response> createCommittee(@RequestBody CommitteeCreationDto committeeCreationDto, Authentication authentication) {
         Committee savedCommittee = committeeService.saveNewCommittee(committeeCreationDto, authentication.getName());
         CommitteeSummaryDto committeeSummaryDto = new CommitteeSummaryDto(savedCommittee);

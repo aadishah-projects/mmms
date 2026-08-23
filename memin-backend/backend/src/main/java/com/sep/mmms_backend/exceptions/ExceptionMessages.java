@@ -28,6 +28,7 @@ public enum ExceptionMessages {
     MEMBERSHIP_DOES_NOT_EXIST("Requested membership does not exist"),
 
     COORDINATOR_DOES_NOT_EXIST("The specified coordinator profile does not exist"),
+    NEPALI_COMMITTEE_NAME_REQUIRED("Nepali committee name is required when minute language is Nepali"),
     TODO("Implement Exception Handling Properly");
     ;
 

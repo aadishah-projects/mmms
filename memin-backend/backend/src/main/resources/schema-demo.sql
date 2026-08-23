@@ -41,6 +41,7 @@ CREATE TABLE committees (
         committee_description TEXT,
         committee_uuid VARCHAR(36) NOT NULL UNIQUE,
         committee_name VARCHAR(255) NOT NULL,
+        committee_name_nepali VARCHAR(255),
         committee_created_by VARCHAR(255) NOT NULL,
         committee_created_date DATE NOT NULL,
         committee_modified_by VARCHAR(255) NOT NULL,
@@ -79,6 +80,7 @@ CREATE TABLE meetings (
           meeting_held_time TIME NOT NULL,  -- Added this line for LocalTime
           meeting_held_place VARCHAR(255) NOT NULL,
           meeting_minute_content_html TEXT,
+          meeting_minute_template_html TEXT,
           created_by VARCHAR(255) NOT NULL,
           updated_by VARCHAR(255) NOT NULL,
           created_date DATE NOT NULL,

@@ -39,6 +39,9 @@ public class Committee {
     @Column(name = "committee_name", nullable = false)
     private String name;
 
+    @Column(name = "committee_name_nepali")
+    private String nepaliName;
+
     @Column(name = "committee_description", nullable = false)
     private String description;
 

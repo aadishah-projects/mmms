@@ -669,13 +669,9 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       );
     }, template);
 
-    // A custom template may contain only the header and meeting metadata. Keep
-    // that template as the document source of truth, but append any omitted
-    // live sections inside the same document so editable meeting content can
-    // never fall back to a second generic page.
+    // Keep the committee template as the document source of truth. A live
+    // section is shown only when its token was placed in the template.
     const missingSections: Array<{ names: string[]; heading: string; slot: 'attendance' | 'agendas' | 'decisions' }> = [
-      { names: ['attendance', 'participants'], heading: this.minuteTemplateLanguage === 'NEPALI' ? 'उपस्थिति' : 'Attendance', slot: 'attendance' },
-      { names: ['agendas'], heading: this.minuteTemplateLanguage === 'NEPALI' ? 'कार्यसूची' : 'Agendas', slot: 'agendas' },
       { names: ['decisions'], heading: this.minuteTemplateLanguage === 'NEPALI' ? 'निर्णयहरू' : 'Decisions and resolutions', slot: 'decisions' },
     ];
     missingSections.forEach(({ names, heading, slot }) => {

@@ -33,6 +33,7 @@ export class CreateCommitteeComponent implements OnInit {
   hasDataLoaded = false;
   committeeFormData: CommitteeFormData = {
     name: '',
+    nepaliName: '',
     description: '',
     coordinator: {
       memberId: 0,
