@@ -28,13 +28,11 @@
     <section class="preset-section">
       <div class="preset-heading">
         <div>
-          <p class="eyebrow">{{ minuteLanguage === 'NEPALI' ? 'कार्यवृत्तका ढाँचाहरू' : 'Template starters' }}</p>
-          <h2>{{ minuteLanguage === 'NEPALI' ? 'उपयुक्त ढाँचा छान्नुहोस्' : 'Pick a layout, then make it yours' }}</h2>
+          <p class="eyebrow">Template starters</p>
+          <h2>Pick a layout, then make it yours</h2>
         </div>
         <p class="preset-note">
-          {{ minuteLanguage === 'NEPALI'
-            ? 'एउटा ढाँचा छानेर बैठकको आवश्यकता अनुसार प्रत्येक शब्द, खण्ड र तालिका सम्पादन गरी सुरक्षित गर्नुहोस्।'
-            : 'Choosing a starter replaces the paper content. You can edit every word, section, and table before saving.' }}
+          Choosing a starter replaces the paper content. You can edit every word, section, and table before saving.
         </p>
       </div>
       <div class="preset-grid">
@@ -49,8 +47,8 @@
             <span class="preset-card-description">{{ preset.description }}</span>
             <span class="preset-card-action">
               {{ selectedPresetId === preset.id
-                ? (minuteLanguage === 'NEPALI' ? 'छानिएको — तल सम्पादन गर्नुहोस्' : 'Selected — edit below')
-                : (minuteLanguage === 'NEPALI' ? 'यो ढाँचा प्रयोग गर्नुहोस्' : 'Use this layout') }}
+                ? 'Selected — edit below'
+                : 'Use this layout' }}
             </span>
           </button>
         }
@@ -59,6 +57,35 @@
         <strong>Quick start:</strong> choose a starter, edit the words directly on the paper, or switch to
         <strong>HTML source</strong> when you want precise control. Blue chips insert live meeting data.
       </div>
+    </section>
+
+    <section class="saved-template-section">
+      <div class="saved-template-heading">
+        <div>
+          <p class="eyebrow">Saved templates</p>
+          <h2>Reuse a previous minute layout</h2>
+        </div>
+        <p class="preset-note">Templates are stored for this committee. Saving an edited template updates the active layout used by new minutes.</p>
+      </div>
+      <div class="template-name-row">
+        <label for="template-name">Template name</label>
+        <input id="template-name" class="template-name-input" [(ngModel)]="templateName" maxlength="160" placeholder="e.g. Monthly committee minutes">
+        <button type="button" class="secondary-action small-action" (click)="saveAsNewTemplate()" [disabled]="isSaving">Save as new</button>
+      </div>
+      @if (savedTemplates.length > 0) {
+        <div class="saved-template-grid">
+          @for (template of savedTemplates; track template.templateId) {
+            <button type="button" class="saved-template-card" [class.selected]="selectedTemplateId === template.templateId" (click)="useSavedTemplate(template)">
+              <span class="saved-template-card-title">{{ template.name }}</span>
+              @if (template.active) { <span class="active-template-badge">Active</span> }
+              <span class="saved-template-card-action">Open template</span>
+              <span class="saved-template-delete" role="button" tabindex="0" (click)="deleteSavedTemplate(template, $event)">Delete</span>
+            </button>
+          }
+        </div>
+      } @else {
+        <p class="saved-template-empty">No named templates yet. Give this layout a name and choose “Save as new”.</p>
+      }
     </section>
 
     <div class="editor-layout">

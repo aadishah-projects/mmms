@@ -74,9 +74,19 @@ public class Committee {
     @JoinColumn(name = "committee_coordinator_id", referencedColumnName = "member_id", nullable = false)
     private Member coordinator;
 
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    /**
+     * A member may be the secretary of more than one committee. This must be a
+     * many-to-one relationship; using one-to-one makes the database add a
+     * unique constraint on committee_secretary_id.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "committee_secretary_id", referencedColumnName = "member_id")
     private Member secretary;
+
+    // Identifies the reusable template currently applied to this committee.
+    // The HTML column remains for backwards compatibility with older records.
+    @Column(name = "active_minute_template_id")
+    private Integer activeMinuteTemplateId;
 
     @Column(name = "committee_created_by", updatable = false, nullable = false)
     @CreatedBy

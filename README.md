@@ -73,7 +73,10 @@ Department heads can configure AI LLM endpoints and SMTP credentials dynamically
 
 ---
 
-## Roadmap (from `todo.md`, not yet done)
-- Per-committee **dynamic minute template** (core feature).
-- **Email invitations to a meeting** (registration invites already exist).
-- Additional custom minute export styling.
+## Additional minute workflow features
+
+- Named per-committee **minute template library** with save, reuse, rename, activation, and deletion.
+- Persistent **attendance ordering** for each meeting, with table or numbered-list rendering.
+- Expandable numbered agenda and decision editors.
+- A member can serve as secretary for multiple committees; assignments are persisted on each committee.
+- Registration invitations accept valid email addresses from any domain.

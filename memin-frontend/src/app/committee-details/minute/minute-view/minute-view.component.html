@@ -29,7 +29,7 @@
   <div class="panel-header">
     <p class="heading">Drag and Drop with ☰ as handle</p>
     <p class="panel-subtitle">
-      NOTE: These changes are not persisted in the database
+      Drag participants into the order used by the attendance section, then save.
     </p>
   </div>
 
@@ -44,6 +44,12 @@
       </div>
     </div>
     }
+  </div>
+  <div class="participant-order-actions">
+    <button type="button" class="order-cancel" (click)="cancelParticipantOrder()">Cancel</button>
+    <button type="button" class="order-save" (click)="saveParticipantOrder()" [disabled]="participantOrderSaving">
+      {{ participantOrderSaving ? 'Saving...' : 'Save order' }}
+    </button>
   </div>
 </dialog>
 

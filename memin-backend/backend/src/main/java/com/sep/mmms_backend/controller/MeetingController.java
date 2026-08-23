@@ -3,6 +3,7 @@ package com.sep.mmms_backend.controller;
 import com.sep.mmms_backend.dto.*;
 import com.sep.mmms_backend.entity.Committee;
 import com.sep.mmms_backend.entity.Meeting;
+import com.sep.mmms_backend.entity.Member;
 import com.sep.mmms_backend.response.Response;
 import com.sep.mmms_backend.response.ResponseMessages;
 import com.sep.mmms_backend.service.CommitteeService;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 @RestController
 @RequestMapping("api")
@@ -66,6 +69,21 @@ public class MeetingController {
        return ResponseEntity.ok(new Response(ResponseMessages.MEETING_UPDATION_SUCCESS));
     }
 
+    @PatchMapping("/meeting/{meetingId}/participant-order")
+    public ResponseEntity<Response> updateParticipantOrder(
+            @PathVariable int meetingId,
+            @RequestBody ParticipantOrderUpdateDto request,
+            Authentication authentication) {
+        Meeting updatedMeeting = meetingService.updateParticipantOrder(
+                meetingId,
+                request == null ? List.of() : request.getParticipantIds(),
+                authentication.getName());
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("participantIds", updatedMeeting.getAttendees().stream().map(Member::getId).toList());
+        result.put("minuteContentHtml", updatedMeeting.getMinuteContentHtml());
+        return ResponseEntity.ok(new Response("Participant order saved", result));
+    }
+
     @DeleteMapping("/meeting/{meetingId}")
     public ResponseEntity<Response> deleteMeeting(@PathVariable Integer meetingId, Authentication authentication) {
         meetingService.deleteMeeting(meetingId, authentication.getName());
@@ -75,7 +93,7 @@ public class MeetingController {
     @PostMapping("/meeting/{meetingId}/send-invites")
     public ResponseEntity<Response> sendMeetingInvites(@PathVariable Integer meetingId, Authentication authentication) {
         int sentCount = meetingService.sendMeetingInvites(meetingId, authentication.getName());
-        return ResponseEntity.ok(new Response("Meeting invitations sent", sentCount));
+        return ResponseEntity.ok(new Response("Final meeting minutes sent", sentCount));
     }
 
 }

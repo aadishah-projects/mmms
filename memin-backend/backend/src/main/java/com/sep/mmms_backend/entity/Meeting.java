@@ -80,6 +80,10 @@ public class Meeting {
                     @JoinColumn(name = "meeting_id", referencedColumnName = "meeting_id"),
             }
     )
+    // Keep this nullable for SQLite upgrades: SQLite cannot add a NOT NULL
+    // column to an existing meeting_attendees table without rebuilding it.
+    // The startup migration backfills missing positions before requests run.
+    @OrderColumn(name = "display_order", nullable = true)
     public List<Member> attendees = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)

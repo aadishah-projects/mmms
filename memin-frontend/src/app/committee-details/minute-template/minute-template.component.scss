@@ -212,6 +212,109 @@ h2 {
   line-height: 1.45;
 }
 
+.saved-template-section {
+  margin-bottom: 24px;
+  padding: 17px;
+  border: 1px solid colors.$color-border-primary;
+  background: #15181b;
+}
+
+.saved-template-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 14px;
+
+  h2 {
+    margin-bottom: 0;
+  }
+}
+
+.template-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+
+  label {
+    color: colors.$color-text-secondary;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+}
+
+.template-name-input {
+  min-width: 240px;
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 4px;
+  background: colors.$color-background-input;
+  color: colors.$color-text-primary;
+  font: inherit;
+}
+
+.saved-template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.saved-template-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 112px;
+  padding: 13px;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 5px;
+  background: #1c2024;
+  color: colors.$color-text-primary;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+
+  &:hover,
+  &.selected {
+    border-color: colors.$color-button-primary;
+    background: #252b50;
+  }
+}
+
+.saved-template-card-title {
+  font-weight: 700;
+}
+
+.active-template-badge {
+  margin-top: 7px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #1d3934;
+  color: #a8e6d8;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.saved-template-card-action {
+  margin-top: auto;
+  padding-top: 10px;
+  color: #bfc5ff;
+  font-size: 0.74rem;
+}
+
+.saved-template-delete {
+  margin-top: 6px;
+  color: #ef8b8b;
+  font-size: 0.72rem;
+}
+
+.saved-template-empty {
+  margin: 0;
+  color: colors.$color-text-muted;
+  font-size: 0.82rem;
+}
+
 .editor-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 285px;
@@ -657,6 +760,18 @@ h2 {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .saved-template-heading,
+  .template-name-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .template-name-input {
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .preset-note {

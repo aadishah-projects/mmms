@@ -169,6 +169,60 @@
   gap: 12px;
 }
 
+.minute-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: minute-item;
+}
+
+.minute-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 32px;
+  align-items: start;
+  gap: 8px;
+  counter-increment: minute-item;
+}
+
+.item-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 5px;
+  background: colors.$color-background-input-hover;
+  color: colors.$color-text-secondary;
+  font-weight: constants.$font-weight-semibold;
+}
+
+.expandable-item {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  overflow-y: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  resize: vertical;
+}
+
+.remove-item {
+  min-height: 44px;
+  border: 1px solid colors.$color-border-primary;
+  border-radius: 5px;
+  background: transparent;
+  color: colors.$color-text-muted;
+  cursor: pointer;
+  font-size: 1.2rem;
+
+  &:hover {
+    border-color: colors.$color-text-error;
+    color: colors.$color-text-error;
+  }
+}
+
 .decision-item {
   display: flex;
   align-items: center;

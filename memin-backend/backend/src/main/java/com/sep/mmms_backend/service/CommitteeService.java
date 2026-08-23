@@ -100,11 +100,17 @@ public class CommitteeService {
         committee.setCoordinator(coordinatorOptional.get());
 
         if (committeeCreationDto.getSecretaryId() != null) {
-            Optional<Member> secretaryOptional = memberRepository.findMemberByIdNoException(committeeCreationDto.getSecretaryId());
+            Optional<Member> secretaryOptional = memberRepository.findAccessibleMember(
+                    committeeCreationDto.getSecretaryId(), username);
             if (secretaryOptional.isEmpty()) {
                 throw new MemberDoesNotExistException(ExceptionMessages.MEMBER_DOES_NOT_EXIST, committeeCreationDto.getSecretaryId());
             }
-            committee.setSecretary(secretaryOptional.get());
+            Member secretary = secretaryOptional.get();
+            boolean isCommitteeMember = foundMembers.stream().anyMatch(member -> member.getId().equals(secretary.getId()));
+            if (!isCommitteeMember && !secretary.getId().equals(committee.getCoordinator().getId())) {
+                throw new IllegalOperationException("The secretary must be a member of the committee");
+            }
+            committee.setSecretary(secretary);
         }
 
         return committee;
@@ -133,12 +139,23 @@ public class CommitteeService {
         existingCommittee.setDescription(committee.getDescription());
         existingCommittee.setStatus(committee.getStatus());
         existingCommittee.setMinuteLanguage(committee.getMinuteLanguage());
-        existingCommittee.setMinuteOpeningTemplate(committee.getMinuteOpeningTemplate());
-        existingCommittee.setMinuteHeaderTemplate(committee.getMinuteHeaderTemplate());
-        existingCommittee.setMinuteTemplateHtml(committee.getMinuteTemplateHtml());
+        if (committeeCreationDto.getMinuteOpeningTemplate() != null) {
+            existingCommittee.setMinuteOpeningTemplate(committee.getMinuteOpeningTemplate());
+        }
+        if (committeeCreationDto.getMinuteHeaderTemplate() != null) {
+            existingCommittee.setMinuteHeaderTemplate(committee.getMinuteHeaderTemplate());
+        }
+        if (committeeCreationDto.getMinuteTemplateHtml() != null) {
+            existingCommittee.setMinuteTemplateHtml(committee.getMinuteTemplateHtml());
+        }
         existingCommittee.setMaxNoOfMeetings(committee.getMaxNoOfMeetings());
         existingCommittee.setCoordinator(committee.getCoordinator());
-        existingCommittee.setSecretary(committee.getSecretary());
+        // Secretary assignment is managed from the committee overview. Older
+        // edit forms do not send secretaryId, so a normal committee edit must
+        // not silently clear the persisted assignment.
+        if (committeeCreationDto.getSecretaryId() != null) {
+            existingCommittee.setSecretary(committee.getSecretary());
+        }
 
         List<CommitteeMembership> newMemberships = committee.getMemberships();
 
@@ -281,6 +298,12 @@ public class CommitteeService {
         committeeRepository.save(committee);
     }
 
+    /** Used by the template library service on an already managed committee. */
+    @Transactional
+    public void saveTemplateActivation(Committee committee) {
+        committeeRepository.save(committee);
+    }
+
     @Transactional(readOnly = true)
     public List<Committee> getAllActiveCommittees(String username) {
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
@@ -351,14 +374,14 @@ public class CommitteeService {
         boolean hasAccess = false;
         if (isDeptHead) {
             hasAccess = true;
+        } else if (committee.getCreatedBy().equals(username)) {
+            hasAccess = true;
         } else if (isMember) {
             if (user.getLinkedMemberId() != null) {
                 boolean isSecretary = committee.getSecretary() != null && committee.getSecretary().getId().equals(user.getLinkedMemberId());
                 boolean isCommitteeMember = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
                 hasAccess = isSecretary || isCommitteeMember;
             }
-        } else if (committee.getCreatedBy().equals(username)) {
-            hasAccess = true;
         }
 
         if (!hasAccess) {
@@ -413,6 +436,13 @@ public class CommitteeService {
         } else {
             Member member = memberRepository.findAccessibleMember(memberId, username)
                     .orElseThrow(() -> new MemberDoesNotExistException(ExceptionMessages.MEMBER_DOES_NOT_EXIST, memberId));
+            boolean isMember = committee.getMemberships().stream()
+                    .anyMatch(membership -> membership.getMember().getId().equals(member.getId()));
+            boolean isCoordinator = committee.getCoordinator() != null
+                    && committee.getCoordinator().getId().equals(member.getId());
+            if (!isMember && !isCoordinator) {
+                throw new IllegalOperationException("The secretary must be a member of the committee");
+            }
             committee.setSecretary(member);
         }
         

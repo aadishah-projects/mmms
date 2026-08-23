@@ -43,15 +43,32 @@
         @if (this.selectedInvitees.length > 0) {
           <div class="selected-invitees-section">
             <h3 class="section-title">Selected Invitees</h3>
-            <div class="selected-invitees-list">
+            <p class="selected-invitees-help">Drag or use the arrows to set the attendance order.</p>
+            <div
+              class="selected-invitees-list"
+              cdkDropList
+              (cdkDropListDropped)="onSelectedInviteeDrop($event)"
+            >
               @for (
                 selectedInvitee of selectedInvitees;
-                track selectedInvitee.memberId
+                track selectedInvitee.memberId;
+                let index = $index
               ) {
                 <div
                   class="selected-invitee-item"
+                  cdkDrag
                   (dblclick)="onSelectedInviteeRemoval(selectedInvitee)"
                 >
+                  <button
+                    type="button"
+                    class="reorder-handle"
+                    cdkDragHandle
+                    [attr.aria-label]="'Drag ' + selectedInvitee.firstName + ' ' + selectedInvitee.lastName"
+                    title="Drag to reorder"
+                    (click)="$event.stopPropagation()"
+                  >
+                    ⋮⋮
+                  </button>
                   <div class="member-info">
                     <span class="selected-name">
                       {{
@@ -60,6 +77,22 @@
                           selectedInvitee.lastName
                       }}
                     </span>
+                  </div>
+                  <div class="reorder-buttons">
+                    <button
+                      type="button"
+                      class="reorder-button"
+                      [disabled]="index === 0"
+                      [attr.aria-label]="'Move ' + selectedInvitee.firstName + ' ' + selectedInvitee.lastName + ' up'"
+                      (click)="moveSelectedInvitee(index, -1, $event)"
+                    >↑</button>
+                    <button
+                      type="button"
+                      class="reorder-button"
+                      [disabled]="index === selectedInvitees.length - 1"
+                      [attr.aria-label]="'Move ' + selectedInvitee.firstName + ' ' + selectedInvitee.lastName + ' down'"
+                      (click)="moveSelectedInvitee(index, 1, $event)"
+                    >↓</button>
                   </div>
                 </div>
               }
@@ -118,7 +151,7 @@
   >
     <div class="panel-header">
       <h2>Meeting Details</h2>
-      <p class="panel-subtitle">Prepare the meeting record and capture its decisions</p>
+      <p class="panel-subtitle">Prepare the meeting record and capture its agendas and decisions</p>
     </div>
 
     <form
@@ -271,6 +304,9 @@
             </div>
           }
           <div #minuteDocument class="single-minute-document" [innerHTML]="minuteDocumentHtml"></div>
+          @if (showAllFormErrors && hasNoNonEmptyMeetingItems()) {
+            <p class="field-error">(Add at least one non-empty agenda or decision)</p>
+          }
         </section>
       }
 

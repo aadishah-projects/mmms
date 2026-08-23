@@ -9,6 +9,11 @@ import com.sep.mmms_backend.repository.MemberRepository;
 import com.sep.mmms_backend.repository.AppUserRepository;
 import com.sep.mmms_backend.validators.EntityValidator;
 import jakarta.transaction.Transactional;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,20 +22,24 @@ import java.util.stream.Collectors;
 @Service
 public class MeetingService {
 
+    private static final Logger log = LoggerFactory.getLogger(MeetingService.class);
+
     private final MeetingRepository meetingRepository;
     private final MemberRepository memberRepository;
     private final EntityValidator entityValidator;
     private final AppUserRepository appUserRepository;
     private final EmailService emailService;
     private final CommitteeService committeeService;
+    private final MeetingMinutePreparationService meetingMinutePreparationService;
 
-    public MeetingService(MeetingRepository meetingRepository, MemberRepository memberRepository, EntityValidator entityValidator, AppUserRepository appUserRepository, EmailService emailService, CommitteeService committeeService) {
+    public MeetingService(MeetingRepository meetingRepository, MemberRepository memberRepository, EntityValidator entityValidator, AppUserRepository appUserRepository, EmailService emailService, CommitteeService committeeService, MeetingMinutePreparationService meetingMinutePreparationService) {
         this.meetingRepository = meetingRepository;
         this.entityValidator = entityValidator;
         this.memberRepository = memberRepository;
         this.appUserRepository = appUserRepository;
         this.emailService = emailService;
         this.committeeService = committeeService;
+        this.meetingMinutePreparationService = meetingMinutePreparationService;
     }
 
     @Transactional
@@ -69,10 +78,11 @@ public class MeetingService {
         if (!requestedInvitees.isEmpty()) {
             List<Member> foundMembers = memberRepository.findAccessibleMembersByIds(requestedInvitees, username);
             memberRepository.validateWhetherAllMembersAreFound(requestedInvitees, foundMembers);
-            meeting.setInvitees(foundMembers);
+            meeting.setInvitees(orderMembersByRequestedIds(requestedInvitees, foundMembers));
         }
+        initializeParticipantOrder(meeting);
         Meeting savedMeeting = meetingRepository.save(meeting);
-        notifyMeetingInvitees(savedMeeting, savedMeeting.getInvitees(), username);
+        notifyFinalMinuteRecipients(savedMeeting, username);
         return savedMeeting;
     }
 
@@ -209,6 +219,108 @@ public class MeetingService {
         meetingRepository.save(meeting);
     }
 
+    /** Persist the order in which participants are rendered in the minute. */
+    @Transactional
+    public Meeting updateParticipantOrder(int meetingId, List<Integer> requestedParticipantIds, String username) {
+        Meeting meeting = getMeetingIfAccessible(meetingId, username);
+        List<Member> defaultParticipants = getDefaultParticipantOrder(meeting);
+        Map<Integer, Member> allowed = defaultParticipants.stream()
+                .filter(member -> member.getId() != null)
+                .collect(Collectors.toMap(Member::getId, member -> member, (left, right) -> left,
+                        LinkedHashMap::new));
+
+        List<Member> ordered = new ArrayList<>();
+        Set<Integer> seen = new HashSet<>();
+        if (requestedParticipantIds != null) {
+            for (Integer participantId : requestedParticipantIds) {
+                if (participantId != null && allowed.containsKey(participantId) && seen.add(participantId)) {
+                    ordered.add(allowed.get(participantId));
+                }
+            }
+        }
+        defaultParticipants.stream()
+                .filter(member -> member.getId() != null && seen.add(member.getId()))
+                .forEach(ordered::add);
+
+        meeting.getAttendees().clear();
+        meeting.getAttendees().addAll(ordered);
+        refreshSavedAttendanceTable(meeting, ordered);
+        return meetingRepository.save(meeting);
+    }
+
+    private void refreshSavedAttendanceTable(Meeting meeting, List<Member> orderedParticipants) {
+        if (meeting.getMinuteContentHtml() == null || meeting.getMinuteContentHtml().isBlank()) {
+            return;
+        }
+        Document document = Jsoup.parseBodyFragment(meeting.getMinuteContentHtml());
+        Element attendanceTable = document.select("table.memberships").first();
+        if (attendanceTable == null) {
+            attendanceTable = document.select("table").stream()
+                    .filter(table -> {
+                        String text = table.text().toLowerCase();
+                        return text.contains("signature") && text.contains("name");
+                    })
+                    .findFirst()
+                    .orElse(null);
+        }
+        if (attendanceTable == null) {
+            return;
+        }
+
+        Element body = attendanceTable.selectFirst("tbody");
+        if (body == null) {
+            body = attendanceTable.appendElement("tbody");
+        }
+        Map<String, String> signaturesByName = new HashMap<>();
+        for (Element row : body.children()) {
+            if (row.childrenSize() >= 4) {
+                String participantName = row.child(1).text();
+                if (!participantName.isBlank()) {
+                    signaturesByName.put(participantName, row.child(3).html());
+                }
+            }
+        }
+        body.empty();
+        for (int index = 0; index < orderedParticipants.size(); index++) {
+            Member participant = orderedParticipants.get(index);
+            String participantName = participantDisplayName(participant);
+            Element row = body.appendElement("tr");
+            row.appendElement("td").text(String.valueOf(index + 1));
+            row.appendElement("td").text(participantName);
+            row.appendElement("td").text(participantRole(meeting.getCommittee(), participant));
+            row.appendElement("td").html(signaturesByName.getOrDefault(participantName, ""));
+        }
+        meeting.setMinuteContentHtml(document.body().html());
+    }
+
+    private String participantDisplayName(Member member) {
+        String name = String.join(" ",
+                member.getTitle() == null ? "" : member.getTitle(),
+                member.getFirstName() == null ? "" : member.getFirstName(),
+                member.getLastName() == null ? "" : member.getLastName()).trim();
+        if (member.getPost() != null && !member.getPost().isBlank()) {
+            return name + ", " + member.getPost();
+        }
+        if (member.getInstitution() != null && !member.getInstitution().isBlank()) {
+            return name + ", " + member.getInstitution();
+        }
+        return name;
+    }
+
+    private String participantRole(Committee committee, Member participant) {
+        if (committee.getCoordinator() != null && participant.getId().equals(committee.getCoordinator().getId())) {
+            return committee.getMinuteLanguage() != null && committee.getMinuteLanguage().name().equals("NEPALI")
+                    ? "\u0938\u0902\u092f\u094b\u091c\u0915" : "Coordinator";
+        }
+        for (CommitteeMembership membership : committee.getMemberships()) {
+            if (membership.getMember().getId().equals(participant.getId())) {
+                return membership.getRole();
+            }
+        }
+        return committee.getMinuteLanguage() != null && committee.getMinuteLanguage().name().equals("NEPALI")
+                ? "\u0906\u092e\u0928\u094d\u0924\u094d\u0930\u093f\u0924" : "Invitee";
+    }
+
 
     @CheckCommitteeAccess
     public List<MeetingSummaryDto> getMeetingOfCommittee(Committee committee, String username) {
@@ -227,6 +339,7 @@ public class MeetingService {
         return meetingRepository.findById(meetingId);
     }
 
+    @Transactional
     public MeetingDetailsForEditDto getMeetingDetails(Integer meetingId, String username) {
         Meeting meeting = getMeetingIfAccessible(meetingId, username);
         List<Member> possibleInvitees = memberRepository.getPossibleInviteesForMeeting(meetingId, meeting.getCommittee().getId(), username);
@@ -235,11 +348,92 @@ public class MeetingService {
     }
 
     private Meeting getMeetingIfAccessible(Integer memberId, String username) {
-        Optional<Meeting> optionalMeeting = meetingRepository.getMeetingIfAccessible(memberId, username);
-        if (optionalMeeting.isEmpty()) {
-            throw new MeetingDoesNotExistException();
+        Meeting meeting = meetingRepository.findById(memberId)
+                .orElseThrow(() -> new MeetingDoesNotExistException());
+        // Access is committee-scoped. Restricting the lookup to meeting.createdBy
+        // blocked a secretary from working on meetings created by another user.
+        committeeService.getCommitteeIfAccessible(meeting.getCommittee().getId(), username);
+        return meeting;
+    }
+
+    private void initializeParticipantOrder(Meeting meeting) {
+        meeting.getAttendees().clear();
+        meeting.getAttendees().addAll(getDefaultParticipantOrder(meeting));
+    }
+
+    private List<Member> orderMembersByRequestedIds(List<Integer> requestedIds, Collection<Member> members) {
+        Map<Integer, Member> membersById = members.stream()
+                .filter(member -> member.getId() != null)
+                .collect(Collectors.toMap(Member::getId, member -> member, (left, right) -> left));
+        return requestedIds.stream()
+                .map(membersById::get)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private void reorderInvitees(Meeting meeting, List<Integer> requestedInviteeIds) {
+        List<Member> orderedInvitees = orderMembersByRequestedIds(
+                requestedInviteeIds,
+                meeting.getInvitees());
+        meeting.getInvitees().clear();
+        meeting.getInvitees().addAll(orderedInvitees);
+    }
+
+    private void syncParticipantOrder(Meeting meeting, List<Integer> requestedInviteeIds) {
+        List<Member> allowed = getDefaultParticipantOrder(meeting);
+        Set<Integer> allowedIds = allowed.stream()
+                .map(Member::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Set<Integer> requestedInviteeIdSet = new HashSet<>(requestedInviteeIds);
+        List<Member> orderedInvitees = orderMembersByRequestedIds(requestedInviteeIds, meeting.getInvitees());
+        List<Member> currentAttendees = new ArrayList<>(meeting.getAttendees());
+        if (currentAttendees.isEmpty()) {
+            currentAttendees.addAll(allowed);
         }
-        return optionalMeeting.get();
+        List<Member> ordered = new ArrayList<>();
+        Set<Integer> seen = new HashSet<>();
+        int nextRequestedInvitee = 0;
+
+        for (Member attendee : currentAttendees) {
+            if (attendee.getId() != null && requestedInviteeIdSet.contains(attendee.getId())) {
+                if (nextRequestedInvitee < orderedInvitees.size()) {
+                    Member requestedInvitee = orderedInvitees.get(nextRequestedInvitee++);
+                    if (seen.add(requestedInvitee.getId())) {
+                        ordered.add(requestedInvitee);
+                    }
+                }
+            } else if (attendee.getId() != null && allowedIds.contains(attendee.getId()) && seen.add(attendee.getId())) {
+                ordered.add(attendee);
+            }
+        }
+        while (nextRequestedInvitee < orderedInvitees.size()) {
+            Member requestedInvitee = orderedInvitees.get(nextRequestedInvitee++);
+            if (seen.add(requestedInvitee.getId())) {
+                ordered.add(requestedInvitee);
+            }
+        }
+        allowed.stream()
+                .filter(member -> member.getId() != null && seen.add(member.getId()))
+                .forEach(ordered::add);
+        meeting.getAttendees().clear();
+        meeting.getAttendees().addAll(ordered);
+    }
+
+    private List<Member> getDefaultParticipantOrder(Meeting meeting) {
+        Committee committee = meeting.getCommittee();
+        List<Member> participants = new ArrayList<>();
+        addParticipantIfMissing(participants, committee.getCoordinator());
+        committee.getSortedMemberships().forEach(membership -> addParticipantIfMissing(participants, membership.getMember()));
+        meeting.getInvitees().forEach(invitee -> addParticipantIfMissing(participants, invitee));
+        return participants;
+    }
+
+    private void addParticipantIfMissing(List<Member> participants, Member candidate) {
+        if (candidate != null && participants.stream().noneMatch(existing ->
+                existing.getId() != null && existing.getId().equals(candidate.getId()))) {
+            participants.add(candidate);
+        }
     }
 
 
@@ -247,9 +441,6 @@ public class MeetingService {
     public Meeting updateExistingMeeting(MeetingCreationDto meetingCreationDto, Integer meetingId, String username) {
         entityValidator.validate(meetingCreationDto);
         Meeting existingMeeting = getMeetingIfAccessible(meetingId, username);
-        Set<Integer> existingInviteeIds = existingMeeting.getInvitees().stream()
-                .map(Member::getId)
-                .collect(Collectors.toSet());
 
         //reassign the updated values
         existingMeeting.setTitle(meetingCreationDto.getTitle());
@@ -322,12 +513,10 @@ public class MeetingService {
                 existingMeeting.getInvitees().add(member.get());
             }
         }
-        Meeting savedMeeting = meetingRepository.save(existingMeeting);
-        List<Member> newlyAddedInvitees = savedMeeting.getInvitees().stream()
-                .filter(invitee -> !existingInviteeIds.contains(invitee.getId()))
-                .toList();
-        notifyMeetingInvitees(savedMeeting, newlyAddedInvitees, username);
-        return savedMeeting;
+        List<Integer> requestedInviteeIds = meetingCreationDto.getInviteeIds().stream().toList();
+        reorderInvitees(existingMeeting, requestedInviteeIds);
+        syncParticipantOrder(existingMeeting, requestedInviteeIds);
+        return meetingRepository.save(existingMeeting);
     }
 
     @Transactional
@@ -346,15 +535,26 @@ public class MeetingService {
     @Transactional
     public int sendMeetingInvites(Integer meetingId, String username) {
         Meeting meeting = getMeetingIfAccessible(meetingId, username);
-        return notifyMeetingInvitees(meeting, meeting.getInvitees(), username);
+        return notifyFinalMinuteRecipients(meeting, username);
     }
 
-    private int notifyMeetingInvitees(Meeting meeting, Collection<Member> invitees, String inviterUsername) {
-        AppUser inviter = appUserServiceForEmail(inviterUsername);
-        String inviterName = inviter.getFirstName() + " " + inviter.getLastName();
+    private int notifyFinalMinuteRecipients(Meeting meeting, String senderUsername) {
+        byte[] attachment;
+        try {
+            String htmlContent = meetingMinutePreparationService.renderMinuteForEmail(
+                    meeting.getCommittee(), meeting, senderUsername);
+            attachment = meetingMinutePreparationService.createWordDocumentFromHtml(htmlContent);
+        } catch (Exception exception) {
+            log.warn("Could not prepare the final minute attachment for meeting {}. The meeting record was still saved. Reason: {}",
+                    meeting.getId(), exception.getMessage(), exception);
+            return 0;
+        }
+
+        AppUser sender = appUserServiceForEmail(senderUsername);
+        String senderName = sender.getFirstName() + " " + sender.getLastName();
         int sentCount = 0;
 
-        for (Member invitee : invitees) {
+        for (Member invitee : meeting.getInvitees()) {
             String email = invitee.getEmail();
             if ((email == null || email.isBlank()) && invitee.getId() != null) {
                 email = appUserRepository.findFirstByLinkedMemberId(invitee.getId())
@@ -362,7 +562,7 @@ public class MeetingService {
                         .orElse(null);
             }
             if (email != null && !email.isBlank()
-                    && emailService.sendMeetingInviteEmail(email, meeting, inviterName)) {
+                    && emailService.sendMeetingMinutesEmail(email, meeting, senderName, attachment)) {
                 sentCount++;
             }
         }

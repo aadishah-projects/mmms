@@ -30,8 +30,21 @@ public class MeetingDetailsForEditDto {
         this.heldDate = meeting.getHeldDate();
         this.heldTime = meeting.getHeldTime();
         this.heldPlace = meeting.getHeldPlace();
-        for(Member invitee: meeting.getInvitees()) {
-            this.selectedInvitees.add(new MemberSearchResultDto(invitee));
+        Set<Integer> selectedInviteeIds = meeting.getInvitees().stream()
+                .map(Member::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        Set<Integer> addedInviteeIds = new HashSet<>();
+        // Attendees contain the persisted attendance order. Use it to restore
+        // the selected invitee order when the meeting is opened for editing.
+        for (Member attendee : meeting.getAttendees()) {
+            if (selectedInviteeIds.contains(attendee.getId()) && addedInviteeIds.add(attendee.getId())) {
+                this.selectedInvitees.add(new MemberSearchResultDto(attendee));
+            }
+        }
+        for (Member invitee : meeting.getInvitees()) {
+            if (addedInviteeIds.add(invitee.getId())) {
+                this.selectedInvitees.add(new MemberSearchResultDto(invitee));
+            }
         }
 
         for(Decision decision: meeting.getDecisions()) {

@@ -11,6 +11,11 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  CdkDragDrop,
+  DragDropModule,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
+import {
   FormGroup,
   FormControl,
   ReactiveFormsModule,
@@ -41,6 +46,7 @@ import { Response } from '../../response/response';
     ReactiveFormsModule,
     SafeCloseDialogCustom,
     RouterLink,
+    DragDropModule,
   ],
   templateUrl: './meeting-form.component.html',
   styleUrl: './meeting-form.component.scss',
@@ -64,7 +70,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       this.heldTime.valid &&
       this.heldDate.valid &&
       this.selectedCommitteeId != undefined &&
-      !this.hasNoNonEmptyDecisions()
+      !this.hasNoNonEmptyMeetingItems()
     ) {
       return true;
     } else {
@@ -268,6 +274,24 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     this.updateMinuteDocument();
   }
 
+  onSelectedInviteeDrop(event: CdkDragDrop<MemberSearchResult[]>): void {
+    if (event.previousIndex === event.currentIndex) {
+      return;
+    }
+    moveItemInArray(this.selectedInvitees, event.previousIndex, event.currentIndex);
+    this.updateMinuteDocument();
+  }
+
+  moveSelectedInvitee(index: number, direction: -1 | 1, event?: Event): void {
+    event?.stopPropagation();
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= this.selectedInvitees.length) {
+      return;
+    }
+    moveItemInArray(this.selectedInvitees, index, targetIndex);
+    this.updateMinuteDocument();
+  }
+
   setupObservableForInviteeSearchBarInputChange() {
     this.invitteeSearchInputFieldSubscription =
       this.selectInviteeFormGroup.controls.searchBarInput.valueChanges
@@ -412,11 +436,14 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     this.router.navigate(['/home/create-committee']);
   }
 
-  hasNoNonEmptyDecisions(): boolean {
-    return (
-      this.decisions.filter((d) => d.decision && d.decision.trim().length > 0).length <
-      1
+  hasNoNonEmptyMeetingItems(): boolean {
+    const hasAgenda = this.agendas.some(
+      (agenda) => !!agenda.agenda && agenda.agenda.trim().length > 0,
     );
+    const hasDecision = this.decisions.some(
+      (decision) => !!decision.decision && decision.decision.trim().length > 0,
+    );
+    return !hasAgenda && !hasDecision;
   }
 
   showAllFormErrors = false;
@@ -426,7 +453,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     $event.preventDefault();
     if (
       this.meetingFormGroup.invalid ||
-      this.hasNoNonEmptyDecisions() ||
+      this.hasNoNonEmptyMeetingItems() ||
       this.selectedCommitteeId == undefined
     ) {
       this.showAllFormErrors = true;
@@ -675,6 +702,15 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       }
     });
     this.renderedDocumentHtml = this.minuteDocumentHtml;
+    // The slot is built off-DOM first, so its initial width measurement can
+    // be too small. Recalculate after the browser has laid out the paper so
+    // existing long values use the available horizontal space before they
+    // wrap vertically.
+    requestAnimationFrame(() => {
+      this.minuteDocument?.nativeElement
+        .querySelectorAll<HTMLTextAreaElement>('.template-item-input')
+        .forEach((input) => this.autoGrowTextarea(input));
+    });
   }
 
   private createAttendanceSlot(): HTMLElement {
@@ -721,13 +757,18 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       row.className = 'template-item-row';
       const input = document.createElement('textarea');
       input.rows = 1;
+      input.className = 'template-item-input';
       input.value = agenda.agenda || '';
       input.placeholder = 'Enter an agenda item';
       input.setAttribute('aria-label', `Agenda item ${index + 1}`);
-      input.addEventListener('input', () => agenda.agenda = input.value);
+      input.addEventListener('input', () => {
+        agenda.agenda = input.value;
+        this.autoGrowTextarea(input);
+      });
       const remove = this.createRemoveButton(`Remove agenda ${index + 1}`, () => this.deleteAgenda(agenda.agendaId));
       row.append(input, remove);
       list.appendChild(row);
+      this.autoGrowTextarea(input);
     });
     if (this.agendas.length === 0) {
       const empty = document.createElement('li');
@@ -749,13 +790,18 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       row.className = 'template-item-row';
       const input = document.createElement('textarea');
       input.rows = 1;
+      input.className = 'template-item-input';
       input.value = decision.decision || '';
       input.placeholder = 'Record the decision or resolution';
       input.setAttribute('aria-label', `Decision or resolution ${index + 1}`);
-      input.addEventListener('input', () => decision.decision = input.value);
+      input.addEventListener('input', () => {
+        decision.decision = input.value;
+        this.autoGrowTextarea(input);
+      });
       const remove = this.createRemoveButton(`Remove decision ${index + 1}`, () => this.deleteDecision(decision.decisionId));
       row.append(input, remove);
       list.appendChild(row);
+      this.autoGrowTextarea(input);
     });
     if (this.decisions.length === 0) {
       const empty = document.createElement('li');
@@ -789,6 +835,33 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     button.setAttribute('aria-label', label);
     button.addEventListener('click', action);
     return button;
+  }
+
+  private autoGrowTextarea(textarea: HTMLTextAreaElement): void {
+    const row = textarea.closest<HTMLElement>('.template-item-row');
+    const availableWidth = row
+      ? Math.max(80, row.clientWidth - 42)
+      : 640;
+    const minimumWidth = Math.min(220, availableWidth);
+    const styles = window.getComputedStyle(textarea);
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    let contentWidth = minimumWidth;
+
+    if (context) {
+      context.font = `${styles.fontStyle} ${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
+      const longestLine = textarea.value
+        .split('\n')
+        .reduce((longest, line) => Math.max(longest, context.measureText(line).width), 0);
+      const horizontalPadding = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight) + 2;
+      contentWidth = Math.ceil(longestLine + horizontalPadding);
+    }
+
+    // Use horizontal space first. Once the paper width is reached, the
+    // textarea wraps naturally and its height grows to fit the wrapped text.
+    textarea.style.width = `${Math.min(availableWidth, Math.max(minimumWidth, contentWidth))}px`;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.max(textarea.scrollHeight, 46)}px`;
   }
 
   private focusLastMinuteItem(type: 'agenda' | 'decision'): void {

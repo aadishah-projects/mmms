@@ -6,6 +6,7 @@ import com.sep.mmms_backend.response.Response;
 import com.sep.mmms_backend.response.ResponseMessages;
 import com.sep.mmms_backend.service.CommitteeService;
 import com.sep.mmms_backend.service.MemberService;
+import com.sep.mmms_backend.service.MinuteTemplateService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +20,12 @@ import java.util.List;
 public class CommitteeController {
 
     private final CommitteeService committeeService;
+    private final MinuteTemplateService minuteTemplateService;
 
-    public CommitteeController(CommitteeService committeeService, MemberService memberService) {
+    public CommitteeController(CommitteeService committeeService, MemberService memberService,
+                               MinuteTemplateService minuteTemplateService) {
         this.committeeService = committeeService;
+        this.minuteTemplateService = minuteTemplateService;
     }
 
 
@@ -58,7 +62,7 @@ public class CommitteeController {
             @PathVariable int committeeId,
             Authentication authentication) {
         return ResponseEntity.ok(new Response(
-                committeeService.getMinuteTemplate(committeeId, authentication.getName())));
+                minuteTemplateService.getWorkspace(committeeId, authentication.getName())));
     }
 
     @PatchMapping("/committee/{committeeId}/minute-template")
@@ -66,9 +70,26 @@ public class CommitteeController {
             @PathVariable int committeeId,
             @RequestBody MinuteTemplateUpdateDto minuteTemplateUpdateDto,
             Authentication authentication) {
-        committeeService.updateMinuteTemplate(
-                committeeId, minuteTemplateUpdateDto, authentication.getName());
-        return ResponseEntity.ok(new Response("Minute template updated successfully"));
+        return ResponseEntity.ok(new Response("Minute template saved successfully",
+                minuteTemplateService.saveTemplate(committeeId, minuteTemplateUpdateDto, authentication.getName())));
+    }
+
+    @PostMapping("/committee/{committeeId}/minute-templates/{templateId}/activate")
+    public ResponseEntity<Response> activateMinuteTemplate(
+            @PathVariable int committeeId,
+            @PathVariable int templateId,
+            Authentication authentication) {
+        return ResponseEntity.ok(new Response("Minute template activated successfully",
+                minuteTemplateService.activateTemplate(committeeId, templateId, authentication.getName())));
+    }
+
+    @DeleteMapping("/committee/{committeeId}/minute-templates/{templateId}")
+    public ResponseEntity<Response> deleteMinuteTemplate(
+            @PathVariable int committeeId,
+            @PathVariable int templateId,
+            Authentication authentication) {
+        minuteTemplateService.deleteTemplate(committeeId, templateId, authentication.getName());
+        return ResponseEntity.ok(new Response("Minute template deleted successfully"));
     }
 
 

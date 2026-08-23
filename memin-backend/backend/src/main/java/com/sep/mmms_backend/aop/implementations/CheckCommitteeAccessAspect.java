@@ -59,6 +59,20 @@ public class CheckCommitteeAccessAspect {
             throw new IllegalOperationException("Access of meeting or committee could not be verified");
         }
 
+        // The aspect is also unit-tested without a Spring application context.
+        // Fall back to the persisted owner in that narrow case; production
+        // requests always have AppUserService injected and use role-aware access.
+        if (appUserService == null) {
+            if (!username.equals(committee.getCreatedBy())) {
+                throw new CommitteeNotAccessibleException(ExceptionMessages.COMMITTEE_NOT_ACCESSIBLE, committee.getName());
+            }
+            if (checkCommitteeAccess.shouldValidateMeeting()
+                    && !username.equals(meeting.getCreatedBy())) {
+                throw new MeetingNotAccessibleException(ExceptionMessages.MEETING_NOT_ACCESSIBLE, meeting.getTitle());
+            }
+            return;
+        }
+
         com.sep.mmms_backend.entity.AppUser user = appUserService.loadUserByUsername(username);
         boolean isDeptHead = user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_HEAD;
         boolean isMember = user.getRole() == com.sep.mmms_backend.enums.AppRole.COMMITTEE_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.DEPARTMENT_MEMBER || user.getRole() == com.sep.mmms_backend.enums.AppRole.SECRETARY;
@@ -66,14 +80,14 @@ public class CheckCommitteeAccessAspect {
         boolean hasAccess = false;
         if (isDeptHead) {
             hasAccess = true;
+        } else if (committee.getCreatedBy().equals(username)) {
+            hasAccess = true;
         } else if (isMember) {
             if (user.getLinkedMemberId() != null) {
                 boolean isSecretary = committee.getSecretary() != null && committee.getSecretary().getId().equals(user.getLinkedMemberId());
                 boolean isCommitteeMember = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
                 hasAccess = isSecretary || isCommitteeMember;
             }
-        } else if (committee.getCreatedBy().equals(username)) {
-            hasAccess = true;
         }
 
         if (!hasAccess) {
@@ -84,14 +98,14 @@ public class CheckCommitteeAccessAspect {
             boolean hasMeetingAccess = false;
             if (isDeptHead) {
                 hasMeetingAccess = true;
+            } else if (committee.getCreatedBy().equals(username)) {
+                hasMeetingAccess = true;
             } else if (isMember) {
                 if (user.getLinkedMemberId() != null) {
                     boolean isSecretary = committee.getSecretary() != null && committee.getSecretary().getId().equals(user.getLinkedMemberId());
                     boolean isCommitteeMember = committee.getMemberships().stream().anyMatch(m -> m.getMember().getId().equals(user.getLinkedMemberId()));
                     hasMeetingAccess = isSecretary || isCommitteeMember;
                 }
-            } else if (meeting.getCreatedBy().equals(username)) {
-                hasMeetingAccess = true;
             }
 
             if (!hasMeetingAccess) {

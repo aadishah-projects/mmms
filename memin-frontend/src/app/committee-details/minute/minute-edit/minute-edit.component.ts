@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, input, OnInit, viewChildren } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, inject, input, OnInit, viewChildren } from '@angular/core';
 import { MinuteDataService } from '../minute-data.service';
 import { FormsModule } from '@angular/forms';
 import {
@@ -20,7 +20,7 @@ import { PopupService } from '../../../popup/popup.service';
   templateUrl: './minute-edit.component.html',
   styleUrl: './minute-edit.component.scss',
 })
-export class MinuteEditComponent implements OnInit {
+export class MinuteEditComponent implements OnInit, AfterViewChecked {
   minuteDataService = inject(MinuteDataService);
   minuteData = this.minuteDataService.getMinuteData();
   fullEditorMode = this.minuteDataService.getFullEditorMode();
@@ -49,12 +49,22 @@ export class MinuteEditComponent implements OnInit {
     });
   }
 
-  hasNoNonEmptyDecisions(): boolean {
-    return (
-      this.minuteData().decisions.filter(
-        (d) => d.decision && d.decision.length > 0,
-      ).length < 1
+  ngAfterViewChecked(): void {
+    if (this.fullEditorMode()) {
+      return;
+    }
+    this.agendaInputFields().forEach((input) => this.resizeTextarea(input.nativeElement));
+    this.decisionInputFields().forEach((input) => this.resizeTextarea(input.nativeElement));
+  }
+
+  hasNoNonEmptyMeetingItems(): boolean {
+    const hasAgenda = this.minuteData().agendas.some(
+      (agenda) => !!agenda.agenda && agenda.agenda.trim().length > 0,
     );
+    const hasDecision = this.minuteData().decisions.some(
+      (decision) => !!decision.decision && decision.decision.trim().length > 0,
+    );
+    return !hasAgenda && !hasDecision;
   }
 
   onFullContentInput(event: Event): void {
@@ -78,7 +88,7 @@ export class MinuteEditComponent implements OnInit {
       <h1>${this.escapeHtml(data.committeeName)} — Meeting Minute</h1>
       <p>${this.escapeHtml(data.openingParagraph ?? `Meeting held on ${data.meetingHeldDate} at ${data.meetingHeldPlace}.`)}</p>
       <h2>Attendance</h2>
-      <table border="1"><thead><tr><th>S.N.</th><th>Name</th><th>Position</th><th>Signature</th></tr></thead><tbody>${attendance}</tbody></table>
+      <table class="memberships" border="1"><thead><tr><th>S.N.</th><th>Name</th><th>Position</th><th>Signature</th></tr></thead><tbody>${attendance}</tbody></table>
       <h2>Agendas</h2><ol>${agendas}</ol>
       <h2>Decisions</h2><ol>${decisions}</ol>`);
     this.minuteDataService.setFullEditorMode(true);
@@ -345,6 +355,16 @@ export class MinuteEditComponent implements OnInit {
     );
   }
 
+  autoGrow(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.resizeTextarea(textarea);
+  }
+
+  private resizeTextarea(textarea: HTMLTextAreaElement): void {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.max(textarea.scrollHeight, 44)}px`;
+  }
+
   showAllErrors = false;
   onSubmit() {
     if (
@@ -353,7 +373,7 @@ export class MinuteEditComponent implements OnInit {
       this.minuteData().meetingHeldDate.trim().length <1 ||
 	this.minuteData().meetingHeldTime.trim().length < 1 ||
 	this.minuteData().meetingHeldPlace.trim().length < 1 ||
-	(!this.minuteData().minuteContentHtml && this.hasNoNonEmptyDecisions())
+      (!this.minuteData().minuteContentHtml && this.hasNoNonEmptyMeetingItems())
     ) {
       this.showAllErrors = true;
       return;

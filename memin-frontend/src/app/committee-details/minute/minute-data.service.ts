@@ -47,8 +47,7 @@ export class MinuteDataService {
           );
           this.hasMinuteDataLoaded = true;
 
-          // originalDataString should not contain invitees because changing
-          // invitee order is intentionally not persisted by this form.
+          // Participant order is persisted independently by the minute viewer.
           this.markSaved();
         },
         error: (response) => {
@@ -79,6 +78,10 @@ export class MinuteDataService {
     decisions: MinuteDataDto['decisions'],
   ): void {
     this.minuteData.update((data) => ({ ...data, agendas, decisions }));
+  }
+
+  setParticipants(participants: MinuteDataDto['participants']): void {
+    this.minuteData.update((data) => ({ ...data, participants }));
   }
 
   markSaved(): void {

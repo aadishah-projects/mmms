@@ -16,7 +16,10 @@ import {
   DragDropModule,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
-import { MemberSearchResult } from '../../../models/models';
+import { ActivatedRoute } from '@angular/router';
+import { CommitteeMembershipDto } from '../../../models/models';
+import { Response } from '../../../response/response';
+import { PopupService } from '../../../popup/popup.service';
 
 @Component({
   selector: 'app-minute-view',
@@ -32,6 +35,8 @@ import { MemberSearchResult } from '../../../models/models';
 export class MinuteViewComponent {
   showMinuteOptions = false;
   isEditMode = false;
+  participantOrderSaving = false;
+  private participantOrderSnapshot: CommitteeMembershipDto[] = [];
 
   ///////////////////////////////////////////
   // for invitee order change dialog
@@ -65,28 +70,66 @@ export class MinuteViewComponent {
   ////////////////////////////////////////////////////////////
   //for participant order change dialog
 
-  drop(event: CdkDragDrop<MemberSearchResult[]>) {
+  drop(event: CdkDragDrop<CommitteeMembershipDto[]>) {
     moveItemInArray(
       this.minuteData().participants,
       event.previousIndex,
       event.currentIndex,
     );
-    console.log('drop executed');
   }
 
   diag = viewChild<ElementRef<HTMLDialogElement>>('participant_order_dialog');
   showChangeParticipantOrderDialog() {
     this.showMinuteOptions = false;
+    this.participantOrderSnapshot = this.minuteData().participants.map((participant) => ({ ...participant }));
     this.diag()!.nativeElement.showModal();
   }
 
+  cancelParticipantOrder(): void {
+    this.injectedMinuteDataService.setParticipants(this.participantOrderSnapshot);
+    this.diag()?.nativeElement.close();
+  }
+
+  saveParticipantOrder(): void {
+    if (this.participantOrderSaving) return;
+    const meetingId = this.routeMeetingId();
+    if (!meetingId) return;
+    this.participantOrderSaving = true;
+    this.httpClient
+      .patch<Response<{ participantIds: number[]; minuteContentHtml: string | null }>>(
+        `${BACKEND_URL}/api/meeting/${meetingId}/participant-order`,
+        { participantIds: this.minuteData().participants.map((participant) => participant.memberId) },
+        { withCredentials: true },
+      )
+      .subscribe({
+        next: (response) => {
+          this.participantOrderSaving = false;
+          if (response.mainBody?.minuteContentHtml !== undefined) {
+            this.injectedMinuteDataService.setMinuteContentHtml(response.mainBody.minuteContentHtml);
+          }
+          this.participantOrderSnapshot = this.minuteData().participants.map((participant) => ({ ...participant }));
+          this.diag()?.nativeElement.close();
+          this.popupService.showPopup('Attendance order saved.', 'Success', 2200);
+        },
+        error: (error) => {
+          this.participantOrderSaving = false;
+          this.popupService.showPopup(error?.error?.message || 'Attendance order could not be saved.', 'Error', 3000);
+        },
+      });
+  }
+
   //data loading logic is not in the component because data needs to be shared with minute-edit component.
-  minuteData = inject(MinuteDataService).getMinuteData();
+  private injectedMinuteDataService = inject(MinuteDataService);
+  minuteData = this.injectedMinuteDataService.getMinuteData();
   minuteNepali1 = viewChild(MinuteNepali1Component);
   minuteEnglish1 = viewChild(MinuteEnglish1Component);
   customProcessedMinute = viewChild<ElementRef<HTMLDivElement>>('customProcessedMinute');
 
-  constructor(private httpClient: HttpClient) {}
+  constructor(private httpClient: HttpClient, private popupService: PopupService, private route: ActivatedRoute) {}
+
+  private routeMeetingId(): string | null {
+    return this.route.snapshot.queryParamMap.get('meetingId');
+  }
 
   htmlContent!: string | undefined;
 

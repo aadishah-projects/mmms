@@ -12,6 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BACKEND_URL } from '../../../global_constants';
 import {
   MinuteTemplateDto,
+  MinuteTemplateSummaryDto,
   MinuteTemplateUpdateDto,
 } from '../../models/models';
 import { Response } from '../../response/response';
@@ -53,6 +54,8 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
     { token: '@location', label: 'Location', description: 'Where the meeting was held' },
     { token: '@coordinator', label: 'Coordinator', description: 'Coordinator full name' },
     { token: '@attendance', label: 'Attendance table', description: 'Participant table with roles and signatures', block: true },
+    { token: '@attendanceTable', label: 'Attendance table (explicit)', description: 'Participant table with roles and signatures', block: true },
+    { token: '@attendanceList', label: 'Attendance list', description: 'Numbered participant list', block: true },
     { token: '@agendas', label: 'Agendas', description: 'Numbered agenda list', block: true },
     { token: '@decisions', label: 'Decisions', description: 'Numbered decisions list', block: true },
     { token: '@header', label: 'Saved header', description: 'Legacy committee header text' },
@@ -119,8 +122,8 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
   readonly nepaliTemplatePresets: TemplatePreset[] = [
     {
       id: 'nepali-formal-college',
-      name: 'औपचारिक कलेज समिति कार्यवृत्त',
-      description: 'कलेजका शैक्षिक तथा प्रशासनिक समितिका बैठकका लागि औपचारिक कार्यवृत्त र निर्णय अभिलेख।',
+      name: 'Formal college committee minutes',
+      description: 'Formal minutes and decision records for academic and administrative college committees.',
       html: `<h1 style="text-align: center">@committee</h1>
         <p style="text-align: center"><strong>बैठकको कार्यवृत्त तथा निर्णय अभिलेख</strong></p>
         <p style="text-align: center">@title</p>
@@ -149,8 +152,8 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
     },
     {
       id: 'nepali-academic-department',
-      name: 'शैक्षिक तथा विभागीय बैठक',
-      description: 'विभाग, विषय समिति, परीक्षा समिति वा शैक्षिक परिषद्का नियमित बैठकका लागि क्रमबद्ध ढाँचा।',
+      name: 'Academic and departmental meeting',
+      description: 'A structured layout for department, subject, examination, or academic council meetings.',
       html: `<div style="text-align: center">
           <h1>@committee</h1>
           <p><strong>शैक्षिक समिति बैठकको कार्यवृत्त</strong></p>
@@ -174,8 +177,8 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
     },
     {
       id: 'nepali-decision-register',
-      name: 'संक्षिप्त निर्णय पुस्तिका',
-      description: 'नियमित कलेज समिति बैठकमा प्रस्ताव, छलफल, निर्णय र हस्ताक्षर छोटकरीमा अभिलेख गर्न मिल्ने ढाँचा।',
+      name: 'Concise decision register',
+      description: 'A compact layout for recording proposals, discussions, decisions, and signatures.',
       html: `<h1>@committee - @title</h1>
         <p><strong>बैठकको मिति:</strong> @day, @date</p>
         <p><strong>समय:</strong> @time&nbsp;&nbsp;&nbsp;&nbsp;<strong>स्थान:</strong> @location</p>
@@ -212,7 +215,9 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
       { name: 'decisions', label: 'decision list' },
     ];
     return requiredBlocks
-      .filter(({ name }) => !this.hasTemplateToken(name))
+      .filter(({ name }) => name === 'attendance'
+        ? !this.hasAnyTemplateToken(['attendance', 'attendanceTable', 'attendanceList', 'participants'])
+        : !this.hasTemplateToken(name))
       .map(({ label }) => `Add the ${label} token so meeting data appears in the saved minute.`);
   }
 
@@ -221,6 +226,9 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
   committeeDescription = '';
   minuteLanguage = '';
   editorHtml = '';
+  templateName = 'Current template';
+  savedTemplates: MinuteTemplateSummaryDto[] = [];
+  selectedTemplateId: number | null = null;
   hasDataLoaded = false;
   isSaving = false;
   errorMessage = '';
@@ -291,6 +299,10 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
           this.committeeName = data.committeeName;
           this.committeeDescription = data.committeeDescription;
           this.minuteLanguage = data.minuteLanguage;
+          this.savedTemplates = data.savedTemplates ?? [];
+          this.selectedTemplateId = data.activeTemplateId ?? null;
+          const activeTemplate = this.savedTemplates.find((template) => template.active);
+          this.templateName = activeTemplate?.name ?? 'Current template';
           this.editorHtml = this.getInitialTemplate(data);
           this.selectedPresetId = this.allTemplatePresets.find(
             (preset) => preset.html.trim() === this.editorHtml.trim(),
@@ -579,6 +591,8 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
   saveTemplate(): void {
     this.syncEditorHtml();
     const update: MinuteTemplateUpdateDto = {
+      templateId: this.selectedTemplateId,
+      name: this.templateName.trim() || 'Current template',
       minuteTemplateHtml: this.editorHtml.trim() || null,
     };
     this.isSaving = true;
@@ -592,10 +606,8 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
         next: () => {
           this.isSaving = false;
           this.savedEditorHtml = this.editorHtml;
-          this.popupService.showPopup('Minute template saved.', 'Success', 2500);
-          this.router.navigate(['/committee-details/overview'], {
-            queryParams: { committeeId: this.committeeId },
-          });
+          this.popupService.showPopup('Minute template saved to the template library.', 'Success', 2500);
+          this.loadTemplate();
         },
         error: (error) => {
           this.isSaving = false;
@@ -605,6 +617,44 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
             3500,
           );
         },
+      });
+  }
+
+  saveAsNewTemplate(): void {
+    const name = window.prompt('Name this minute template', `Copy of ${this.templateName}`);
+    if (!name?.trim()) {
+      return;
+    }
+    this.selectedTemplateId = null;
+    this.templateName = name.trim();
+    this.saveTemplate();
+  }
+
+  useSavedTemplate(template: MinuteTemplateSummaryDto): void {
+    if (this.hasUnsavedChanges && !window.confirm('Replace the current edits with this saved template?')) {
+      return;
+    }
+    this.selectedTemplateId = template.templateId;
+    this.templateName = template.name;
+    this.editorHtml = template.minuteTemplateHtml;
+    this.selectedPresetId = null;
+    this.savedEditorHtml = this.editorHtml;
+    this.setEditorHtml();
+  }
+
+  deleteSavedTemplate(template: MinuteTemplateSummaryDto, event: Event): void {
+    event.stopPropagation();
+    if (!window.confirm(`Delete the "${template.name}" template?`)) {
+      return;
+    }
+    this.httpClient
+      .delete(`${BACKEND_URL}/api/committee/${this.committeeId}/minute-templates/${template.templateId}`, { withCredentials: true })
+      .subscribe({
+        next: () => {
+          this.popupService.showPopup('Minute template deleted.', 'Success', 2200);
+          this.loadTemplate();
+        },
+        error: (error) => this.popupService.showPopup(error?.error?.message || 'Minute template could not be deleted.', 'Error', 3000),
       });
   }
 
@@ -633,6 +683,10 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
   private hasTemplateToken(name: string): boolean {
     const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp(`(?:@${escapedName}|\\{${escapedName}\\}|\\{\\{${escapedName}\\}\\})`).test(this.editorHtml);
+  }
+
+  private hasAnyTemplateToken(names: string[]): boolean {
+    return names.some((name) => this.hasTemplateToken(name));
   }
 
   private insertTokenIntoSource(token: string): void {

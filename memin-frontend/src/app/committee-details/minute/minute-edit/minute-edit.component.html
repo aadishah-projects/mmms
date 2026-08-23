@@ -147,58 +147,66 @@
       <div class="pair">
         <label>Agendas</label>
         <button
+          type="button"
           class="btn btn-primary plus-button"
           (click)="createEmptyAgenda()"
         >
-          +
+          + Add agenda
         </button>
       </div>
-      <div class="decisions-list">
-        @for (agenda of minuteData().agendas; track agenda.agendaId) {
-          <div class="decision-item">
-            <input
+      <ol class="minute-items-list agenda-items-list">
+        @for (agenda of minuteData().agendas; track agenda.agendaId; let index = $index) {
+          <li class="minute-item">
+            <span class="item-number">{{ index + 1 }}</span>
+            <textarea
               #agendaInputFields
               [(ngModel)]="agenda.agenda"
-              placeholder="Double click to delete"
-              class="form-input"
+              placeholder="Enter an agenda item"
+              class="form-textarea expandable-item"
               [name]="'agenda-' + agenda.agendaId"
               autocomplete="off"
-              (dblclick)="deleteAgenda(agenda.agendaId)"
-            />
-          </div>
+              rows="1"
+              (input)="autoGrow($event)"
+            ></textarea>
+            <button type="button" class="remove-item" (click)="deleteAgenda(agenda.agendaId)" [attr.aria-label]="'Remove agenda ' + (index + 1)">×</button>
+          </li>
         }
-      </div>
+      </ol>
     </div>
 
     <div class="form-group">
       <div class="pair">
         <label>Decisions</label>
         <button
+          type="button"
           class="btn btn-primary plus-button"
           (click)="createEmptyDecision()"
         >
-          +
+          + Add decision
         </button>
       </div>
-      <div class="decisions-list">
-        @for (decision of minuteData().decisions; track decision.decisionId) {
-          <div class="decision-item">
-            <input
+      <ol class="minute-items-list decision-items-list">
+        @for (decision of minuteData().decisions; track decision.decisionId; let index = $index) {
+          <li class="minute-item">
+            <span class="item-number">{{ index + 1 }}</span>
+            <textarea
               #decisionInputFields
               [(ngModel)]="decision.decision"
-              placeholder="Enter decision"
-              class="form-input"
+              placeholder="Record the decision or resolution"
+              class="form-textarea expandable-item"
               [name]="'decision-' + decision.decisionId"
               autocomplete="off"
-              (dblclick)="deleteDecision(decision.decisionId)"
-            />
-          </div>
+              rows="1"
+              (input)="autoGrow($event)"
+            ></textarea>
+            <button type="button" class="remove-item" (click)="deleteDecision(decision.decisionId)" [attr.aria-label]="'Remove decision ' + (index + 1)">×</button>
+          </li>
         }
 
-        @if (hasNoNonEmptyDecisions()) {
-          <p class="field-error">(Add at least one non-empty decision)</p>
+        @if (hasNoNonEmptyMeetingItems()) {
+          <p class="field-error">(Add at least one non-empty agenda or decision)</p>
         }
-      </div>
+      </ol>
     </div>
   </form>
   }

@@ -6,5 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MinuteTemplateUpdateDto {
+    private Integer templateId;
+    private String name;
     private String minuteTemplateHtml;
 }

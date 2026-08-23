@@ -106,9 +106,13 @@ export interface MinuteTemplateDto {
   minuteTemplateHtml: string | null;
   minuteOpeningTemplate: string | null;
   minuteHeaderTemplate: string | null;
+  activeTemplateId: number | null;
+  savedTemplates: MinuteTemplateSummaryDto[];
 }
 
 export interface MinuteTemplateUpdateDto {
+  templateId?: number | null;
+  name?: string | null;
   minuteTemplateHtml: string | null;
 }
 
@@ -140,8 +144,17 @@ export class AgendaWithMeetingId {
 
 
 export class CommitteeMembershipDto {
+  memberId: number = 0;
   fullName: string = '';
   role: string = '';
+}
+
+export interface MinuteTemplateSummaryDto {
+  templateId: number;
+  name: string;
+  minuteTemplateHtml: string;
+  minuteLanguage: string | null;
+  active: boolean;
 }
 
 export class MemberDetailsDto {

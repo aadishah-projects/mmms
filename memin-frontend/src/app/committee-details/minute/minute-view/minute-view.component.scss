@@ -265,6 +265,37 @@
   opacity: 0.5;
 }
 
+.participant-order-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid colors.$color-border-primary;
+
+  button {
+    padding: 8px 13px;
+    border: 1px solid colors.$color-border-primary;
+    border-radius: 5px;
+    cursor: pointer;
+    font: inherit;
+  }
+}
+
+.order-cancel {
+  background: transparent;
+  color: colors.$color-text-secondary;
+}
+
+.order-save {
+  background: colors.$color-button-primary;
+  color: white;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+}
+
 
 
 @media (max-width: 768px) {

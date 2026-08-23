@@ -71,7 +71,7 @@ export class DocumentationComponent {
       title: 'Export & Distribution',
       description: [
         'Finalize the drafted minutes.',
-        'Reorganize participant ordering for the output document if necessary (Note: This reordering is not persisted in the backedn).',
+        'Reorganize participant ordering for the output document if necessary; the saved attendance order is reused when the meeting is edited.',
         'Generate a standardized Word document export, or directly print finalized minutes from your browser.',
       ],
       image: 'images/minute-options.png',

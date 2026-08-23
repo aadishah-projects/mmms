@@ -20,6 +20,7 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTLvl;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STNumberFormat;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -31,16 +32,28 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class MeetingMinutePreparationService {
     private final TemplateEngine templateEngine;
 
-    public MeetingMinutePreparationService(MeetingService meetingService, CommitteeRepository committeeRepository, MemberService memberService, TemplateEngine templateEngine) {
+    @Autowired
+    public MeetingMinutePreparationService(TemplateEngine templateEngine) {
         this.templateEngine = templateEngine;
+    }
+
+    /** Compatibility constructor retained for existing unit tests and callers. */
+    public MeetingMinutePreparationService(
+            MeetingService ignoredMeetingService,
+            CommitteeRepository ignoredCommitteeRepository,
+            MemberService ignoredMemberService,
+            TemplateEngine templateEngine) {
+        this(templateEngine);
     }
 
 
@@ -99,6 +112,46 @@ public class MeetingMinutePreparationService {
             return null;
         }
         return renderFullMinuteTemplate(committee.getMinuteTemplateHtml(), data);
+    }
+
+    /**
+     * Builds the document that is attached to the final-minute email. A
+     * meeting-specific or committee template remains the source of truth; the
+     * fallback keeps email delivery working for committees without a saved
+     * template.
+     */
+    public String renderMinuteForEmail(Committee committee, Meeting meeting, String username) {
+        MinuteDataDto data = prepareDataForMinute(committee, meeting, username);
+        if (data.getMinuteContentHtml() != null && !data.getMinuteContentHtml().isBlank()) {
+            return data.getMinuteContentHtml();
+        }
+        return renderFallbackMinuteHtml(data);
+    }
+
+    private String renderFallbackMinuteHtml(MinuteDataDto data) {
+        boolean nepali = MinuteLanguage.NEPALI.equals(data.getMinuteLanguage());
+        String meetingLabel = nepali ? "बैठकको विषय" : "Meeting";
+        String dateLabel = nepali ? "मिति" : "Date";
+        String timeLabel = nepali ? "समय" : "Time";
+        String placeLabel = nepali ? "स्थान" : "Place";
+        String attendanceLabel = nepali ? "उपस्थिति" : "Attendance";
+        String agendasLabel = nepali ? "कार्यसूची" : "Agendas";
+        String decisionsLabel = nepali ? "निर्णयहरू" : "Decisions and resolutions";
+
+        return "<div id=\"a4-box\">"
+                + "<div class=\"introduction\"><p class=\"introduction-body\"><strong>"
+                + meetingLabel + ":</strong> " + escapeHtml(data.getMeetingTitle())
+                + "<br><strong>" + dateLabel + ":</strong> " + escapeHtml(String.valueOf(data.getMeetingHeldDate()))
+                + "<br><strong>" + timeLabel + ":</strong> " + escapeHtml(data.getMeetingHeldTime())
+                + "<br><strong>" + placeLabel + ":</strong> " + escapeHtml(data.getMeetingHeldPlace())
+                + "</p></div>"
+                + "<div class=\"memberships\"><h5 class=\"heading\">" + attendanceLabel + "</h5>"
+                + renderAttendance(data) + "</div>"
+                + "<div class=\"agendas\"><h5 class=\"heading\">" + agendasLabel + "</h5>"
+                + renderList(data.getAgendas(), true) + "</div>"
+                + "<div class=\"decisions\"><h5 class=\"heading\">" + decisionsLabel + "</h5>"
+                + renderList(data.getDecisions(), false) + "</div>"
+                + "</div>";
     }
 
     /**
@@ -190,6 +243,10 @@ public class MeetingMinutePreparationService {
         rendered = replaceToken(rendered, escapeHtml(data.getCoordinatorFullName()), "coordinator");
         rendered = replaceToken(rendered, textFragment(data.getHeader()), "header");
         rendered = replaceToken(rendered, textFragment(data.getOpeningParagraph()), "openingParagraph");
+        // The legacy @attendance token remains a table. Template authors can
+        // explicitly choose @attendanceTable or @attendanceList.
+        rendered = replaceToken(rendered, renderAttendance(data), "attendanceTable");
+        rendered = replaceToken(rendered, renderAttendanceList(data), "attendanceList");
         rendered = replaceToken(rendered, renderAttendance(data), "attendance", "participants");
         rendered = replaceToken(rendered, renderList(data.getAgendas(), true), "agendas");
         rendered = replaceToken(rendered, renderList(data.getDecisions(), false), "decisions");
@@ -229,6 +286,20 @@ public class MeetingMinutePreparationService {
                     .append(escapeHtml(participant.getRole())).append("</td><td></td></tr>");
         }
         return html.append("</tbody></table>").toString();
+    }
+
+    private String renderAttendanceList(MinuteDataDto data) {
+        StringBuilder html = new StringBuilder("<ol class=\"attendance-list\">");
+        for (CommitteeMembershipDto participant : data.getParticipants()) {
+            html.append("<li><strong>")
+                    .append(escapeHtml(participant.getFullName()))
+                    .append("</strong>");
+            if (participant.getRole() != null && !participant.getRole().isBlank()) {
+                html.append(" — ").append(escapeHtml(participant.getRole()));
+            }
+            html.append("</li>");
+        }
+        return html.append("</ol>").toString();
     }
 
     private String renderList(List<?> items, boolean agendas) {
@@ -288,18 +359,18 @@ public class MeetingMinutePreparationService {
         minuteDataDto.setMeetingHeldDate(meeting.getHeldDate());
     }
 
-    private List<CommitteeMembershipDto> getParticipants(Committee committee, Meeting meeting) {
+    private List<CommitteeMembershipDto> getDefaultParticipants(Committee committee, Meeting meeting) {
         List<CommitteeMembershipDto> memberships;
 
         memberships = committee.getSortedMemberships().stream().map(membership -> {
             Member member = membership.getMember();
             String fullName = getFullNameOfParticipant(member);
-            return new CommitteeMembershipDto(fullName, membership.getRole());
+            return new CommitteeMembershipDto(member.getId(), fullName, membership.getRole());
         }).collect(Collectors.toCollection(ArrayList::new));
 
         String coordinatorRole = committee.getMinuteLanguage() == MinuteLanguage.ENGLISH ? "Coordinator" : "संयोजक";
 
-        memberships.addFirst(new CommitteeMembershipDto(getFullNameOfParticipant(committee.getCoordinator()),coordinatorRole ));
+        memberships.addFirst(new CommitteeMembershipDto(committee.getCoordinator().getId(), getFullNameOfParticipant(committee.getCoordinator()), coordinatorRole ));
 
         meeting.getInvitees().forEach( invitee -> {
             String fullname = getFullNameOfParticipant(invitee);
@@ -309,9 +380,34 @@ public class MeetingMinutePreparationService {
             } else {
                 role = "आमन्त्रित";
             }
-            memberships.add(new CommitteeMembershipDto(fullname, role));
+            memberships.add(new CommitteeMembershipDto(invitee.getId(), fullname, role));
         });
         return memberships;
+    }
+
+    private List<CommitteeMembershipDto> getParticipants(Committee committee, Meeting meeting) {
+        List<CommitteeMembershipDto> defaults = getDefaultParticipants(committee, meeting);
+        if (meeting.getAttendees() == null || meeting.getAttendees().isEmpty()) {
+            return defaults;
+        }
+
+        Map<Integer, CommitteeMembershipDto> byMemberId = defaults.stream()
+                .filter(participant -> participant.getMemberId() != null)
+                .collect(Collectors.toMap(CommitteeMembershipDto::getMemberId, participant -> participant,
+                        (left, right) -> left));
+        List<CommitteeMembershipDto> ordered = new ArrayList<>();
+        Set<Integer> orderedMemberIds = new HashSet<>();
+        for (Member attendee : meeting.getAttendees()) {
+            CommitteeMembershipDto participant = byMemberId.get(attendee.getId());
+            if (participant != null && orderedMemberIds.add(participant.getMemberId())) {
+                ordered.add(participant);
+            }
+        }
+        defaults.stream()
+                .filter(participant -> participant.getMemberId() != null
+                        && orderedMemberIds.add(participant.getMemberId()))
+                .forEach(ordered::add);
+        return ordered.isEmpty() ? defaults : ordered;
     }
 
     private String getFullNameOfParticipant(Member member) {
@@ -422,7 +518,6 @@ public class MeetingMinutePreparationService {
     */
 
     public byte[] createWordDocumentFromHtml(String htmlContent) throws Exception {
-        System.out.println(htmlContent);
         try (XWPFDocument document = new XWPFDocument()) {
             Document html = Jsoup.parse(htmlContent);
 
@@ -430,7 +525,7 @@ public class MeetingMinutePreparationService {
             XWPFRun run = null;
             Element a4_box = html.getElementById("a4-box");
             if (a4_box == null) {
-                throw new Exception();
+                a4_box = html.body();
             }
 
 
@@ -524,7 +619,7 @@ public class MeetingMinutePreparationService {
                                 paragraph.setIndentationHanging(360);   // Hanging indent for number alignment
 
                                 run = paragraph.createRun();
-                                run.setText(agenda.text().substring(3));
+                                run.setText(listItemText(agenda));
                             }
                         }
                     }
@@ -576,7 +671,7 @@ public class MeetingMinutePreparationService {
                                 paragraph.setIndentationHanging(360);   // Hanging indent for number alignment
 
                                 run = paragraph.createRun();
-                                run.setText(decision.text().substring(3));
+                                run.setText(listItemText(decision));
                             }
                         }
                     }
@@ -647,6 +742,10 @@ public class MeetingMinutePreparationService {
         if (!hasBlockChild && !element.text().isBlank()) {
             document.createParagraph().createRun().setText(element.text().trim());
         }
+    }
+
+    private String listItemText(Element item) {
+        return item.text().trim().replaceFirst("^\\d+[.)]\\s*", "");
     }
 
     private boolean isBlockElement(Element element) {

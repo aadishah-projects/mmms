@@ -47,8 +47,10 @@ CREATE TABLE committees (
         committee_minute_opening_template TEXT,
         committee_minute_header_template TEXT,
         committee_minute_template_html TEXT,
+        active_minute_template_id INT,
         committee_max_no_of_meetings INT,
-        FOREIGN KEY (committee_coordinator_id) REFERENCES members(member_id)
+        FOREIGN KEY (committee_coordinator_id) REFERENCES members(member_id),
+        FOREIGN KEY (committee_secretary_id) REFERENCES members(member_id)
 ) ;
 
 
@@ -87,6 +89,7 @@ CREATE TABLE meetings (
 CREATE TABLE meeting_attendees (
            member_id INT NOT NULL,
            meeting_id INT NOT NULL,
+           display_order INT NOT NULL DEFAULT 0,
 
            PRIMARY KEY (member_id, meeting_id),
            FOREIGN KEY (member_id) REFERENCES members(member_id),
@@ -163,4 +166,15 @@ CREATE TABLE system_settings (
     frontend_url VARCHAR(255),
     updated_at TIMESTAMP,
     updated_by VARCHAR(100)
+) ;
+
+CREATE TABLE minute_templates (
+    template_id INT AUTO_INCREMENT PRIMARY KEY,
+    committee_id INT NOT NULL,
+    template_name VARCHAR(160) NOT NULL,
+    template_html TEXT NOT NULL,
+    template_language VARCHAR(30),
+    created_by VARCHAR(255),
+    UNIQUE (committee_id, template_name),
+    FOREIGN KEY (committee_id) REFERENCES committees(committee_id)
 ) ;

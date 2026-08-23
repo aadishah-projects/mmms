@@ -1,8 +1,8 @@
 - Reaarangable the order of attendence of the crated minute
-- Save the mintue templates when eidted that the previously used minute template could be saved and accessed.
+- attendace can be in table or the list
+- Save the mintue templates when eidted that the previously used minute template could be saved and accessed and also delted and renamed as wish and also should reflect in db.
+- ![alt text](image.png)
+- better explandable box for agendas and decsions writing and should be in 1 2 3 list.
 - a single person can be a screatary of the multiple committee
 - The person creted secretary should be reflected in db.
-- The ai api currently is set in the applicaitonproperties through env but when deployed the ai api need chaging and the different type of llm api could be used thus setting panel where we can configure without reloading backend,
 - The invitation through email should be sendable to other domains also not only pcampus.edu.np
-- In the settings panel, there should be the section other than ai config, for configuring the email and its key through which to send the emial invitation
-- the settings panel only accessible to the dept head.
