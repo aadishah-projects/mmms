@@ -142,6 +142,12 @@ public class SqliteDateTimeMigration implements ApplicationRunner {
                 statement.executeUpdate();
             }
         }
+        if (!tableHasColumn(connection, "members", "member_title_nepali")) {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "ALTER TABLE members ADD COLUMN member_title_nepali TEXT")) {
+                statement.executeUpdate();
+            }
+        }
     }
 
     private boolean tableHasColumn(Connection connection, String table, String column) throws Exception {

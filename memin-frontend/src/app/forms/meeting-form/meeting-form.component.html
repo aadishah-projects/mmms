@@ -1,141 +1,90 @@
-<dialog
-  appSafeCloseDialogCustom
-  [customSaveForm]="saveFormData"
-  [customRestoreForm]="restoreFormData"
-  #new_meeting_dialogue
-  class="main-dialog"
->
+<dialog appSafeCloseDialogCustom [customSaveForm]="saveFormData" [customRestoreForm]="restoreFormData"
+  #new_meeting_dialogue class="main-dialog">
   <!-- This button is only visibile in mobile view -->
 
-  <button
-    class="btn btn-primary next-button"
-    (click)="isMeetingDetailsPart = !isMeetingDetailsPart"
-      [disabled]="!isNextButtonInMobileViewActive()"
-  >
+  <button class="btn btn-primary next-button" (click)="isMeetingDetailsPart = !isMeetingDetailsPart"
+    [disabled]="!isNextButtonInMobileViewActive()">
     Next
   </button>
 
   <!-- LEFT PANEL - Member Selection -->
-  <div
-    class="invitee-selection-panel"
-    [class.activePartInMobileView]="!isMeetingDetailsPart"
-  >
+  <div class="invitee-selection-panel" [class.activePartInMobileView]="!isMeetingDetailsPart">
     <div class="panel-header">
       <h2>Select Members</h2>
       <p class="panel-subtitle">Search invitees for the meeting</p>
 
     </div>
 
-    <div
-      class="invitee-selection-container"
-      [formGroup]="selectInviteeFormGroup"
-    >
+    <div class="invitee-selection-container" [formGroup]="selectInviteeFormGroup">
       <!-- Search Section -->
       <div class="search-section">
-        <input
-          type="text"
-          class="search-input"
-          formControlName="searchBarInput"
-          placeholder="Search members..."
-        />
+        <input type="text" class="search-input" formControlName="searchBarInput" placeholder="Search members..." />
 
         <!-- Selected Members Section -->
         @if (this.selectedInvitees.length > 0) {
-          <div class="selected-invitees-section">
-            <h3 class="section-title">Selected Invitees</h3>
-            <p class="selected-invitees-help">Drag or use the arrows to set the attendance order.</p>
-            <div
-              class="selected-invitees-list"
-              cdkDropList
-              (cdkDropListDropped)="onSelectedInviteeDrop($event)"
-            >
-              @for (
-                selectedInvitee of selectedInvitees;
-                track selectedInvitee.memberId;
-                let index = $index
-              ) {
-                <div
-                  class="selected-invitee-item"
-                  cdkDrag
-                  (dblclick)="onSelectedInviteeRemoval(selectedInvitee)"
-                >
-                  <button
-                    type="button"
-                    class="reorder-handle"
-                    cdkDragHandle
-                    [attr.aria-label]="'Drag ' + selectedInvitee.firstName + ' ' + selectedInvitee.lastName"
-                    title="Drag to reorder"
-                    (click)="$event.stopPropagation()"
-                  >
-                    ⋮⋮
-                  </button>
-                  <div class="member-info">
-                    <span class="selected-name">
-                      {{
-                        selectedInvitee.firstName +
-                          " " +
-                          selectedInvitee.lastName
-                      }}
-                    </span>
-                  </div>
-                  <div class="reorder-buttons">
-                    <button
-                      type="button"
-                      class="reorder-button"
-                      [disabled]="index === 0"
-                      [attr.aria-label]="'Move ' + selectedInvitee.firstName + ' ' + selectedInvitee.lastName + ' up'"
-                      (click)="moveSelectedInvitee(index, -1, $event)"
-                    >↑</button>
-                    <button
-                      type="button"
-                      class="reorder-button"
-                      [disabled]="index === selectedInvitees.length - 1"
-                      [attr.aria-label]="'Move ' + selectedInvitee.firstName + ' ' + selectedInvitee.lastName + ' down'"
-                      (click)="moveSelectedInvitee(index, 1, $event)"
-                    >↓</button>
-                  </div>
-                </div>
-              }
+        <div class="selected-invitees-section">
+          <h3 class="section-title">Selected Invitees</h3>
+          <p class="selected-invitees-help">Drag or use the arrows to set the attendance order.</p>
+          <div class="selected-invitees-list" cdkDropList (cdkDropListDropped)="onSelectedInviteeDrop($event)">
+            @for (
+            selectedInvitee of selectedInvitees;
+            track selectedInvitee.memberId;
+            let index = $index
+            ) {
+            <div class="selected-invitee-item" cdkDrag (dblclick)="onSelectedInviteeRemoval(selectedInvitee)">
+              <button type="button" class="reorder-handle" cdkDragHandle
+                [attr.aria-label]="'Drag ' + getInviteeName(selectedInvitee)"
+                title="Drag to reorder" (click)="$event.stopPropagation()">
+                ⋮⋮
+              </button>
+              <div class="member-info">
+                <span class="selected-name">
+                  {{ getInviteeName(selectedInvitee) }}
+                </span>
+              </div>
+              <div class="reorder-buttons">
+                <button type="button" class="reorder-button" [disabled]="index === 0"
+                  [attr.aria-label]="'Move ' + getInviteeName(selectedInvitee) + ' up'"
+                  (click)="moveSelectedInvitee(index, -1, $event)">↑</button>
+                <button type="button" class="reorder-button" [disabled]="index === selectedInvitees.length - 1"
+                  [attr.aria-label]="'Move ' + getInviteeName(selectedInvitee) + ' down'"
+                  (click)="moveSelectedInvitee(index, 1, $event)">↓</button>
+              </div>
             </div>
+            }
           </div>
+        </div>
         }
 
         <!-- Unselected Members Section -->
         @if (displayedPossibleInvitees.length > 0) {
-          <div class="unselected-invitees-section">
-            <h3 class="section-title">Unselected Invitees</h3>
-          </div>
+        <div class="unselected-invitees-section">
+          <h3 class="section-title">Unselected Invitees</h3>
+        </div>
         }
 
         <div class="available-invitees">
           @for (
-            displayedPossibleInvitee of displayedPossibleInvitees;
-            track displayedPossibleInvitee.memberId
+          displayedPossibleInvitee of displayedPossibleInvitees;
+          track displayedPossibleInvitee.memberId
           ) {
-            <div
-              class="available-invitee-item"
-              (click)="onInviteeSelect(displayedPossibleInvitee)"
-            >
-              <span class="member-name">
-                {{
-                  displayedPossibleInvitee.firstName +
-                    " " +
-                    displayedPossibleInvitee.lastName
-                }}
-              </span>
-            </div>
+          <div class="available-invitee-item" (click)="onInviteeSelect(displayedPossibleInvitee)">
+            <span class="member-name">
+              {{ getInviteeName(displayedPossibleInvitee) }}
+            </span>
+          </div>
           } @empty {
-            @if (!selectedCommitteeId) {
-              <p class="empty-state">
-                Please select a committee to view the possible invitees
-              </p>
-            } @else {
-              @if (hasInviteeDataLoaded) {
-                <p class="empty-state">
-                  No possible invitees, create a new member first
-                </p>
-              }
-            }
+          @if (!selectedCommitteeId) {
+          <p class="empty-state">
+            Please select a committee to view the possible invitees
+          </p>
+          } @else {
+          @if (hasInviteeDataLoaded) {
+          <p class="empty-state">
+            No possible invitees, create a new member first
+          </p>
+          }
+          }
           }
         </div>
       </div>
@@ -145,123 +94,85 @@
   <!-- -------------------------------------------------------------------------  -->
 
   <!-- RIGHT PANEL - Meeting Details and Paper Canvas -->
-  <div
-    class="meeting-details-panel"
-    [class.activePartInMobileView]="isMeetingDetailsPart"
-  >
+  <div class="meeting-details-panel" [class.activePartInMobileView]="isMeetingDetailsPart">
     <div class="panel-header">
       <h2>Meeting Details</h2>
       <p class="panel-subtitle">Prepare the meeting record and capture its agendas and decisions</p>
     </div>
 
-    <form
-      [formGroup]="meetingFormGroup"
-      class="actual-form"
-    >
+    <form [formGroup]="meetingFormGroup" class="actual-form">
       <section class="meeting-control-bar" aria-label="Meeting details">
         <!-- Committee Selection Dropdown with Search -->
         <div class="form-group committee-control">
           <label for="committee-search">Select Committee<span class="required-astrick">*</span></label>
           <div class="custom-dropdown">
-            <input
-              id="committee-search"
-              type="text"
-              class="form-input"
-              [formControl]="committeeSearch"
-              placeholder="Click here to see all committees"
-              (focus)="showDropdown = true; onCommitteeSearchBarFocus()"
-              (blur)="showDropdown = false"
-              autocomplete="off"
-            />
+            <input id="committee-search" type="text" class="form-input" [formControl]="committeeSearch"
+              placeholder="Click here to see all committees" (focus)="showDropdown = true; onCommitteeSearchBarFocus()"
+              (blur)="showDropdown = false" autocomplete="off" />
             @if (showAllFormErrors && selectedCommitteeId == undefined) {
-              <p class="field-error">(Select a valid committee)</p>
+            <p class="field-error">(Select a valid committee)</p>
             }
             @if (showDropdown && displayedCommitteeIdsAndNames.length > 0) {
-              <div class="dropdown-options">
-                @for (
-                  committeeIdAndName of displayedCommitteeIdsAndNames;
-                  track committeeIdAndName.committeeId
-                ) {
-                  <div
-                    class="dropdown-option"
-                    (mousedown)="onCommitteeSelection(committeeIdAndName)"
-                  >
-                    {{ committeeIdAndName.committeeName }}
-                  </div>
-                }
+            <div class="dropdown-options">
+              @for (
+              committeeIdAndName of displayedCommitteeIdsAndNames;
+              track committeeIdAndName.committeeId
+              ) {
+              <div class="dropdown-option" (mousedown)="onCommitteeSelection(committeeIdAndName)">
+                {{ committeeIdAndName.committeeName }}
               </div>
+              }
+            </div>
             }
             @if (showDropdown && displayedCommitteeIdsAndNames.length === 0) {
-              <div class="dropdown-options">
-                <div
-                  class="dropdown-option disabled"
-                  (mousedown)="redirectToCreateCommittee()"
-                >
-                  No committees found. Create one from
-                  <a routerLink="../create-committee">here</a>.
-                </div>
+            <div class="dropdown-options">
+              <div class="dropdown-option disabled" (mousedown)="redirectToCreateCommittee()">
+                No committees found. Create one from
+                <a routerLink="../create-committee">here</a>.
               </div>
+            </div>
             }
           </div>
         </div>
 
         @if (selectedCommitteeId) {
-          <div class="form-group chairman-control">
-            <label for="meeting-chairman">Meeting chairman<span class="required-astrick">*</span></label>
-            <select
-              id="meeting-chairman"
-              class="form-input"
-              [value]="selectedChairman?.memberId ?? ''"
-              (change)="onChairmanSelection($event)"
-              [disabled]="chairmanCandidates.length === 0"
-            >
-              @for (candidate of chairmanCandidates; track candidate.memberId) {
-                <option [value]="candidate.memberId">
-                  {{ getInviteeName(candidate) }}
-                </option>
-              }
-            </select>
-            @if (showAllFormErrors && !selectedChairman) {
-              <p class="field-error">(Select the meeting chairman)</p>
+        <div class="form-group chairman-control">
+          <label for="meeting-chairman">Meeting chairman<span class="required-astrick">*</span></label>
+          <select id="meeting-chairman" class="form-input" [value]="selectedChairman?.memberId ?? ''"
+            (change)="onChairmanSelection($event)" [disabled]="chairmanCandidates.length === 0">
+            @for (candidate of chairmanCandidates; track candidate.memberId) {
+            <option [value]="candidate.memberId">
+              {{ getInviteeName(candidate) }}
+            </option>
             }
-          </div>
+          </select>
+          @if (showAllFormErrors && !selectedChairman) {
+          <p class="field-error">(Select the meeting chairman)</p>
+          }
+        </div>
         }
 
         <div class="form-element-pair control-pair">
           <div class="form-group">
             <label for="meeting-title">Meeting Title<span class="required-astrick">*</span></label>
-            <input
-              id="meeting-title"
-              type="text"
-              placeholder="Enter meeting title"
-              formControlName="title"
-              class="form-input"
-              autocomplete="off"
-              spellcheck="false"
-            />
+            <input id="meeting-title" type="text" placeholder="Enter meeting title" formControlName="title"
+              class="form-input" autocomplete="off" spellcheck="false" />
             @if ((title.touched && title.dirty) || showAllFormErrors) {
-              @if (title.errors?.["required"]) {
-                <p class="field-error">(Meeting title is required)</p>
-              }
+            @if (title.errors?.["required"]) {
+            <p class="field-error">(Meeting title is required)</p>
+            }
             }
           </div>
 
           <div class="form-group">
             <label for="meeting-held-place">Meeting Venue<span class="required-astrick">*</span></label>
-            <input
-              id="meeting-held-place"
-              type="text"
-              placeholder="Enter meeting venue"
-              class="form-input"
-              name="meetingHeldPlace"
-              autocomplete="off"
-              formControlName="heldPlace"
-            />
+            <input id="meeting-held-place" type="text" placeholder="Enter meeting venue" class="form-input"
+              name="meetingHeldPlace" autocomplete="off" formControlName="heldPlace" />
 
             @if ((heldPlace.touched && heldPlace.dirty) || showAllFormErrors) {
-              @if (heldPlace.errors?.["required"]) {
-                <p class="field-error">(Meeting venue is required)</p>
-              }
+            @if (heldPlace.errors?.["required"]) {
+            <p class="field-error">(Meeting venue is required)</p>
+            }
             }
           </div>
         </div>
@@ -269,110 +180,83 @@
         <div class="form-element-pair control-pair">
           <div class="form-group">
             <label for="meeting-date">Meeting Date<span class="required-astrick">*</span></label>
-            <input
-              id="meeting-date"
-              type="date"
-              class="form-input"
-              name="meetingHeldDate"
-              formControlName="heldDate"
-            />
+            <input id="meeting-date" type="date" class="form-input" name="meetingHeldDate" formControlName="heldDate" />
             @if ((heldDate.touched && heldDate.dirty) || showAllFormErrors) {
-              @if (heldDate.errors?.["required"]) {
-                <p class="field-error">(Meeting date is required)</p>
-              }
+            @if (heldDate.errors?.["required"]) {
+            <p class="field-error">(Meeting date is required)</p>
+            }
             }
           </div>
 
           <div class="form-group">
             <label for="meeting-held-time">Meeting Time<span class="required-astrick">*</span></label>
-            <input
-              id="meeting-held-time"
-              type="time"
-              placeholder="Meeting time"
-              class="form-input"
-              formControlName="heldTime"
-              name="meetingHeldTime"
-            />
+            <input id="meeting-held-time" type="time" placeholder="Meeting time" class="form-input"
+              formControlName="heldTime" name="meetingHeldTime" />
 
             @if ((heldTime.touched && heldTime.dirty) || showAllFormErrors) {
-              @if (heldTime.errors?.["required"]) {
-                <p class="field-error">(Meeting time is required)</p>
-              }
+            @if (heldTime.errors?.["required"]) {
+            <p class="field-error">(Meeting time is required)</p>
+            }
             }
           </div>
         </div>
       </section>
 
       @if (selectedCommitteeId) {
-        <section class="minute-document-card" aria-labelledby="minute-document-heading">
-          <div class="minute-document-card-header">
-            <div>
-              <p class="template-preview-kicker">Meeting minute document</p>
-              <h2 id="minute-document-heading">{{ committeeDisplayName }} template</h2>
-              <p class="template-preview-note">
-                This single document uses the selected committee template. Meeting details, participants, agendas, and decisions are inserted at its live sections.
-              </p>
-            </div>
-            @if (minuteTemplateLanguage) {
-              <span class="template-language-badge">{{ minuteTemplateLanguage }}</span>
-            }
+      <section class="minute-document-card" aria-labelledby="minute-document-heading">
+        <div class="minute-document-card-header">
+          <div>
+            <p class="template-preview-kicker">Meeting minute document</p>
+            <h2 id="minute-document-heading">{{ committeeDisplayName }} template</h2>
+            <p class="template-preview-note">
+              This single document uses the selected committee template. Meeting details, participants, agendas, and
+              decisions are inserted at its live sections.
+            </p>
           </div>
+          @if (minuteTemplateLanguage) {
+          <span class="template-language-badge">{{ minuteTemplateLanguage }}</span>
+          }
+        </div>
 
-          @if (isMinuteTemplateLoading) {
-            <div class="minute-document-status">Loading the committee template…</div>
-          } @else if (minuteTemplateLoadError) {
-            <div class="minute-document-status minute-document-error">
-              The committee template could not be loaded. You can still complete the meeting record and try again later.
-            </div>
-          }
-          <div #minuteDocument class="single-minute-document" [innerHTML]="minuteDocumentHtml"></div>
-          @if (showAllFormErrors && hasNoNonEmptyMeetingItems()) {
-            <p class="field-error">(Add at least one non-empty agenda or decision)</p>
-          }
-        </section>
+        @if (isMinuteTemplateLoading) {
+        <div class="minute-document-status">Loading the committee template…</div>
+        } @else if (minuteTemplateLoadError) {
+        <div class="minute-document-status minute-document-error">
+          The committee template could not be loaded. You can still complete the meeting record and try again later.
+        </div>
+        }
+        <div #minuteDocument class="single-minute-document" [innerHTML]="minuteDocumentHtml"></div>
+        @if (showAllFormErrors && hasNoNonEmptyMeetingItems()) {
+        <p class="field-error">(Add at least one non-empty agenda or decision)</p>
+        }
+      </section>
       }
 
       @if (!isEditPage()) {
-        <div class="ai-draft-panel">
-          <label for="new-minute-ai-prompt">AI agenda and decision assistant</label>
-          <textarea
-            id="new-minute-ai-prompt"
-            name="newMinuteAiPrompt"
-            [(ngModel)]="aiDraftPrompt"
-            [ngModelOptions]="{ standalone: true }"
-            placeholder="Optional: paste rough agenda or decision notes. AI will only clarify those entries; the saved template creates the minute layout."
-            class="form-input"
-          ></textarea>
-        </div>
+      <div class="ai-draft-panel">
+        <label for="new-minute-ai-prompt">AI agenda and decision assistant</label>
+        <textarea id="new-minute-ai-prompt" name="newMinuteAiPrompt" [(ngModel)]="aiDraftPrompt"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Optional: paste rough agenda or decision notes. AI will only clarify those entries; the saved template creates the minute layout."
+          class="form-input"></textarea>
+      </div>
       }
 
       <div class="document-actions">
         @if (!isEditPage()) {
-          <button
-            type="button"
-            class="btn btn-secondary document-cancel-button"
-            (click)="new_meeting_dialogue.close()"
-          >
-            Cancel
-          </button>
+        <button type="button" class="btn btn-secondary document-cancel-button" (click)="new_meeting_dialogue.close()">
+          Cancel
+        </button>
         }
-        <button
-          type="button"
-          class="btn btn-primary document-save-button"
-          (click)="onSubmit($event)"
-          [disabled]="isFormSaving"
-        >
+        <button type="button" class="btn btn-primary document-save-button" (click)="onSubmit($event)"
+          [disabled]="isFormSaving">
           {{ isFormSaving ? 'Saving…' : (isEditPage() ? 'Save changes' : 'Save meeting') }}
         </button>
         @if (!isEditPage()) {
-          <button
-            type="button"
-            class="btn btn-primary ai-submit-button"
-            (click)="onSubmitWithAi($event)"
-            [disabled]="isFormSaving"
-          >
-            Save meeting and refine entries with AI
-          </button>
+        <button type="button" class="btn btn-primary ai-submit-button" (click)="onSubmitWithAi($event)"
+          [disabled]="isFormSaving">
+          Save meeting and refine entries with AI
+        </button>
         }
       </div>
     </form>

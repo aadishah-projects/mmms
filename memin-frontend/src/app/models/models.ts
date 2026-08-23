@@ -2,6 +2,10 @@ export interface MemberSearchResult {
   memberId: number;
   firstName: string;
   lastName: string;
+  firstNameNepali?: string;
+  lastNameNepali?: string;
+  title?: string;
+  titleNepali?: string;
 }
 
 export interface MemberDetails {
@@ -12,6 +16,7 @@ export interface MemberDetails {
   lastNameNepali: string;
   post: string;
   title: string;
+  titleNepali: string;
   institution: string;
   email: string;
 }
@@ -85,6 +90,7 @@ export class MemberOfCommitteeDto {
 
 export class MinuteDataDto {
   minuteLanguage: string = '';
+  meetingNumber: string = '';
   meetingHeldDateNepali: string = '';
   meetingHeldDate: string = '';
   meetingHeldDay: string = '';
@@ -169,6 +175,7 @@ export class MemberDetailsDto {
   firstNameNepali: string = '';
   lastNameNepali: string = '';
   title: string = '';
+  titleNepali: string = '';
   post: string = '';
   institution: string = '';
   email: string = '';
@@ -180,6 +187,7 @@ export class MemberCreationDto {
   firstNameNepali: string = '';
   lastNameNepali: string = '';
   title: string = '';
+  titleNepali: string = '';
   post: string = '';
   institution: string = '';
   email: string = '';
@@ -215,6 +223,7 @@ export class CommitteeDetailsForEditDto {
     lastNameNepali: '',
     post: '',
     title:'',
+    titleNepali: '',
     institution: '',
     email: '',
   };
@@ -230,6 +239,7 @@ export class MemberDetailsWithRole {
     lastNameNepali: '',
     post: '',
     title: '',
+    titleNepali: '',
     institution: '',
     email: '',
   };
@@ -300,11 +310,13 @@ export interface MemberFormData {
   lastNameNepali: string;
   post: string;
   title: string;
+  titleNepali: string;
   institution: string;
   email: string;
 }
 
 export interface MeetingFormData {
+  meetingNumber?: number;
   title: string;
   committeeName: string; //for edit page
   heldDate: string;
@@ -328,6 +340,7 @@ export interface MeetingDetailsForEdit {
   selectedInvitees: MemberSearchResult[];
   possibleInvitees: MemberSearchResult[];
   chairman: MemberSearchResult;
+  meetingNumber: number;
   decisions: DecisionDto[];
   agendas: AgendaDto[];
 }

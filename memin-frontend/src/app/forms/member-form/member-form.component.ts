@@ -42,6 +42,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
   lastNameNepali!: FormControl<string>;
   post!: FormControl<string>;
   title!: FormControl<string>;
+  titleNepali!: FormControl<string>;
   institution!: FormControl<string>;
   email!: FormControl<string>;
 
@@ -52,6 +53,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
     lastNameNepali: FormControl<string>;
     post: FormControl<string>;
     title: FormControl<string>;
+    titleNepali: FormControl<string>;
     institution: FormControl<string>;
     email: FormControl<string>;
   }>;
@@ -85,6 +87,9 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
     this.title = new FormControl(this.memberFormData().title, {nonNullable: true, validators: [
       Validators.required,
     ]});
+    this.titleNepali = new FormControl(this.memberFormData().titleNepali, {nonNullable: true, validators: [
+      Validators.required,
+    ]});
 
 
     this.institution = new FormControl(this.memberFormData().institution, {nonNullable: true });
@@ -98,6 +103,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
       lastNameNepali: this.lastNameNepali,
       post: this.post,
       title: this.title,
+      titleNepali: this.titleNepali,
       institution: this.institution,
       email: this.email,
     });
@@ -125,6 +131,7 @@ export class MemberFormComponent implements AfterViewInit, OnInit {
     memberCreationDto.lastNameNepali = this.lastNameNepali.value!;
     memberCreationDto.post = this.post.value!;
     memberCreationDto.title = this.title.value!;
+    memberCreationDto.titleNepali = this.titleNepali.value!;
     memberCreationDto.institution = this.institution.value!;
     memberCreationDto.email = this.email.value!;
     localStorage.removeItem(this.FORM_NAME);

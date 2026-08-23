@@ -46,6 +46,7 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
   readonly templateTokens: TemplateToken[] = [
     { token: '@committee', label: 'Committee', description: 'Committee name' },
     { token: '@title', label: 'Meeting title', description: 'Meeting title' },
+    { token: '@meetingNo', label: 'Meeting no.', description: 'Automatic meeting number within the committee' },
     { token: '@purpose', label: 'Purpose', description: 'Committee description / purpose' },
     { token: '@date', label: 'Date', description: 'Meeting date' },
     { token: '@day', label: 'Day', description: 'Sunday, Monday, etc.' },
@@ -125,16 +126,15 @@ export class MinuteTemplateComponent implements OnInit, AfterViewInit, AfterView
       id: 'nepali-drc-standard',
       name: 'DRC standard minute',
       description: 'Standard departmental research committee minute layout with meeting-specific chairmanship.',
-      html: `<p style="text-align: center"><strong>@committee</strong></p>
-        <p>बैठक नं. @title</p>
-        <p>आज मिति @date (@day) यस @committee को बैठक, @chairman ज्यूको अध्यक्षतामा बसी देहाय बमोजिम छलफल तथा निर्णय गरियो ।</p>
-        <p><strong>उपस्थितिः</strong></p>
-        @attendance
-        <p>बैठक बसेको समयः @time बजे</p>
-        <p><strong>निर्णयः</strong></p>
+      html: `<p>बैठक नं. @meetingNo</p>
+        <p>आज मिति @date गते @day का दिन यस @committee को बैठक, @chairman ज्यूको अध्यक्षतामा बसी देहाय बमोजिम छलफल तथा निर्णय गरियो ।</p>
+        <p>उपस्थिति :</p>
+        @attendanceList
+        <p>बैठक बसेको समय : @time बजे</p>
+        <p>हस्ताक्षर: ____________________</p>
+        <p>निर्णय :</p>
         @agendas
-        @decisions
-        <p>अध्यक्षः @chairman&nbsp;&nbsp;&nbsp;&nbsp;हस्ताक्षरः ____________________</p>`,
+        @decisions`,
     },
     {
       id: 'nepali-legacy-structured',

@@ -4,25 +4,27 @@ VALUES ('username', '{noop}password', 'username@gmail.com', 'admin', 'admin', 'D
 
 INSERT INTO members (member_title, member_post,
                      member_created_by, member_created_date, member_modified_by, member_modified_date, member_uuid,
-                     member_first_name, member_last_name)
-VALUES ('प्रा.', 'Campus Cheif', 'username', '2025-07-04', 'username', '2025-07-04', RANDOM_UUID(), 'हरि', 'बहादुर'),
-       ('डा.', 'IOM Delegate', 'username', '2025-07-05', 'username', '2025-07-05', RANDOM_UUID(), 'गिता', 'ओली'),
-       ('डा.', 'IMO Chief', 'username', '2025-07-06', 'username', '2025-07-06', RANDOM_UUID(), 'विकाश', 'लामा'),
-       ('प्रा.', 'MSc Environmental Science', 'username', '2025-07-07', 'username', '2025-07-07', RANDOM_UUID(), 'सुनिता',
-        'महार्जन'),
-       ('डा.', 'PhD Civil Engineering', 'username', '2025-07-12', 'username', '2025-07-12', RANDOM_UUID(), 'कमल', 'पाण्डे'),
-       ('प्रा.', 'MBBS', 'username', '2025-07-13', 'username', '2025-07-13', RANDOM_UUID(), 'दीपा', 'गुरुङ'),
-       ('प्रा.', 'MSc Computer Science', 'username', '2025-07-14', 'username', '2025-07-14', RANDOM_UUID(), 'नविन', 'तामाङ'),
-       ('डा.', 'MA Sociology', 'username', '2025-07-15', 'username', '2025-07-15', RANDOM_UUID(), 'अनिता', 'श्रेष्ठ'),
-       ('Dr.', 'BSc CSIT', 'username', '2025-07-16', 'username', '2025-07-16', RANDOM_UUID(), 'Ramesh', 'Karki'),
-       ('Dr.', 'PhD Biotechnology', 'username', '2025-07-17', 'username', '2025-07-17', RANDOM_UUID(), 'Sita', 'Basnet'),
-       ('Dr.', 'M.Ed', 'username', '2025-07-18', 'username', '2025-07-18', RANDOM_UUID(), 'Prakash', 'Rana'),
-       ('Dr.', 'MA Economics', 'username', '2025-07-19', 'username', '2025-07-19', RANDOM_UUID(), 'Mina', 'Thapa'),
-       ('Prof.', 'MSc IT', 'username', '2025-07-20', 'username', '2025-07-20', RANDOM_UUID(), 'Dipesh', 'K.C'),
-       ('प्रा.', 'PhD Management', 'username', '2025-07-21', 'username', '2025-07-21', RANDOM_UUID(), 'सरिता', 'ढकाल'),
-       ('प्रा.', 'EEC Chief', 'username', '2025-07-22', 'username', '2025-07-22', RANDOM_UUID(), 'विजय', 'गुरुङ'),
-       ('प्रा.', 'MSc CSIT', 'username', '2025-07-23', 'username', '2025-07-23', RANDOM_UUID(), 'रोजिना', 'महार्जन'),
-       ('डा.', 'PhD Information Systems', 'username', '2025-07-24', 'username', '2025-07-24', RANDOM_UUID(), 'सुमन', 'बिष्ट');
+                     member_first_name, member_last_name,
+                     member_first_name_nepali, member_last_name_nepali,
+                     member_title_nepali)
+VALUES ('Prof.', 'Campus Chief', 'username', '2025-07-04', 'username', '2025-07-04', RANDOM_UUID(), 'Hari', 'Bahadur', 'हरि', 'बहादुर', 'प्रा.'),
+       ('Dr.', 'IOM Delegate', 'username', '2025-07-05', 'username', '2025-07-05', RANDOM_UUID(), 'Gita', 'Oli', 'गिता', 'ओली', 'डा.'),
+       ('Dr.', 'IMO Chief', 'username', '2025-07-06', 'username', '2025-07-06', RANDOM_UUID(), 'Bikash', 'Lama', 'विकाश', 'लामा', 'डा.'),
+       ('Prof.', 'MSc Environmental Science', 'username', '2025-07-07', 'username', '2025-07-07', RANDOM_UUID(), 'Sunita',
+        'Maharjan', 'सुनिता', 'महार्जन', 'प्रा.'),
+       ('Dr.', 'PhD Civil Engineering', 'username', '2025-07-12', 'username', '2025-07-12', RANDOM_UUID(), 'Kamal', 'Pandey', 'कमल', 'पाण्डे', 'डा.'),
+       ('Prof.', 'MBBS', 'username', '2025-07-13', 'username', '2025-07-13', RANDOM_UUID(), 'Deepa', 'Gurung', 'दीपा', 'गुरुङ', 'प्रा.'),
+       ('Prof.', 'MSc Computer Science', 'username', '2025-07-14', 'username', '2025-07-14', RANDOM_UUID(), 'Navin', 'Tamang', 'नविन', 'तामाङ', 'प्रा.'),
+       ('Dr.', 'MA Sociology', 'username', '2025-07-15', 'username', '2025-07-15', RANDOM_UUID(), 'Anita', 'Shrestha', 'अनिता', 'श्रेष्ठ', 'डा.'),
+       ('Dr.', 'BSc CSIT', 'username', '2025-07-16', 'username', '2025-07-16', RANDOM_UUID(), 'Ramesh', 'Karki', 'रमेश', 'कार्की', 'डा.'),
+       ('Dr.', 'PhD Biotechnology', 'username', '2025-07-17', 'username', '2025-07-17', RANDOM_UUID(), 'Sita', 'Basnet', 'सीता', 'बस्नेत', 'डा.'),
+       ('Dr.', 'M.Ed', 'username', '2025-07-18', 'username', '2025-07-18', RANDOM_UUID(), 'Prakash', 'Rana', 'प्रकाश', 'राणा', 'डा.'),
+       ('Dr.', 'MA Economics', 'username', '2025-07-19', 'username', '2025-07-19', RANDOM_UUID(), 'Mina', 'Thapa', 'मिना', 'थापा', 'डा.'),
+       ('Prof.', 'MSc IT', 'username', '2025-07-20', 'username', '2025-07-20', RANDOM_UUID(), 'Dipesh', 'K.C', 'दिपेश', 'के.सी', 'प्रा.'),
+       ('Prof.', 'PhD Management', 'username', '2025-07-21', 'username', '2025-07-21', RANDOM_UUID(), 'Sarita', 'Dhakal', 'सरिता', 'ढकाल', 'प्रा.'),
+       ('Prof.', 'EEC Chief', 'username', '2025-07-22', 'username', '2025-07-22', RANDOM_UUID(), 'Vijay', 'Gurung', 'विजय', 'गुरुङ', 'प्रा.'),
+       ('Prof.', 'MSc CSIT', 'username', '2025-07-23', 'username', '2025-07-23', RANDOM_UUID(), 'Rojina', 'Maharjan', 'रोजिना', 'महार्जन', 'प्रा.'),
+       ('Dr.', 'PhD Information Systems', 'username', '2025-07-24', 'username', '2025-07-24', RANDOM_UUID(), 'Suman', 'Bista', 'सुमन', 'बिष्ट', 'डा.');
 
 
 -- Insert Committees

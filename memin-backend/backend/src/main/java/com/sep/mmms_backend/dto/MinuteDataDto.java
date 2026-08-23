@@ -22,6 +22,7 @@ public class MinuteDataDto {
     String meetingHeldTime;
     String meetingHeldPlace;
     String meetingTitle;
+    String meetingNumber;
     String committeeName;
     String committeeDescription;
     String coordinatorFullName;

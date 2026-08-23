@@ -4,6 +4,7 @@ import com.sep.mmms_backend.aop.interfaces.CheckCommitteeAccess;
 import com.sep.mmms_backend.dto.*;
 import com.sep.mmms_backend.entity.*;
 import com.sep.mmms_backend.exceptions.*;
+import com.sep.mmms_backend.enums.MinuteLanguage;
 import com.sep.mmms_backend.repository.MeetingRepository;
 import com.sep.mmms_backend.repository.MemberRepository;
 import com.sep.mmms_backend.repository.AppUserRepository;
@@ -284,7 +285,7 @@ public class MeetingService {
         body.empty();
         for (int index = 0; index < orderedParticipants.size(); index++) {
             Member participant = orderedParticipants.get(index);
-            String participantName = participantDisplayName(participant);
+            String participantName = participantDisplayName(participant, meeting.getCommittee().getMinuteLanguage());
             Element row = body.appendElement("tr");
             row.appendElement("td").text(String.valueOf(index + 1));
             row.appendElement("td").text(participantName);
@@ -294,11 +295,18 @@ public class MeetingService {
         meeting.setMinuteContentHtml(document.body().html());
     }
 
-    private String participantDisplayName(Member member) {
+    private String participantDisplayName(Member member, MinuteLanguage language) {
+        boolean nepali = MinuteLanguage.NEPALI.equals(language);
+        String title = nepali && member.getTitleNepali() != null && !member.getTitleNepali().isBlank()
+                ? member.getTitleNepali() : member.getTitle();
+        String firstName = nepali && member.getFirstNameNepali() != null && !member.getFirstNameNepali().isBlank()
+                ? member.getFirstNameNepali() : member.getFirstName();
+        String lastName = nepali && member.getLastNameNepali() != null && !member.getLastNameNepali().isBlank()
+                ? member.getLastNameNepali() : member.getLastName();
         String name = String.join(" ",
-                member.getTitle() == null ? "" : member.getTitle(),
-                member.getFirstName() == null ? "" : member.getFirstName(),
-                member.getLastName() == null ? "" : member.getLastName()).trim();
+                title == null ? "" : title,
+                firstName == null ? "" : firstName,
+                lastName == null ? "" : lastName).trim();
         if (member.getPost() != null && !member.getPost().isBlank()) {
             return name + ", " + member.getPost();
         }

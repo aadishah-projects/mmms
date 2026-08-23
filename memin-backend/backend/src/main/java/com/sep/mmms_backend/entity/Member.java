@@ -47,6 +47,9 @@ public class Member {
     @Column(name="member_title", nullable = false)
     private String title;
 
+    @Column(name="member_title_nepali")
+    private String titleNepali;
+
     @Column(name="member_institution", nullable = true)
     private String institution;
 

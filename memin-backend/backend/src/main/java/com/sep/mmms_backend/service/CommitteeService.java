@@ -11,6 +11,7 @@ import com.sep.mmms_backend.exceptions.*;
 import com.sep.mmms_backend.repository.CommitteeMembershipRepository;
 import com.sep.mmms_backend.repository.CommitteeRepository;
 import com.sep.mmms_backend.repository.MemberRepository;
+import com.sep.mmms_backend.utils.MemberDisplayNameFormatter;
 import com.sep.mmms_backend.validators.EntityValidator;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.transaction.annotation.Transactional;
@@ -213,7 +214,8 @@ public class CommitteeService {
         }
         committeeOverview.setDecisionCount(decisionCount);
 
-        committeeOverview.setCoordinatorName(committee.getCoordinator().getFirstName() + " " + committee.getCoordinator().getLastName());
+        committeeOverview.setCoordinatorName(MemberDisplayNameFormatter.format(
+                committee.getCoordinator(), committee.getMinuteLanguage()));
         committeeOverview.setCoordinatorId(committee.getCoordinator().getId());
         List<MemberSearchResultDto> chairmanCandidates = new ArrayList<>();
         chairmanCandidates.add(new MemberSearchResultDto(committee.getCoordinator()));
@@ -228,7 +230,8 @@ public class CommitteeService {
         // display it and pre-select it in the assignment control.
         Member secretary = committee.getSecretary();
         if (secretary != null) {
-            committeeOverview.setSecretaryName(secretary.getFirstName() + " " + secretary.getLastName());
+            committeeOverview.setSecretaryName(MemberDisplayNameFormatter.format(
+                    secretary, committee.getMinuteLanguage()));
             committeeOverview.setSecretaryId(secretary.getId());
         }
 
@@ -362,7 +365,7 @@ public class CommitteeService {
 
         List<MemberOfCommitteeDto> membersOfCommittee = committee.getSortedMemberships().stream().map(membership -> {
             Member member = membership.getMember();
-            String memberFullName = member.getFirstName() + " " + member.getLastName();
+            String memberFullName = MemberDisplayNameFormatter.format(member, committee.getMinuteLanguage());
             return new MemberOfCommitteeDto(member.getId(), memberFullName, membership.getRole());
         }).toList();
 

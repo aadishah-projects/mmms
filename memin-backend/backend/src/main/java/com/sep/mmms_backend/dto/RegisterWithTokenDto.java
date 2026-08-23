@@ -34,6 +34,9 @@ public class RegisterWithTokenDto {
     @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)
     private String title;
 
+    @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)
+    private String titleNepali;
+
     private String post;
 
     @NotBlank(message = ValidationErrorMessages.FIELD_CANNOT_BE_EMPTY)

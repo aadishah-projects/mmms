@@ -26,6 +26,7 @@ export class RegisterComponent implements OnInit {
     firstNameNepali: new FormControl('', { validators: [Validators.required] }),
     lastNameNepali: new FormControl('', { validators: [Validators.required] }),
     title: new FormControl('', { validators: [Validators.required] }),
+    titleNepali: new FormControl('', { validators: [Validators.required] }),
     username: new FormControl('', { validators: [Validators.required, validateUsernameFormat] }),
     password: new FormControl('', { validators: [Validators.required, Validators.minLength(5)] }),
     confirmPassword: new FormControl('', { validators: [Validators.required] })
@@ -91,6 +92,7 @@ export class RegisterComponent implements OnInit {
       firstNameNepali: this.formData.value.firstNameNepali,
       lastNameNepali: this.formData.value.lastNameNepali,
       title: this.formData.value.title,
+      titleNepali: this.formData.value.titleNepali,
       username: this.formData.value.username,
       password: this.formData.value.password,
       confirmPassword: this.formData.value.confirmPassword

@@ -37,6 +37,7 @@ import {
 } from '../../models/models';
 import { SafeCloseDialogCustom } from '../../utils/safe-close-dialog-custom.directive';
 import { Response } from '../../response/response';
+import { formatMemberDisplayName } from '../../utils/member-display';
 
 @Component({
   selector: 'app-meeting-form',
@@ -160,6 +161,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     this.displayedPossibleInvitees = this.possibleInvitees;
     this.selectedInvitees = this.meetingFormData().selectedInvitees;
     this.selectedChairman = this.meetingFormData().chairman;
+    this.meetingNumber = this.meetingFormData().meetingNumber || 1;
     this.hasInviteeDataLoaded = true;
 
     //INITIALIZING RIGHT PANELS SELECT COMMITTEE DROPDOWN
@@ -257,6 +259,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
   chairmanCandidates: MemberSearchResult[] = [];
   selectedChairman: MemberSearchResult | null = null;
   committeeCoordinatorId: number | null = null;
+  meetingNumber = 1;
 
   constructor(
     private router: Router,
@@ -568,6 +571,10 @@ export class MeetingForm implements OnInit, AfterViewChecked {
       })
       .subscribe({
         next: (response) => {
+          if (!this.isEditPage()) {
+            this.meetingNumber = (response.mainBody.meetingCount || 0) + 1;
+          }
+          this.minuteTemplateLanguage = response.mainBody.language || this.minuteTemplateLanguage;
           this.coordinatorName = response.mainBody.coordinatorName || '';
           this.committeeCoordinatorId = response.mainBody.coordinatorId ?? null;
           this.chairmanCandidates = response.mainBody.chairmanCandidates || [];
@@ -631,6 +638,7 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     const values: { names: string[]; value: string }[] = [
       { names: ['committeeName', 'committee', 'committe'], value: this.committeeDisplayName },
       { names: ['meetingTitle', 'title'], value: this.title?.value || 'Meeting title' },
+      { names: ['meetingNumber', 'meetingNo'], value: this.formatMeetingNumber(this.meetingNumber) },
       { names: ['committeeDescription', 'purpose'], value: 'Committee purpose' },
       { names: ['date', 'data'], value: meetingDate },
       { names: ['day'], value: meetingDay },
@@ -704,11 +712,11 @@ export class MeetingForm implements OnInit, AfterViewChecked {
   private getFallbackMinuteTemplate(): string {
     const isNepali = this.minuteTemplateLanguage === 'NEPALI';
     if (isNepali) {
-      return `<p style="text-align:center"><strong>@committee</strong></p><p>\u092c\u0948\u0920\u0915 \u0928\u0902. @title</p><p>\u0906\u091c \u092e\u093f\u0924\u093f @date (@day) \u092f\u0938 @committee \u0915\u094b \u092c\u0948\u0920\u0915, @chairman \u091c\u094d\u092f\u0942\u0915\u094b \u0905\u0927\u094d\u092f\u0915\u094d\u0937\u0924\u093e\u092e\u093e \u092c\u0938\u0940 \u0926\u0947\u0939\u093e\u092f \u092c\u092e\u094b\u091c\u093f\u092e \u091b\u0932\u092b\u0932 \u0924\u0925\u093e \u0928\u093f\u0930\u094d\u0923\u092f \u0917\u0930\u093f\u092f\u094b \u0964</p><h2>\u0909\u092a\u0938\u094d\u0925\u093f\u0924\u093f\u0903</h2>@attendance<h2>\u0928\u093f\u0930\u094d\u0923\u092f\u0903</h2>@agendas@decisions<p>\u0905\u0927\u094d\u092f\u0915\u094d\u0937\u0903 @chairman&nbsp;&nbsp;&nbsp;&nbsp;\u0939\u0938\u094d\u0924\u093e\u0915\u094d\u0937\u0930\u0903 ____________________</p>`;
+      return `<p style="text-align:center"><strong>@committee</strong></p><p>\u092c\u0948\u0920\u0915 \u0928\u0902. @meetingNo</p><p>\u0906\u091c \u092e\u093f\u0924\u093f @date (@day) \u092f\u0938 @committee \u0915\u094b \u092c\u0948\u0920\u0915, @chairman \u091c\u094d\u092f\u0942\u0915\u094b \u0905\u0927\u094d\u092f\u0915\u094d\u0937\u0924\u093e\u092e\u093e \u092c\u0938\u0940 \u0926\u0947\u0939\u093e\u092f \u092c\u092e\u094b\u091c\u093f\u092e \u091b\u0932\u092b\u0932 \u0924\u0925\u093e \u0928\u093f\u0930\u094d\u0923\u092f \u0917\u0930\u093f\u092f\u094b \u0964</p><h2>\u0909\u092a\u0938\u094d\u0925\u093f\u0924\u093f\u0903</h2>@attendance<h2>\u0928\u093f\u0930\u094d\u0923\u092f\u0903</h2>@agendas@decisions<p>\u0905\u0927\u094d\u092f\u0915\u094d\u0937\u0903 @chairman&nbsp;&nbsp;&nbsp;&nbsp;\u0939\u0938\u094d\u0924\u093e\u0915\u094d\u0937\u0930\u0903 ____________________</p>`;
     }
     return isNepali
       ? `<h1 style="text-align:center">@committee</h1><p><strong>बैठकको विषय:</strong> @title</p><p><strong>मिति:</strong> @date&nbsp;&nbsp;&nbsp;<strong>समय:</strong> @time&nbsp;&nbsp;&nbsp;<strong>स्थान:</strong> @location</p><h2>उपस्थिति</h2>@attendance<h2>कार्यसूची</h2>@agendas<h2>निर्णयहरू</h2>@decisions`
-      : `<h1 style="text-align:center">@committee</h1><p><strong>Meeting:</strong> @title</p><p><strong>Date:</strong> @date&nbsp;&nbsp;&nbsp;<strong>Time:</strong> @time&nbsp;&nbsp;&nbsp;<strong>Venue:</strong> @location</p><h2>Attendance</h2>@attendance<h2>Agendas</h2>@agendas<h2>Decisions and resolutions</h2>@decisions`;
+      : `<h1 style="text-align:center">@committee</h1><p><strong>Meeting no.:</strong> @meetingNo</p><p><strong>Meeting:</strong> @title</p><p><strong>Date:</strong> @date&nbsp;&nbsp;&nbsp;<strong>Time:</strong> @time&nbsp;&nbsp;&nbsp;<strong>Venue:</strong> @location</p><h2>Attendance</h2>@attendance<h2>Agendas</h2>@agendas<h2>Decisions and resolutions</h2>@decisions`;
   }
 
   ngAfterViewChecked(): void {
@@ -968,7 +976,14 @@ export class MeetingForm implements OnInit, AfterViewChecked {
   }
 
   getInviteeName(invitee: MemberSearchResult): string {
-    return `${invitee.firstName} ${invitee.lastName}`.trim();
+    return formatMemberDisplayName(invitee, this.minuteTemplateLanguage);
+  }
+
+  formatMeetingNumber(number: number | null | undefined): string {
+    const value = String(number || 1);
+    return this.minuteTemplateLanguage === 'NEPALI'
+      ? value.replace(/[0-9]/g, (digit) => '०१२३४५६७८९'[Number(digit)])
+      : value;
   }
 
   isDecisionInvalid(decision: DecisionDto): boolean {

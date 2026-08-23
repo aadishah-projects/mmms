@@ -21,6 +21,7 @@ export class CreateMemberComponent {
     lastNameNepali: '',
     post: '',
     title: '',
+    titleNepali: '',
     institution: '',
     email: '',
   };

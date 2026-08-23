@@ -86,29 +86,55 @@
         </div>
       </div>
 
-      <div class="input-group">
-        <label>Pad / Title<span class="required-astrick">*</span></label>
+      <div class="input-row">
+        <div class="input-group half">
+          <label>Nepali Pad / Title<span class="required-astrick">*</span></label>
+          <input
+            type="text"
+            formControlName="titleNepali"
+            list="register-pad-nepali-options"
+            class="form-input"
+            placeholder="प्रा., उपप्रा., डा., सहप्राध्यापक"
+            [class.error]="f['titleNepali'].touched && f['titleNepali'].invalid"
+            autocomplete="off"
+          />
+          <datalist id="register-pad-nepali-options">
+            <option value="प्रा.">Professor</option>
+            <option value="उप्रा.">Assistant Professor</option>
+            <option value="डा.">Doctor</option>
+            <option value="सहप्राध्यापक">Associate Professor</option>
+          </datalist>
+          @if ((f['titleNepali'].touched && f['titleNepali'].dirty) || showAllErrors) {
+            @if (f['titleNepali'].errors?.['required']) {
+              <p class="field-error">Nepali pad / title is required</p>
+            }
+          }
+        </div>
+
+        <div class="input-group half">
+        <label>English Pad / Title<span class="required-astrick">*</span></label>
         <input
           type="text"
           formControlName="title"
-          list="register-pad-options"
+          list="register-pad-english-options"
           class="form-input"
-          placeholder="pra, upra, da, associate professor"
+          placeholder="Prof., Asst. Prof., Dr., Assoc. Prof."
           [class.error]="f['title'].touched && f['title'].invalid"
           autocomplete="off"
         />
-        <datalist id="register-pad-options">
-          <option value="pra">Professor</option>
-          <option value="upra">Assistant Professor</option>
-          <option value="da">Doctor</option>
-          <option value="associate professor">Associate Professor</option>
+        <datalist id="register-pad-english-options">
+          <option value="Prof.">Professor</option>
+          <option value="Asst. Prof.">Assistant Professor</option>
+          <option value="Dr.">Doctor</option>
+          <option value="Assoc. Prof.">Associate Professor</option>
         </datalist>
-        <small class="field-help">Use the romanized pad code used for the member’s designation.</small>
+        <small class="field-help">Choose the English designation used in English minutes.</small>
         @if ((f['title'].touched && f['title'].dirty) || showAllErrors) {
           @if (f['title'].errors?.['required']) {
             <p class="field-error">Pad / title is required</p>
           }
         }
+        </div>
       </div>
 
       <div class="input-group">

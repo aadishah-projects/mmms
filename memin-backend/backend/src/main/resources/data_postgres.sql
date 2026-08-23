@@ -24,25 +24,27 @@ ON CONFLICT (username) DO NOTHING;
 -- ============================================================
 -- Members
 -- ============================================================
-INSERT INTO members (member_uuid, member_first_name, member_last_name, member_post, member_title, member_institution, member_created_by, member_created_date, member_modified_by, member_modified_date)
+INSERT INTO members (member_uuid, member_first_name, member_last_name, member_first_name_nepali, member_last_name_nepali,
+                     member_post, member_title, member_title_nepali, member_institution,
+                     member_created_by, member_created_date, member_modified_by, member_modified_date)
 VALUES
-('uuid-mem-01', 'हरि', 'बहादुर',    'Campus Cheif',              'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-02', 'गिता', 'ओली',      'IOM Delegate',              'डा.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-03', 'विकाश', 'लामा',    'IMO Chief',                 'डा.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-04', 'सुनिता', 'महार्जन', 'MSc Environmental Science', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-05', 'कमल', 'पाण्डे',    'PhD Civil Engineering',     'डा.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-06', 'दीपा', 'गुरुङ',    'MBBS',                      'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-07', 'नविन', 'तामाङ',    'MSc Computer Science',      'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-08', 'अनिता', 'श्रेष्ठ', 'MA Sociology',               'डा.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-09', 'Ramesh', 'Karki',   'BSc CSIT',                  'Dr.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-10', 'Sita',   'Basnet',  'PhD Biotechnology',         'Dr.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-11', 'Prakash','Rana',    'M.Ed',                      'Dr.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-12', 'Mina',   'Thapa',   'MA Economics',              'Dr.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-13', 'Dipesh', 'K.C',     'MSc IT',                    'Prof.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-14', 'सरिता', 'ढकाल',    'PhD Management',            'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-15', 'विजय', 'गुरुङ',    'EEC Chief',                 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-16', 'रोजिना', 'महार्जन', 'MSc CSIT',                  'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
-('uuid-mem-17', 'सुमन', 'बिष्ट',    'PhD Information Systems',   'डा.',   NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE)
+('uuid-mem-01', 'Hari', 'Bahadur', 'हरि', 'बहादुर', 'Campus Chief', 'Prof.', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-02', 'Gita', 'Oli', 'गिता', 'ओली', 'IOM Delegate', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-03', 'Bikash', 'Lama', 'विकाश', 'लामा', 'IMO Chief', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-04', 'Sunita', 'Maharjan', 'सुनिता', 'महार्जन', 'MSc Environmental Science', 'Prof.', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-05', 'Kamal', 'Pandey', 'कमल', 'पाण्डे', 'PhD Civil Engineering', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-06', 'Deepa', 'Gurung', 'दीपा', 'गुरुङ', 'MBBS', 'Prof.', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-07', 'Navin', 'Tamang', 'नविन', 'तामाङ', 'MSc Computer Science', 'Prof.', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-08', 'Anita', 'Shrestha', 'अनिता', 'श्रेष्ठ', 'MA Sociology', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-09', 'Ramesh', 'Karki', 'रमेश', 'कार्की', 'BSc CSIT', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-10', 'Sita', 'Basnet', 'सीता', 'बस्नेत', 'PhD Biotechnology', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-11', 'Prakash', 'Rana', 'प्रकाश', 'राणा', 'M.Ed', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-12', 'Mina', 'Thapa', 'मिना', 'थापा', 'MA Economics', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-13', 'Dipesh', 'K.C', 'दिपेश', 'के.सी', 'MSc IT', 'Prof.', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-14', 'Sarita', 'Dhakal', 'सरिता', 'ढकाल', 'PhD Management', 'Prof.', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-15', 'Vijay', 'Gurung', 'विजय', 'गुरुङ', 'EEC Chief', 'Prof.', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-16', 'Rojina', 'Maharjan', 'रोजिना', 'महार्जन', 'MSc CSIT', 'Prof.', 'प्रा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE),
+('uuid-mem-17', 'Suman', 'Bista', 'सुमन', 'बिष्ट', 'PhD Information Systems', 'Dr.', 'डा.', NULL, 'admin', CURRENT_DATE, 'admin', CURRENT_DATE)
 ON CONFLICT (member_uuid) DO NOTHING;
 
 -- ============================================================

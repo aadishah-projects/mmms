@@ -24,6 +24,7 @@ CREATE TABLE members (
 
                          member_post VARCHAR(255),
     member_title VARCHAR(255) NOT NULL,
+    member_title_nepali VARCHAR(255),
     member_institution VARCHAR(255),
     member_email VARCHAR(255),
 

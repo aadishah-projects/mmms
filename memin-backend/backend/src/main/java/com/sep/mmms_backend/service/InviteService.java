@@ -143,6 +143,7 @@ public class InviteService {
         member.setFirstNameNepali(requestDto.getFirstNameNepali());
         member.setLastNameNepali(requestDto.getLastNameNepali());
         member.setTitle(requestDto.getTitle());
+        member.setTitleNepali(requestDto.getTitleNepali());
         member.setPost(requestDto.getPost());
     }
 

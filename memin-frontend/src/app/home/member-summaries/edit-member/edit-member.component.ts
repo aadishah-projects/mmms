@@ -37,6 +37,7 @@ export class EditMemberComponent implements OnInit {
     firstNameNepali: '',
     lastNameNepali: '',
     title: '',
+    titleNepali: '',
     post: '',
     institution: '',
     email: '',
@@ -66,6 +67,7 @@ export class EditMemberComponent implements OnInit {
             this.memberFormData.firstNameNepali = mainBody.firstNameNepali || '';
             this.memberFormData.lastNameNepali = mainBody.lastNameNepali || '';
             this.memberFormData.title = mainBody.title;
+            this.memberFormData.titleNepali = mainBody.titleNepali || '';
             this.memberFormData.post = mainBody.post;
             this.memberFormData.institution = mainBody.institution;
             this.memberFormData.email = mainBody.email || '';

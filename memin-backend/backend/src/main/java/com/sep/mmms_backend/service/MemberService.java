@@ -47,6 +47,7 @@ public class MemberService {
         member.setFirstNameNepali(memberDto.getFirstNameNepali());
         member.setLastNameNepali(memberDto.getLastNameNepali());
         member.setTitle(memberDto.getTitle());
+        member.setTitleNepali(memberDto.getTitleNepali());
         if(memberDto.getInstitution() != null && !memberDto.getInstitution().isBlank()) {
             member.setInstitution(memberDto.getInstitution());
         }
@@ -68,6 +69,7 @@ public class MemberService {
         member.setFirstNameNepali(memberCreationDto.getFirstNameNepali());
         member.setLastNameNepali(memberCreationDto.getLastNameNepali());
         member.setTitle(memberCreationDto.getTitle());
+        member.setTitleNepali(memberCreationDto.getTitleNepali());
         member.setPost(memberCreationDto.getPost());
         member.setEmail(normalizeEmail(memberCreationDto.getEmail()));
 

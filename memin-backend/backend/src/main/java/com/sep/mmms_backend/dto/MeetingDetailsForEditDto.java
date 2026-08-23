@@ -18,6 +18,7 @@ public class MeetingDetailsForEditDto {
     private final LocalDate heldDate;
     private final LocalTime heldTime;
     private final String heldPlace;
+    private final int meetingNumber;
     private final MemberSearchResultDto chairman;
     private final List<MemberSearchResultDto> selectedInvitees = new LinkedList<>();
     private final List<MemberSearchResultDto> possibleInvitees;
@@ -31,6 +32,18 @@ public class MeetingDetailsForEditDto {
         this.heldDate = meeting.getHeldDate();
         this.heldTime = meeting.getHeldTime();
         this.heldPlace = meeting.getHeldPlace();
+        List<Meeting> orderedMeetings = meeting.getCommittee().getMeetings().stream()
+                .filter(candidate -> candidate.getId() != null)
+                .sorted(java.util.Comparator.comparing(Meeting::getId))
+                .toList();
+        int resolvedMeetingNumber = 1;
+        for (int index = 0; index < orderedMeetings.size(); index++) {
+            if (java.util.Objects.equals(orderedMeetings.get(index).getId(), meeting.getId())) {
+                resolvedMeetingNumber = index + 1;
+                break;
+            }
+        }
+        this.meetingNumber = resolvedMeetingNumber;
         Member meetingChairman = meeting.getChairman() != null
                 ? meeting.getChairman()
                 : meeting.getCommittee().getCoordinator();

@@ -83,6 +83,7 @@ public class MeetingMinutePreparationService {
 
         minuteData.setMeetingHeldPlace(meeting.getHeldPlace());
         minuteData.setMeetingTitle(meeting.getTitle());
+        minuteData.setMeetingNumber(getMeetingNumber(committee, meeting));
 
         minuteData.setCommitteeDescription(committee.getDescription());
 
@@ -141,6 +142,7 @@ public class MeetingMinutePreparationService {
     private String renderFallbackMinuteHtml(MinuteDataDto data) {
         boolean nepali = MinuteLanguage.NEPALI.equals(data.getMinuteLanguage());
         String chairmanLabel = nepali ? "\u0905\u0927\u094d\u092f\u0915\u094d\u0937" : "Chairman";
+        String meetingNumberLabel = nepali ? "बैठक नं." : "Meeting no.";
         String meetingLabel = nepali ? "बैठकको विषय" : "Meeting";
         String dateLabel = nepali ? "मिति" : "Date";
         String timeLabel = nepali ? "समय" : "Time";
@@ -151,7 +153,8 @@ public class MeetingMinutePreparationService {
 
         return "<div id=\"a4-box\">"
                 + "<div class=\"introduction\"><p class=\"introduction-body\"><strong>"
-                + meetingLabel + ":</strong> " + escapeHtml(data.getMeetingTitle())
+                + meetingNumberLabel + ":</strong> " + escapeHtml(data.getMeetingNumber())
+                + "<br><strong>" + meetingLabel + ":</strong> " + escapeHtml(data.getMeetingTitle())
                 + "<br><strong>" + dateLabel + ":</strong> " + escapeHtml(getDateForTemplate(data))
                 + "<br><strong>" + timeLabel + ":</strong> " + escapeHtml(data.getMeetingHeldTime())
                 + "<br><strong>" + placeLabel + ":</strong> " + escapeHtml(data.getMeetingHeldPlace())
@@ -247,6 +250,7 @@ public class MeetingMinutePreparationService {
         rendered = replaceToken(rendered, escapeHtml(data.getCommitteeName()), "committeeName", "committee", "committe");
         rendered = replaceToken(rendered, escapeHtml(data.getCommitteeDescription()), "committeeDescription", "purpose");
         rendered = replaceToken(rendered, escapeHtml(data.getMeetingTitle()), "meetingTitle", "title");
+        rendered = replaceToken(rendered, escapeHtml(data.getMeetingNumber()), "meetingNumber", "meetingNo");
         rendered = replaceToken(rendered, escapeHtml(getDateForTemplate(data)), "date", "data");
         rendered = replaceToken(rendered, escapeHtml(data.getMeetingHeldDay()), "day");
         rendered = replaceToken(rendered, escapeHtml(data.getPartOfDay()), "partOfDay");
@@ -302,17 +306,22 @@ public class MeetingMinutePreparationService {
     }
 
     private String renderAttendanceList(MinuteDataDto data) {
-        StringBuilder html = new StringBuilder("<ol class=\"attendance-list\">");
+        StringBuilder html = new StringBuilder("<div class=\"attendance-list\">");
+        int index = 1;
+        boolean nepali = MinuteLanguage.NEPALI.equals(data.getMinuteLanguage());
         for (CommitteeMembershipDto participant : data.getParticipants()) {
-            html.append("<li><strong>")
-                    .append(escapeHtml(participant.getFullName()))
-                    .append("</strong>");
+            String num = String.valueOf(index++);
+            if (nepali) {
+                num = toNepaliDigits(num);
+            }
+            html.append("<p>").append(num).append(". ")
+                    .append(escapeHtml(participant.getFullName()));
             if (participant.getRole() != null && !participant.getRole().isBlank()) {
                 html.append(" — ").append(escapeHtml(participant.getRole()));
             }
-            html.append("</li>");
+            html.append("</p>");
         }
-        return html.append("</ol>").toString();
+        return html.append("</div>").toString();
     }
 
     private String renderList(List<?> items, boolean agendas) {
@@ -354,6 +363,7 @@ public class MeetingMinutePreparationService {
         rendered = replaceToken(rendered, nullSafe(data.getCommitteeName()), "committeeName", "committee", "committe");
         rendered = replaceToken(rendered, nullSafe(data.getCommitteeDescription()), "committeeDescription", "purpose");
         rendered = replaceToken(rendered, nullSafe(data.getMeetingTitle()), "meetingTitle", "title");
+        rendered = replaceToken(rendered, nullSafe(data.getMeetingNumber()), "meetingNumber", "meetingNo");
         rendered = replaceToken(rendered, getDateForTemplate(data), "date", "data");
         rendered = replaceToken(rendered, nullSafe(data.getMeetingHeldDay()), "day");
         rendered = replaceToken(rendered, nullSafe(data.getPartOfDay()), "partOfDay");
@@ -381,6 +391,24 @@ public class MeetingMinutePreparationService {
             return toNepaliDigits(data.getMeetingHeldDateNepali());
         }
         return data.getMeetingHeldDate() == null ? "" : data.getMeetingHeldDate().toString();
+    }
+
+    private String getMeetingNumber(Committee committee, Meeting meeting) {
+        List<Meeting> orderedMeetings = committee.getMeetings().stream()
+                .filter(candidate -> candidate.getId() != null)
+                .sorted(java.util.Comparator.comparing(Meeting::getId))
+                .toList();
+        int position = 1;
+        for (int index = 0; index < orderedMeetings.size(); index++) {
+            if (java.util.Objects.equals(orderedMeetings.get(index).getId(), meeting.getId())) {
+                position = index + 1;
+                break;
+            }
+        }
+        String number = String.valueOf(position);
+        return MinuteLanguage.NEPALI.equals(committee.getMinuteLanguage())
+                ? toNepaliDigits(number)
+                : number;
     }
 
     private String toNepaliDigits(String value) {
