@@ -59,6 +59,7 @@ VALUES ('Academic Committee', 'शैक्षिक समिति', 'Oversee 
         CURRENT_DATE, RANDOM_UUID(), 'INACTIVE', 10, 'NEPALI', 6),
        ('इ.अ.स. BE/BArch केन्द्रीकृत भर्ना २०८२ अनुगमन',
         'त्रि.वि. इ.अ.स. अन्तर्गत आंगिक क्याम्पस तथा सम्बन्धन प्राप्त कलेजहरुमा शैक्षिक वर्ष २०८२/०८३ मा संचालन हुने स्नातक (BE/BArch) तहका विभिन्न कार्यक्रमहरुमा केन्द्रीकृत भर्ना अनुगमन',
+        NULL,
         'username', CURRENT_DATE, 'username', CURRENT_DATE, RANDOM_UUID(), 'ACTIVE', 1, 'NEPALI', 7);
 
 -- Insert Meetings
