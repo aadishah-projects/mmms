@@ -35,6 +35,16 @@ export class GlobalSearchComponent {
   searchBarSubscription!: Subscription;
   globalSearchResult: GlobalSearchResult | null = null;
 
+  hasGlobalSearchResults(): boolean {
+    const result = this.globalSearchResult;
+    return !!result && [
+      result.committees,
+      result.members,
+      result.decisions,
+      result.agendas,
+    ].some((items) => !!items && items.length > 0);
+  }
+
   constructor(private http: HttpClient) {
     effect(() => {
       this.dialogElementRef()!.nativeElement.showModal();

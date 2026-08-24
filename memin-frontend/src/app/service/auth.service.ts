@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subscription, tap } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { BACKEND_URL } from '../../global_constants';
 import { Response } from '../response/response';
 import { Router } from '@angular/router';
@@ -83,17 +83,23 @@ export class AuthService {
       });
   }
 
-  // logout() {
-  //   return this.http
-  //     .post(
-  //       `${BACKEND_URL}/logout`,
-  //       {},
-  //       {
-  //         withCredentials: true,
-  //       },
-  //     )
-  //     .pipe(tap(() => this.loggedIn.next(false)));
-  // }
+  logout(): void {
+    this.httpClient
+      .get<Response<any>>(`${BACKEND_URL}/api/logout`, {
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => this.clearLocalAuthState(),
+        error: () => this.clearLocalAuthState(),
+      });
+  }
+
+  private clearLocalAuthState(): void {
+    this.loggedIn.next(false);
+    this.userRole.next(null);
+    this.isSecretary.next(false);
+    this.router.navigateByUrl('/login');
+  }
 
   registerWithToken(payload: any) {
     return this.httpClient.post<Response<any>>(BACKEND_URL + '/api/register-with-token', payload, {

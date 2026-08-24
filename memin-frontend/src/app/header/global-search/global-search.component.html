@@ -41,7 +41,7 @@
           @for (member of globalSearchResult.members; track member.memberId) {
             <div
               class="data"
-              routerLink="/home"
+              routerLink="/home/members-list"
               [queryParams]="{ memberId: member.memberId }"
               (click)="closeDialogNow()"
             >
@@ -85,6 +85,10 @@
             </div>
           }
         </div>
+      }
+
+      @if (!hasGlobalSearchResults()) {
+        <div class="no-results">No results found</div>
       }
     </div>
   }

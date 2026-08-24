@@ -22,6 +22,8 @@ FROM eclipse-temurin:22-jre-jammy
 
 WORKDIR /app
 
+RUN mkdir -p /app/data
+
 # Copy only the built jar from build stage
 COPY --from=build /app/target/mmms-backend-0.0.1-SNAPSHOT.jar app.jar
 

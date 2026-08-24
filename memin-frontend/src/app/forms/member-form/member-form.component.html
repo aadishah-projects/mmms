@@ -7,8 +7,13 @@
 >
   <div class="member-details-panel">
     <div class="panel-header">
-      <h2>Create New Member</h2>
-      <p class="panel-subtitle">Add a new member to the system</p>
+      @if (isEditPage()) {
+        <h2>Edit Member</h2>
+        <p class="panel-subtitle">Update this member's information</p>
+      } @else {
+        <h2>Create New Member</h2>
+        <p class="panel-subtitle">Add a new member to the system</p>
+      }
       <!-- TODO: only if form data is valid, enable the save button  -->
       <button class="btn btn-primary save-button" (click)="onFormSave($event)">
         Save

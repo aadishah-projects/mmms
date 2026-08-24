@@ -47,6 +47,30 @@ a {
   border: 1px solid colors.$color-border-primary;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logout-button {
+  cursor: pointer;
+  background: transparent;
+  color: colors.$color-text-muted;
+  font-size: constants.$font-normal;
+  height: 35px;
+  border: 1px solid colors.$color-border-primary;
+  padding: 0 13px;
+  border-radius: 2px;
+  font-family: Roboto;
+}
+
+.logout-button:hover,
+.global-search:hover {
+  color: colors.$color-text-primary;
+  background: colors.$color-card-hover;
+}
+
 .eye-glass {
   width: 15px;
   height: 15px;
@@ -92,6 +116,11 @@ dialog {
       font-size: 14px;
       display: none;
     }
+  }
+
+  .logout-button {
+    font-size: 12px;
+    padding: 0 8px;
   }
 
   .eye-glass {
