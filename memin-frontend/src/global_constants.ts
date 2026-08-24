@@ -1,2 +1,2 @@
 export const BACKEND_URL =
-  'http://localhost:8080';
+  'https://mmms-aadishah-api.itclub.asmitphuyal.com.np';
