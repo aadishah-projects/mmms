@@ -462,6 +462,11 @@ export class MeetingForm implements OnInit, AfterViewChecked {
 
   onSubmit($event: Event, draftWithAi = false) {
     $event.preventDefault();
+    // Agenda inputs in the template preview are created with
+    // innerHTML, so copy their current values back before validating and
+    // building the request. This keeps every item (including the last one)
+    // in the creation payload.
+    this.syncMinuteTemplateItems();
     if (
       this.meetingFormGroup.invalid ||
       this.hasNoNonEmptyMeetingItems() ||
@@ -502,6 +507,31 @@ export class MeetingForm implements OnInit, AfterViewChecked {
     this.onSubmit($event, true);
   }
 
+  private syncMinuteTemplateItems(): void {
+    const documentElement = this.minuteDocument?.nativeElement;
+    if (!documentElement) {
+      return;
+    }
+
+    const agendaSlot = documentElement
+      .querySelector<HTMLButtonElement>('[data-slot-action="agenda"]')
+      ?.closest<HTMLElement>('.template-slot-content');
+    agendaSlot?.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((input, index) => {
+      if (this.agendas[index]) {
+        this.agendas[index].agenda = input.value;
+      }
+    });
+
+    const decisionSlot = documentElement
+      .querySelector<HTMLButtonElement>('[data-slot-action="decision"]')
+      ?.closest<HTMLElement>('.template-slot-content');
+    decisionSlot?.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((input, index) => {
+      if (this.decisions[index]) {
+        this.decisions[index].decision = input.value;
+      }
+    });
+  }
+
   count = -1; //unique negative number which is assigned as the decision or agenda id which is used for deletion
 
   @ViewChild('minuteDocument') minuteDocument?: ElementRef<HTMLDivElement>;
@@ -511,9 +541,8 @@ export class MeetingForm implements OnInit, AfterViewChecked {
   private minuteDetailsSubscription?: Subscription;
 
   createEmptyAgenda(): void {
-    const tempId = -Math.floor(Math.random() * 1000000);
     const newAgenda = new AgendaDto();
-    newAgenda.agendaId = tempId;
+    newAgenda.agendaId = this.count--;
     newAgenda.agenda = '';
     this.agendas.push(newAgenda);
     this.updateMinuteDocument();
@@ -521,9 +550,8 @@ export class MeetingForm implements OnInit, AfterViewChecked {
   }
 
   createEmptyDecision(): void {
-    const tempId = -Math.floor(Math.random() * 1000000);
     const newDecision = new DecisionDto();
-    newDecision.decisionId = tempId;
+    newDecision.decisionId = this.count--;
     newDecision.decision = '';
     this.decisions.push(newDecision);
     this.updateMinuteDocument();
