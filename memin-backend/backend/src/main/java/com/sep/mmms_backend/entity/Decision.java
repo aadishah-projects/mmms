@@ -30,7 +30,11 @@ public class Decision {
     private Integer decisionId;
 
     @Column(name = "uuid", nullable = false, unique = true, updatable = false)
-    private String uuid;
+    // Generate the business identity when the object is created, rather than
+    // waiting for @PrePersist. Decisions are kept in a Set on Meeting, and
+    // two transient decisions with a null uuid compare as equal until they
+    // are persisted.
+    private String uuid = UUID.randomUUID().toString();
 
     @ManyToOne
     @JoinColumn(name="meeting_id", referencedColumnName = "meeting_id", nullable=false)

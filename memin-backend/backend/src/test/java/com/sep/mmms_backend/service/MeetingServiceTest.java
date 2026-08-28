@@ -3,6 +3,8 @@ package com.sep.mmms_backend.service;
 import com.sep.mmms_backend.entity.Committee;
 import com.sep.mmms_backend.entity.Meeting;
 import com.sep.mmms_backend.entity.Member;
+import com.sep.mmms_backend.dto.DecisionDto;
+import com.sep.mmms_backend.dto.MeetingCreationDto;
 import com.sep.mmms_backend.repository.AppUserRepository;
 import com.sep.mmms_backend.repository.MeetingRepository;
 import com.sep.mmms_backend.repository.MemberRepository;
@@ -101,6 +103,38 @@ class MeetingServiceTest {
         assertTrue(html.contains("data-edited=\"true\"") || html.contains("data-edited='true'"));
         assertTrue(html.indexOf("Chandra") < html.indexOf("Bikash"));
         assertTrue(!html.contains("old frozen template"));
+    }
+
+    @Test
+    void preservesAllDecisionsWhenCreatingMeeting() {
+        Member coordinator = member(1, "Asha");
+        Committee committee = new Committee();
+        committee.setId(10);
+        committee.setCoordinator(coordinator);
+        committee.setMinuteLanguage(com.sep.mmms_backend.enums.MinuteLanguage.ENGLISH);
+
+        MeetingCreationDto creation = new MeetingCreationDto();
+        creation.setTitle("Planning meeting");
+        creation.setHeldDate(LocalDate.of(2026, 8, 28));
+        creation.setHeldTime(LocalTime.of(10, 30));
+        creation.setHeldPlace("Board Room");
+        creation.setDecisions(List.of(
+                new DecisionDto(null, "Approve the annual plan"),
+                new DecisionDto(null, "Schedule the next review")
+        ));
+
+        when(meetingRepository.save(any(Meeting.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(appUserRepository.findByUsername("writer"))
+                .thenReturn(Optional.of(new com.sep.mmms_backend.entity.AppUser()));
+        doNothing().when(entityValidator).validate(any());
+
+        Meeting savedMeeting = meetingService.saveNewMeeting(creation, committee, "writer");
+
+        assertTrue(savedMeeting.getDecisions().stream()
+                .map(com.sep.mmms_backend.entity.Decision::getDecision)
+                .toList()
+                .containsAll(List.of("Approve the annual plan", "Schedule the next review")));
+        org.junit.jupiter.api.Assertions.assertEquals(2, savedMeeting.getDecisions().size());
     }
 
     private Member member(int id, String firstName) {
