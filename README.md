@@ -13,6 +13,11 @@ The two talk over HTTP; the frontend's API base URL lives in
 
 ---
 
+## Deployed 
+
+Frontend: https://mmms.itprojects.pcampus.edu.np/login//
+
+
 ## Running locally
 
 ### Backend (no external database required)
@@ -30,7 +35,6 @@ This boots on `http://localhost:8080` and seeds committees, members, meetings an
 agendas. It also promotes the demo user below to `DEPARTMENT_HEAD` so the
 role-gated screens are reachable.
 
-**Demo login:** username `username` / password `password`
 
 ### Frontend
 
@@ -79,4 +83,4 @@ Department heads can configure AI LLM endpoints and SMTP credentials dynamically
 - Persistent **attendance ordering** for each meeting, with table or numbered-list rendering.
 - Expandable numbered agenda and decision editors.
 - A member can serve as secretary for multiple committees; assignments are persisted on each committee.
-- Registration invitations accept valid email addresses from any domain.
+- Registration invitations accept valid email addresses from
